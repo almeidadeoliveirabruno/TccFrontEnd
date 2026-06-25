@@ -220,7 +220,7 @@ function ProcedureModal({ open, editProc, onClose, onSaved, token }) {
               className={`form-input ${errors.price ? "input-error" : ""}`}
               type="number"
               min="0"
-              step="0.01"
+              step="10.00"
               value={form.price}
               onChange={set("price")}
               placeholder="0,00"
@@ -234,7 +234,8 @@ function ProcedureModal({ open, editProc, onClose, onSaved, token }) {
             <input
               className={`form-input ${errors.duration ? "input-error" : ""}`}
               type="number"
-              min="1"
+              step="5"
+              min="5"
               value={form.duration}
               onChange={set("duration")}
               placeholder="60"
@@ -370,27 +371,50 @@ export default function Procedimentos() {
       </div>
 
       <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-label">Total</div>
-          <div className="stat-value">{procedures.length}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Categorias</div>
-          <div className="stat-value">{uniqueCats}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Ticket médio</div>
-          <div className="stat-value">
-            R$ {avg.toLocaleString("pt-BR")}
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Mais caro</div>
-          <div className="stat-value">
-            R$ {max.toLocaleString("pt-BR")}
-          </div>
-        </div>
+  <div className="stat-card">
+    <div className="stat-header">
+      <div className="stat-icon" style={{ background: "#E4F6F8" }}>
+        <i className="ti ti-clipboard-list" style={{ color: "#0a9db2" }} aria-hidden="true" />
       </div>
+      <span className="stat-label">Total</span>
+    </div>
+    <div className="stat-value">{procedures.length}</div>
+    <div className="stat-sub">procedimentos cadastrados</div>
+  </div>
+
+  <div className="stat-card">
+    <div className="stat-header">
+      <div className="stat-icon" style={{ background: "#EEEDFE" }}>
+        <i className="ti ti-layout-grid" style={{ color: "#534AB7" }} aria-hidden="true" />
+      </div>
+      <span className="stat-label">Categorias</span>
+    </div>
+    <div className="stat-value">{uniqueCats}</div>
+    <div className="stat-sub">em uso ativo</div>
+  </div>
+
+  <div className="stat-card">
+    <div className="stat-header">
+      <div className="stat-icon" style={{ background: "#EAF3DE" }}>
+        <i className="ti ti-chart-line" style={{ color: "#3B6D11" }} aria-hidden="true" />
+      </div>
+      <span className="stat-label">Ticket médio</span>
+    </div>
+    <div className="stat-value">R$ {avg.toLocaleString("pt-BR")}</div>
+    <div className="stat-sub">valor médio</div>
+  </div>
+
+  <div className="stat-card">
+    <div className="stat-header">
+      <div className="stat-icon" style={{ background: "#FAEEDA" }}>
+        <i className="ti ti-trophy" style={{ color: "#854F0B" }} aria-hidden="true" />
+      </div>
+      <span className="stat-label">Mais caro</span>
+    </div>
+    <div className="stat-value">R$ {max.toLocaleString("pt-BR")}</div>
+    <div className="stat-sub">procedimento premium</div>
+  </div>
+</div>
 
       <div className="proc-toolbar">
         <div className="search-wrap">

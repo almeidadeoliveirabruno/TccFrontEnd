@@ -13,5 +13,21 @@
   width: calc(100vw - var(--sidebar-width));
   min-height: 100vh;
   padding: 20px 20px;
-  background: #F9FAFB;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(56, 189, 248, 0.08),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(167, 139, 250, 0.08),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(16, 185, 129, 0.05),
+      transparent 40%
+    ),
+    #f8fafc;
 }
