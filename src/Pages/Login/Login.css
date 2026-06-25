@@ -1,7 +1,7 @@
 .login-page {
     display: flex;
     min-height: 100vh;
-    background: linear-gradient(to right, #ffffff, #EBFFFE);
+    background: linear-gradient(to right, #ffffff, #E6FFFE);
     align-items: center;
     justify-content: center;
     padding: 1%;
@@ -40,7 +40,7 @@
 }
 
 .brand-name span {
-    color: #1daa7a;
+    color: #00A19A;
 }
 
 .login-right {
@@ -93,8 +93,8 @@
 
 .login-input:focus {
     outline: none;
-    border-color: #1daa7a;
-    box-shadow: 0 0 0 2px rgba(29, 170, 122, 0.15);
+    border-color: #00A19A;
+    box-shadow: 0 0 0 2px rgba(0, 161, 154, 0.15);
 }
 
 .row-check {
@@ -122,7 +122,7 @@
 .btn-entrar {
     width: 100%;
     height: clamp(46px, 4.5vw, 62px);
-    background: #1daa7a;
+    background: #00A19A;
     color: white;
     border: none;
     border-radius: 10px;
@@ -132,11 +132,11 @@
 }
 
 .btn-entrar:hover {
-    background: #178f66;
+    background: #00857F;
 }
 
 .btn-entrar:disabled {
-    background: #a8d5c2;
+    background: #99D4D1;
     cursor: not-allowed;
 }
 

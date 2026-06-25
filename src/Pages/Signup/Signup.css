@@ -1,11 +1,10 @@
-
 .signup-page {
     display: flex;
     min-height: 100vh;
-    background: linear-gradient(to right, #ffffff, #EBFFFE);
-    align-items: center;
+    background: linear-gradient(to right, #ffffff, #E6FFFE);
+    align-items: flex-start;
     justify-content: center;
-    padding: 1%;
+    padding: 2vh 1%;
     box-sizing: border-box;
 }
 
@@ -14,7 +13,6 @@
     flex-direction: row;
     width: 100%;
     max-width: 1400px;
-    min-height: 80vh;
 }
 
 .signup-left {
@@ -25,6 +23,9 @@
     justify-content: center;
     gap: 24px;
     padding: 3rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
 }
 
 .signup-left svg {
@@ -41,15 +42,15 @@
 }
 
 .brand-name span {
-    color: #1daa7a;
+    color: #00A19A;
 }
 
 .signup-right {
     flex: 1;
     background: white;
     border-radius: 20px;
-    margin: 32px;
-    padding: clamp(2rem, 4vw, 4rem);
+    margin: 24px;
+    padding: clamp(1.2rem, 2.5vw, 2.5rem);
     border: 0.5px solid #ddd;
     box-sizing: border-box;
     display: flex;
@@ -59,44 +60,44 @@
 }
 
 .signup-right h2 {
-    font-size: clamp(24px, 3vw, 42px);
+    font-size: clamp(20px, 2.5vw, 36px);
     font-weight: 500;
     color: #1a2e5e;
-    margin: 0 0 6px;
+    margin: 0 0 4px;
 }
 
 .subtitle {
-    font-size: clamp(13px, 1.2vw, 18px);
+    font-size: clamp(12px, 1vw, 16px);
     color: #666;
-    margin-bottom: 32px;
+    margin-bottom: clamp(12px, 1.5vw, 24px);
 }
 
 .field-wrap {
-    margin-bottom: 20px;
+    margin-bottom: clamp(10px, 1.2vw, 18px);
 }
 
 .field-label {
-    font-size: clamp(13px, 1.1vw, 17px);
+    font-size: clamp(12px, 1vw, 15px);
     font-weight: 500;
     color: #1a2e5e;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .signup-input {
     width: 100%;
-    height: clamp(42px, 4vw, 58px);
+    height: clamp(38px, 3.5vw, 50px);
     border: 1px solid #ccc;
     border-radius: 10px;
     padding: 0 16px;
     box-sizing: border-box;
-    font-size: clamp(14px, 1.1vw, 17px);
+    font-size: clamp(13px, 1vw, 15px);
     transition: 0.2s;
 }
 
 .signup-input:focus {
     outline: none;
-    border-color: #1daa7a;
-    box-shadow: 0 0 0 2px rgba(29, 170, 122, 0.15);
+    border-color: #00A19A;
+    box-shadow: 0 0 0 2px rgba(0, 161, 154, 0.15);
 }
 
 .password-container {
@@ -120,21 +121,21 @@
 }
 
 .success-msg {
-    color: #1daa7a;
+    color: #00A19A;
     font-size: 13px;
-    margin-top: -8px;
-    margin-bottom: 14px;
+    margin-top: -6px;
+    margin-bottom: 10px;
 }
 
 .error-msg {
     color: red;
     font-size: 13px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .clinic-row {
     display: flex;
-    gap: 20px;
+    gap: 16px;
 }
 
 .clinic-field {
@@ -143,31 +144,31 @@
 
 .btn-register {
     width: 100%;
-    height: clamp(46px, 4.5vw, 62px);
-    background: #1daa7a;
+    height: clamp(42px, 4vw, 54px);
+    background: #00A19A;
     color: white;
     border: none;
     border-radius: 10px;
-    font-size: clamp(15px, 1.3vw, 20px);
+    font-size: clamp(14px, 1.2vw, 18px);
     font-weight: 500;
     cursor: pointer;
     transition: .2s;
 }
 
 .btn-register:hover {
-    background: #178f66;
+    background: #00857F;
 }
 
 .btn-register:disabled {
-    background: #a8d5c2;
+    background: #99D4D1;
     cursor: not-allowed;
 }
 
 .login-row {
     text-align: center;
-    margin-top: 24px;
+    margin-top: clamp(12px, 1.5vw, 20px);
     color: #666;
-    font-size: clamp(13px, 1vw, 16px);
+    font-size: clamp(12px, 1vw, 15px);
 }
 
 .login-row span {
@@ -179,27 +180,25 @@
 }
 
 .login-row span:hover {
-    color: #1daa7a;
+    color: #00A19A;
 }
 
 @media (max-width: 768px) {
-
     .clinic-row {
         flex-direction: column;
         gap: 0;
     }
-
 }
 
 @media (max-width: 600px) {
-
     .signup-wrapper {
         flex-direction: column;
         width: 100%;
-        min-height: unset;
     }
 
     .signup-left {
+        position: static;
+        height: auto;
         padding: 2rem 1rem 1rem;
     }
 
@@ -212,6 +211,4 @@
         padding: 2rem 1.5rem;
         border-radius: 16px;
     }
-
 }
-

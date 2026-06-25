@@ -1,0 +1,17 @@
+:root {
+  --sidebar-width: 280px;
+}
+
+.app-layout {
+  display: flex;
+  flex: 1;
+}
+
+.content {
+  padding: 36px 40px; 
+  margin-left: var(--sidebar-width);
+  width: calc(100vw - var(--sidebar-width));
+  min-height: 100vh;
+  padding: 20px 20px;
+  background: #F9FAFB;
+}

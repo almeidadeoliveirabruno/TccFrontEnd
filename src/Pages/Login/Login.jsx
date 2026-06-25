@@ -50,7 +50,7 @@ function Login() {
                     data.access_token
                 );
 
-                navigate("/protected");
+                navigate("/procedimentos");
 
             } else {
 
