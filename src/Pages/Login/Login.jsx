@@ -5,18 +5,19 @@ import "./Login.css";
 
 function Login() {
 
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [remember, setRemember] = useState(false);
+   
 
     const navigate = useNavigate();
 
     const validateForm = () => {
 
-        if (!username || !password) {
-            setError("Usuário e senha são obrigatórios");
+        if (!email || !password) {
+            setError("Email e senha são obrigatórios");
             return false;
         }
 
@@ -25,47 +26,33 @@ function Login() {
     };
 
     const handleSubmit = async (e) => {
+    e.preventDefault();
 
-        e.preventDefault();
+    if (!validateForm()) return;
 
-        if (!validateForm()) return;
+    setLoading(true);
 
-        setLoading(true);
+    try {
+        const response = await login(email, password);
 
-        try {
+        setLoading(false);
 
-            const response = await login(
-                username,
-                password
-            );
-
-            setLoading(false);
-
-            if (response.ok) {
-
-                const data = await response.json();
-
-                localStorage.setItem(
-                    "token",
-                    data.access_token
-                );
-
-                navigate("/procedimentos");
-
-            } else {
-
-                setError("Credenciais inválidas");
-
-            }
-
-        } catch {
-
-            setLoading(false);
-
-            setError("Erro de conexão");
-
+        if (response.ok) {
+            const data = await response.json();
+            console.log(data.access_token);
+            localStorage.setItem("token", data.access_token);
+            console.log("Entrei aqui")
+            navigate("/procedimentos");
+        } else {
+            setError("Credenciais inválidas");
         }
-    };
+
+    } catch {
+        setLoading(false);
+        setError("Erro de conexão");
+    }
+};
+    
 
     return (
         <div className="login-page">
@@ -100,15 +87,15 @@ function Login() {
                     <div className="field-wrap">
 
                         <p className="field-label">
-                            Usuário
+                            Email
                         </p>
 
                         <input
                             className="login-input"
                             type="text"
-                            value={username}
+                            value={email}
                             onChange={(e) =>
-                                setUsername(e.target.value)
+                                setEmail(e.target.value)
                             }
                         />
 

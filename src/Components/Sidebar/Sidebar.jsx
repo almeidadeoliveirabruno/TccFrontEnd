@@ -1,6 +1,8 @@
 import "./Sidebar.css";
 import { useLocation } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 import logo from "../../assets/odontolink-logo.svg";
+import { useAuth } from "../../hooks/useAuth";
 import {
   House,
   UserRound,
@@ -11,6 +13,7 @@ import {
   ChartColumn,
   LogOut,
 } from "lucide-react";
+
 
 function ToothIcon({size = 24 }) {
   return (
@@ -43,6 +46,8 @@ const items = [
 ];
 
 export default function Sidebar() {
+  const { setAuth, logout, token } = useAuth();
+  const payload = token ? jwtDecode(token) : null;
   const location = useLocation();
   const pathname = location.pathname;
 
@@ -67,12 +72,11 @@ export default function Sidebar() {
 
       <div className="profile">
         <div className="profile-info">
-          <h4>Dra. Mariana Silva</h4>
-          <span>Clínica Geral</span>
+          <h4>{payload.nome}</h4>
         </div>
         <button className="logout-btn">
           <LogOut size={20} />
-          <span>Sair</span>
+          <span onClick={logout}>Sair</span>
         </button>
       </div>
     </aside>

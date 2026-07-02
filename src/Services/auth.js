@@ -1,16 +1,10 @@
-export async function login(username, password) {
-    // backend espera JSON com campos `email` e `password`
-    const payload = {
-        email: username,
-        password: password
-    };
-
+export async function login(email, password) {
     return fetch("http://localhost:8000/auth/login", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ email, password })
     });
 }
 
@@ -21,7 +15,6 @@ export async function signup(
     clinicName,
     clinicCnpj
 ) {
-
     const payload = {
         email,
         password,
@@ -32,14 +25,11 @@ export async function signup(
         }
     };
 
-    return fetch(
-        "http://localhost:8000/auth/register",
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        }
-    );
+    return fetch("http://localhost:8000/auth/register", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    });
 }

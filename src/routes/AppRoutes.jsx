@@ -21,7 +21,7 @@ function AppRoutes() {
         <Route element={<PrivateRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/procedimentos" element={<Procedimentos />} />
-        </Route>
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>
