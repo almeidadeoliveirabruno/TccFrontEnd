@@ -2,8 +2,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "../Pages/Login/Login";
 import Signup from "../Pages/Signup/signup";
-import ProtectedPage from "../Pages/Procedimentos/Procedimentos";
 import Procedimentos from "../Pages/Procedimentos/Procedimentos";
+import Dentistas from "../Pages/Dentistas/Dentistas";
 import PrivateRoute from "./PrivateRoute";
 
 import AppLayout from "../layouts/AppLayout";
@@ -21,6 +21,7 @@ function AppRoutes() {
         <Route element={<PrivateRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/procedimentos" element={<Procedimentos />} />
+            <Route path="/dentistas" element={<Dentistas />} />
           </Route>
         </Route>
       </Routes>

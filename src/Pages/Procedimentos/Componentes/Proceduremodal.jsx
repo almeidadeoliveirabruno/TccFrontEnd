@@ -2,7 +2,13 @@ import { useState, useEffect } from "react";
 import { CATEGORIES, EMPTY_FORM } from "../constants";
 import { API_URL, authHeaders } from "../../../utils/api";
 
-export default function ProcedureModal({ open, editProc, onClose, onSaved, token }) {
+export default function ProcedureModal({
+  open,
+  editProc,
+  onClose,
+  onSaved,
+  token,
+}) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -18,7 +24,7 @@ export default function ProcedureModal({ open, editProc, onClose, onSaved, token
               price: String(editProc.price),
               duration: String(editProc.duration),
             }
-          : EMPTY_FORM
+          : EMPTY_FORM,
       );
       setErrors({});
     }
@@ -28,8 +34,10 @@ export default function ProcedureModal({ open, editProc, onClose, onSaved, token
     const e = {};
     if (!form.name.trim()) e.name = "Campo obrigatório";
     if (!form.category) e.category = "Selecione uma categoria";
-    if (form.price === "" || isNaN(Number(form.price))) e.price = "Campo obrigatório";
-    if (form.duration === "" || isNaN(Number(form.duration))) e.duration = "Campo obrigatório";
+    if (form.price === "" || isNaN(Number(form.price)))
+      e.price = "Campo obrigatório";
+    if (form.duration === "" || isNaN(Number(form.duration)))
+      e.duration = "Campo obrigatório";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -80,16 +88,15 @@ export default function ProcedureModal({ open, editProc, onClose, onSaved, token
   }
 
   return (
-    <div
-      className={`modal-overlay ${open ? "open" : ""}`}
-      onClick={(e) => e.target.classList.contains("modal-overlay") && onClose()}
-    >
-      <div className="modal">
+    <div className={`modal-overlay ${open ? "open" : ""}`}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-title">
             {editProc ? "Editar procedimento" : "Novo procedimento"}
           </div>
-          <button className="btn-close" onClick={onClose}>✕</button>
+          <button className="btn-close" onClick={onClose}>
+            ✕
+          </button>
         </div>
 
         <div className="form-group">
@@ -175,7 +182,11 @@ export default function ProcedureModal({ open, editProc, onClose, onSaved, token
           <button className="btn-cancel" onClick={onClose} disabled={loading}>
             Cancelar
           </button>
-          <button className="btn-primary" onClick={handleSave} disabled={loading}>
+          <button
+            className="btn-primary"
+            onClick={handleSave}
+            disabled={loading}
+          >
             {loading ? "Salvando..." : "Salvar"}
           </button>
         </div>
