@@ -420,6 +420,77 @@ tbody td {
   padding: 40px 12px;
 }
 
+/* ===== DETAIL CARDS (secoes dentro do painel: Contato, CPF, Endereco, etc.) ===== */
+/* Mesmo visual dos sub-cards que ja existem no arquivo (.schedule-manager,
+   .dentist-schedule-panel): fundo #F9FAFB, borda clara, radius 12px -
+   consistente em vez de inventar um estilo novo pra isso. */
+.dentist-detail-card {
+  background: #F9FAFB;
+  border: 1px solid #ECEEF1;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.dentist-detail-card:last-child { margin-bottom: 0; }
+
+.dentist-detail-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9CA3AF;
+  margin-bottom: 8px;
+}
+.dentist-detail-label i { font-size: 13px; color: #0CB0C7; }
+
+.dentist-detail-value {
+  font-size: 13.5px;
+  color: #374151;
+  line-height: 1.5;
+}
+.dentist-detail-value + .dentist-detail-value { margin-top: 2px; }
+
+/* ===== DETAILS MODAL (grade 2 colunas) ===== */
+.dentist-details-modal {
+  max-width: 640px;
+  width: 100%;
+}
+
+.dentist-avatar-lg {
+  width: 52px;
+  height: 52px;
+  font-size: 17px;
+}
+
+.dentist-name-lg { font-size: 17px; }
+
+.dentist-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.dentist-detail-card-full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .dentist-detail-grid { grid-template-columns: 1fr; }
+}
+
+/* dentro do painel, o schedule-manager fica mais discreto (ele ja tem seu
+   proprio fundo #F9FAFB e borda - aninhado dentro do dentist-detail-card
+   isso duplicaria a moldura, entao neutraliza aqui) */
+.dentist-detail-card .schedule-manager {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
 /* ===== SCHEDULE MANAGER (dentro do modal) ===== */
 .dentist-schedule-panel {
   background: #f8fafc;

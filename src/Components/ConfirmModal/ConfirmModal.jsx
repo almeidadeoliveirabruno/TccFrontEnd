@@ -10,11 +10,8 @@ export default function ConfirmModal({
   onCancel,
 }) {
   return (
-    <div
-      className={`modal-overlay ${open ? "open" : ""}`}
-      onClick={(e) => e.target.classList.contains("modal-overlay") && onCancel()}
-    >
-      <div className="confirm-box">
+    <div className={`modal-overlay ${open ? "open" : ""}`}>
+      <div className="confirm-box" onClick={(e) => e.stopPropagation()}>
         <h3>{title}</h3>
         <p>{message}</p>
         <div className="confirm-actions">

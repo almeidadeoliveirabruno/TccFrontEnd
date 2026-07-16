@@ -7,6 +7,12 @@ import {
   EMPTY_SCHEDULE,
 } from "../constants";
 import { API_URL, authHeaders } from "../../../utils/api";
+import {
+  cleanDigits,
+  formatCep,
+  formatCpf,
+  formatPhone,
+} from "../../../utils/masks";
 import DentistSchedules from "./DentistSchedules";
 
 export default function DentistModal({
@@ -20,6 +26,8 @@ export default function DentistModal({
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
+  const [cepLookupError, setCepLookupError] = useState("");
   const [fullCpf, setFullCpf] = useState(""); // só exibição, não editável
   const [scheduleDraft, setScheduleDraft] = useState([]); // só usado na criação
   const [newScheduleItem, setNewScheduleItem] = useState(EMPTY_SCHEDULE);
@@ -43,35 +51,6 @@ export default function DentistModal({
   useEffect(() => {
     if (!open) return;
     setErrors({});
-  }, [open]);
-
-  useEffect(() => {
-    const cep = onlyNumbers(form.cep);
-
-    if (cep.length !== 8) return;
-
-    async function buscarCep() {
-      try {
-        const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-        const data = await r.json();
-
-        if (data.erro) return;
-
-        setForm((f) => ({
-          ...f,
-          street: data.logradouro || "",
-          neighborhood: data.bairro || "",
-          city: data.localidade || "",
-          state: data.uf || "",
-        }));
-      } catch {}
-    }
-
-    buscarCep();
-  }, [form.cep]);
-
-  useEffect(() => {
-    if (!open) return;
 
     if (editDentist) {
       // Busca o detalhe completo: a linha da tabela só tem os campos da
@@ -89,7 +68,7 @@ export default function DentistModal({
           setForm({
             name: data.name,
             email: data.email,
-            phone: data.phone,
+            phone: formatPhone(data.phone ?? ""),
             cpf: "",
             cro: data.cro,
             specialties: data.specialties ?? [],
@@ -100,7 +79,7 @@ export default function DentistModal({
             neighborhood: data.neighborhood,
             city: data.city,
             state: data.state,
-            cep: data.cep,
+            cep: formatCep(data.cep ?? ""),
           });
           setFullCpf(data.cpf ?? "");
         })
@@ -116,10 +95,14 @@ export default function DentistModal({
 
   function validate() {
     const e = {};
+    const cleanPhone = cleanDigits(form.phone);
+    const cleanCpf = cleanDigits(form.cpf);
+    const cleanCep = cleanDigits(form.cep);
+
     if (!form.name.trim()) e.name = "Campo obrigatório";
     if (!form.email.trim()) e.email = "Campo obrigatório";
-    if (!form.phone.trim()) e.phone = "Campo obrigatório";
-    if (!editDentist && !form.cpf.trim()) e.cpf = "Campo obrigatório";
+    if (!cleanPhone) e.phone = "Campo obrigatório";
+    if (!editDentist && !cleanCpf) e.cpf = "Campo obrigatório";
     if (!form.cro.trim()) e.cro = "Campo obrigatório";
     if (form.specialties.length === 0)
       e.specialties = "Selecione ao menos uma especialidade";
@@ -128,7 +111,7 @@ export default function DentistModal({
     if (!form.neighborhood.trim()) e.neighborhood = "Campo obrigatório";
     if (!form.city.trim()) e.city = "Campo obrigatório";
     if (!form.state.trim()) e.state = "Campo obrigatório";
-    if (!form.cep.trim()) e.cep = "Campo obrigatório";
+    if (!cleanCep) e.cep = "Campo obrigatório";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -137,10 +120,14 @@ export default function DentistModal({
     if (!validate()) return;
     setLoading(true);
 
+    const cleanPhone = cleanDigits(form.phone);
+    const cleanCpf = cleanDigits(form.cpf);
+    const cleanCep = cleanDigits(form.cep);
+
     const body = {
       name: form.name.trim(),
       email: form.email.trim(),
-      phone: form.phone.trim(),
+      phone: cleanPhone,
       cro: form.cro.trim(),
       specialties: form.specialties,
       status: form.status,
@@ -150,11 +137,11 @@ export default function DentistModal({
       neighborhood: form.neighborhood.trim(),
       city: form.city.trim(),
       state: form.state.trim(),
-      cep: form.cep.trim(),
+      cep: cleanCep,
     };
     // CPF só vai no corpo na criação — a rota de update não aceita trocar CPF.
     if (!editDentist) {
-      body.cpf = form.cpf.trim();
+      body.cpf = cleanCpf;
       // Horários também só vão junto na criação. Em edição, os horários
       // já existem de forma independente e são gerenciados pelo painel
       // DentistSchedules (cada ação lá já persiste na hora).
@@ -193,18 +180,48 @@ export default function DentistModal({
     };
   }
 
-  function setNumeric(field) {
+  function setMasked(field, formatter) {
     return (e) => {
+      setForm((f) => ({ ...f, [field]: formatter(e.target.value) }));
+      setErrors((err) => ({ ...err, [field]: undefined }));
+      if (field === "cep") setCepLookupError("");
+    };
+  }
+
+  async function handleCepSearch() {
+    const digits = cleanDigits(form.cep);
+    if (digits.length !== 8) {
+      setCepLookupError("Informe um CEP com 8 dígitos.");
+      return;
+    }
+
+    setCepLoading(true);
+    setCepLookupError("");
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await response.json();
+      if (data.erro) throw new Error("CEP não encontrado");
+
       setForm((f) => ({
         ...f,
-        [field]: onlyNumbers(e.target.value),
+        street: data.logradouro || f.street,
+        neighborhood: data.bairro || f.neighborhood,
+        city: data.localidade || f.city,
+        state: data.uf || f.state,
+        complement: f.complement || data.complemento || "",
       }));
-
       setErrors((err) => ({
         ...err,
-        [field]: undefined,
+        street: undefined,
+        neighborhood: undefined,
+        city: undefined,
+        state: undefined,
       }));
-    };
+    } catch {
+      setCepLookupError("Não foi possível encontrar este CEP.");
+    } finally {
+      setCepLoading(false);
+    }
   }
 
   function toggleSpecialty(spec) {
@@ -217,19 +234,52 @@ export default function DentistModal({
     setErrors((err) => ({ ...err, specialties: undefined }));
   }
 
-  function addCustomSpecialty() {
+  async function addCustomSpecialty() {
     const value = newSpecialtyInput.trim();
     if (!value) return;
-    // evita duplicata ignorando maiúsculas/minúsculas (ex: já tem "Ortodontia",
-    // não deixa adicionar "ortodontia" de novo como se fosse outra coisa)
-    const alreadyExists = form.specialties.some(
-      (s) => s.toLowerCase() === value.toLowerCase(),
+
+    const normalizedValue = value.toLowerCase();
+    const alreadyExists = [...form.specialties, ...usedSpecialties].some(
+      (s) => s.toLowerCase() === normalizedValue,
     );
-    if (!alreadyExists) {
-      setForm((f) => ({ ...f, specialties: [...f.specialties, value] }));
-      setErrors((err) => ({ ...err, specialties: undefined }));
+
+    if (alreadyExists) {
+      setNewSpecialtyInput("");
+      return;
     }
-    setNewSpecialtyInput("");
+
+    try {
+      const response = await fetch(`${API_URL}/dentists/specialties`, {
+        method: "POST",
+        headers: {
+          ...authHeaders(token),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: value }),
+      });
+
+      const createdValue = response.ok
+        ? ((await response.json().catch(() => null))?.name ?? value)
+        : value;
+
+      setUsedSpecialties((prev) =>
+        Array.from(new Set([...prev, createdValue])),
+      );
+      setForm((f) => ({
+        ...f,
+        specialties: [...f.specialties, createdValue],
+      }));
+      setErrors((err) => ({ ...err, specialties: undefined }));
+    } catch {
+      setUsedSpecialties((prev) => Array.from(new Set([...prev, value])));
+      setForm((f) => ({
+        ...f,
+        specialties: [...f.specialties, value],
+      }));
+      setErrors((err) => ({ ...err, specialties: undefined }));
+    } finally {
+      setNewSpecialtyInput("");
+    }
   }
 
   function addScheduleDraft() {
@@ -242,34 +292,6 @@ export default function DentistModal({
   }
 
   const dayLabel = (v) => DAYS_OF_WEEK.find((d) => d.value === v)?.label ?? v;
-  const onlyNumbers = (value) => value.replace(/\D/g, "");
-
-  const maskCpf = (value) => {
-    const v = onlyNumbers(value).slice(0, 11);
-
-    return v
-      .replace(/^(\d{3})(\d)/, "$1.$2")
-      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
-      .replace(/\.(\d{3})(\d)/, ".$1-$2");
-  };
-
-  const maskCep = (value) => {
-    const v = onlyNumbers(value).slice(0, 8);
-    return v.replace(/^(\d{5})(\d)/, "$1-$2");
-  };
-
-  const maskPhone = (value) => {
-    const v = onlyNumbers(value).slice(0, 13);
-
-    if (v.length <= 2) return `+${v}`;
-
-    if (v.length <= 4) return `+${v.slice(0, 2)} (${v.slice(2)}`;
-
-    if (v.length <= 9)
-      return `+${v.slice(0, 2)} (${v.slice(2, 4)}) ${v.slice(4)}`;
-
-    return `+${v.slice(0, 2)} (${v.slice(2, 4)}) ${v.slice(4, 9)}-${v.slice(9)}`;
-  };
 
   return (
     <div className={`modal-overlay ${open ? "open" : ""}`}>
@@ -338,9 +360,10 @@ export default function DentistModal({
                 </label>
                 <input
                   className={`form-input ${errors.phone ? "input-error" : ""}`}
-                  value={maskPhone(form.phone)}
-                  onChange={setNumeric("phone")}
-                  placeholder="5524999999999"
+                  value={form.phone}
+                  onChange={setMasked("phone", formatPhone)}
+                  placeholder="(11) 99988-1111"
+                  inputMode="numeric"
                 />
                 {errors.phone && (
                   <span className="form-error">{errors.phone}</span>
@@ -351,11 +374,7 @@ export default function DentistModal({
             {editDentist ? (
               <div className="form-group">
                 <label className="form-label">CPF</label>
-                <input
-                  className="form-input"
-                  value={maskCpf(fullCpf)}
-                  disabled
-                />
+                <input className="form-input" value={fullCpf} disabled />
                 <span className="form-hint">
                   CPF não pode ser alterado após o cadastro
                 </span>
@@ -367,9 +386,10 @@ export default function DentistModal({
                 </label>
                 <input
                   className={`form-input ${errors.cpf ? "input-error" : ""}`}
-                  value={maskCpf(form.cpf)}
-                  onChange={set("cpf")}
+                  value={form.cpf}
+                  onChange={setMasked("cpf", formatCpf)}
                   placeholder="000.000.000-00"
+                  inputMode="numeric"
                 />
                 {errors.cpf && <span className="form-error">{errors.cpf}</span>}
               </div>
@@ -441,6 +461,40 @@ export default function DentistModal({
                   + Adicionar
                 </button>
               </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                CEP <span className="req">*</span>
+              </label>
+              <div className="specialty-add-row">
+                <input
+                  className={`form-input ${errors.cep ? "input-error" : ""}`}
+                  value={form.cep}
+                  onChange={setMasked("cep", formatCep)}
+                  onBlur={handleCepSearch}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleCepSearch();
+                    }
+                  }}
+                  placeholder="00000-000"
+                  inputMode="numeric"
+                />
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={handleCepSearch}
+                  disabled={cepLoading}
+                >
+                  {cepLoading ? "Buscando..." : "Buscar CEP"}
+                </button>
+              </div>
+              {errors.cep && <span className="form-error">{errors.cep}</span>}
+              {cepLookupError && (
+                <span className="form-error">{cepLookupError}</span>
+              )}
             </div>
 
             <div className="form-row">
@@ -524,18 +578,6 @@ export default function DentistModal({
                 {errors.state && (
                   <span className="form-error">{errors.state}</span>
                 )}
-              </div>
-              <div className="form-group">
-                <label className="form-label">
-                  CEP <span className="req">*</span>
-                </label>
-                <input
-                  className={`form-input ${errors.cep ? "input-error" : ""}`}
-                  value={maskCep(form.cep)}
-                  onChange={setNumeric("cep")}
-                  placeholder="00000-000"
-                />
-                {errors.cep && <span className="form-error">{errors.cep}</span>}
               </div>
             </div>
 

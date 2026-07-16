@@ -74,22 +74,22 @@ export default function DentistSchedules({
   const dayLabel = (v) => DAYS_OF_WEEK.find((d) => d.value === v)?.label ?? v;
   const fmt = (t) => (t ? t.slice(0, 5) : t);
 
-  const dayAccent = {
-    0: { border: "#E2E8F0", chip: "#F8FAFC", text: "#475569" },
-    1: { border: "#DBEAFE", chip: "#EFF6FF", text: "#2563EB" },
-    2: { border: "#DCFCE7", chip: "#F0FDF4", text: "#15803D" },
-    3: { border: "#FDE68A", chip: "#FFFBEB", text: "#B45309" },
-    4: { border: "#F5E7FF", chip: "#FAF5FF", text: "#7C3AED" },
-    5: { border: "#FECACA", chip: "#FEF2F2", text: "#DC2626" },
-    6: { border: "#E9D5FF", chip: "#F5F3FF", text: "#7E22CE" },
-  };
+  const groupedSchedules = [...schedules]
+    .sort(
+      (a, b) =>
+        a.day_of_week - b.day_of_week ||
+        a.time_begin.localeCompare(b.time_begin),
+    )
+    .reduce((acc, schedule) => {
+      const key = schedule.day_of_week;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(schedule);
+      return acc;
+    }, {});
 
-  const groupedSchedules = schedules.reduce((acc, item) => {
-    const key = item.day_of_week;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(item);
-    return acc;
-  }, {});
+  const groupedEntries = Object.entries(groupedSchedules)
+    .sort(([a], [b]) => Number(a) - Number(b))
+    .map(([day, items]) => ({ day: Number(day), items }));
 
   return (
     <div className="schedule-manager">
@@ -99,51 +99,52 @@ export default function DentistSchedules({
         <p className="form-hint">Nenhum horário cadastrado ainda.</p>
       ) : (
         <ul className="schedule-list">
-          {Object.entries(groupedSchedules).map(([day, items]) => {
-            const accent = dayAccent[Number(day)] ?? dayAccent[0];
-            return (
-              <li
-                key={day}
-                className="schedule-row schedule-row-grouped"
-                style={{ borderColor: accent.border, background: accent.chip }}
+          {groupedEntries.map(({ day, items }) => (
+            <li key={day} className="schedule-row">
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: "4px" }}
               >
-                <div className="schedule-day-block">
-                  <span
-                    className="schedule-day-name"
-                    style={{ color: accent.text }}
-                  >
-                    {dayLabel(Number(day))}
-                  </span>
-                  <div className="schedule-time-list">
-                    {items.map((s) => (
-                      <span
-                        key={s.id}
-                        className="schedule-time-chip"
-                        style={{ background: accent.chip, color: accent.text }}
-                      >
+                <strong>{dayLabel(day)}</strong>
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "8px",
+                    alignItems: "center",
+                  }}
+                >
+                  {items.map((s) => (
+                    <div
+                      key={s.id}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "4px 8px",
+                        border: "1px solid #d0d7de",
+                        borderRadius: "8px",
+                        background: "#f8f9fa",
+                      }}
+                    >
+                      <span>
                         {fmt(s.time_begin)} às {fmt(s.time_end)}
                       </span>
-                    ))}
-                  </div>
+                      {!readOnly && (
+                        <button
+                          type="button"
+                          className="btn-icon del"
+                          onClick={() => handleDelete(s.id)}
+                          title="Remover horário"
+                        >
+                          🗑️
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                {!readOnly && (
-                  <div className="schedule-actions">
-                    {items.map((s) => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        className="btn-icon del"
-                        onClick={() => handleDelete(s.id)}
-                        title="Remover horário"
-                      >
-                        🗑️
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </li>
-            );
-          })}
+              </div>
+            </li>
+          ))}
         </ul>
       )}
 

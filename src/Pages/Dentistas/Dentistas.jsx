@@ -12,7 +12,7 @@ import { useAuth } from "../../hooks/useAuth";
 import Toast from "../../components/Toast/Toast";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import DentistModal from "./Componentes/DentistModal";
-import DentistDetailsPanel from "./Componentes/DentistDetailsPanel";
+import DentistDetailsModal from "./Componentes/DentistDetailsModal";
 
 const AVATAR_PALETTE = [
   "#0CB0C7",
@@ -54,7 +54,9 @@ export default function Dentistas() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editDentist, setEditDentist] = useState(null);
-  const [selectedDentist, setSelectedDentist] = useState(null);
+
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsDentist, setDetailsDentist] = useState(null);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
@@ -105,20 +107,6 @@ export default function Dentistas() {
     loadDentists();
   }, [loadDentists]);
 
-  useEffect(() => {
-    if (!dentists.length) {
-      setSelectedDentist(null);
-      return;
-    }
-
-    setSelectedDentist((current) => {
-      if (current && dentists.some((dentist) => dentist.id === current.id)) {
-        return current;
-      }
-      return dentists[0];
-    });
-  }, [dentists]);
-
   // reseta pra página 1 sempre que algum filtro mudar
   useEffect(() => {
     setPage(1);
@@ -134,15 +122,14 @@ export default function Dentistas() {
     setModalOpen(true);
   }
 
+  function openDetails(dentist) {
+    setDetailsDentist(dentist);
+    setDetailsOpen(true);
+  }
+
   function openDelete(id) {
     setDeleteId(id);
     setDeleteOpen(true);
-  }
-
-  function selectDentist(dentist) {
-    setSelectedDentist((current) =>
-      current?.id === dentist.id ? null : dentist,
-    );
   }
 
   async function handleDelete() {
@@ -291,127 +278,119 @@ export default function Dentistas() {
         </div>
       </div>
 
-      <div className="dentist-content">
-        <div className="table-wrap">
-          {loading ? (
-            <div className="table-loading">Carregando dentistas...</div>
-          ) : stats.total === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">🦷</div>
-              <p>Nenhum dentista encontrado</p>
-            </div>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Dentista</th>
-                  <th>Especialidade</th>
-                  <th>CRO</th>
-                  <th>Contato</th>
-                  <th>Status</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {dentists.map((d) => {
-                  const statusStyle =
-                    STATUS_COLORS[d.status] ?? STATUS_COLORS.ativo;
-                  const isSelected = selectedDentist?.id === d.id;
-                  return (
-                    <tr
-                      key={d.id}
-                      className={`dentist-row ${isSelected ? "selected" : ""}`}
-                      onClick={() => selectDentist(d)}
-                    >
-                      <td>
-                        <div className="dentist-cell">
-                          <div
-                            className="dentist-avatar"
-                            style={{ background: avatarColor(d.name) }}
-                          >
-                            {initials(d.name)}
-                          </div>
-                          <div>
-                            <div className="dentist-name">{d.name}</div>
-                            <div className="dentist-email-sub">{d.email}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        {d.specialties && d.specialties.length > 0 ? (
-                          <div className="spec-cell-multi">
-                            {d.specialties.map((spec) => {
-                              const specStyle = SPECIALTY_COLORS[spec] ?? {
-                                dot: "#9CA3AF",
-                              };
-                              return (
-                                <span key={spec} className="spec-cell">
-                                  <span
-                                    className="spec-dot"
-                                    style={{ background: specStyle.dot }}
-                                  />
-                                  {spec}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td>{d.cro}</td>
-                      <td>
-                        <div className="contact-cell">
-                          <span className="contact-line">
-                            <i className="ti ti-phone" aria-hidden="true" />{" "}
-                            {d.phone}
-                          </span>
-                          <span className="contact-line">
-                            <i className="ti ti-mail" aria-hidden="true" />{" "}
-                            {d.email}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <span
-                          className="badge"
-                          style={{
-                            background: statusStyle.bg,
-                            color: statusStyle.color,
-                          }}
+      <div className="table-wrap">
+        {loading ? (
+          <div className="table-loading">Carregando dentistas...</div>
+        ) : stats.total === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">🦷</div>
+            <p>Nenhum dentista encontrado</p>
+          </div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Dentista</th>
+                <th>Especialidade</th>
+                <th>CRO</th>
+                <th>Contato</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {dentists.map((d) => {
+                const statusStyle = STATUS_COLORS[d.status] ?? STATUS_COLORS.ativo;
+                return (
+                  <tr key={d.id}>
+                    <td>
+                      <div className="dentist-cell">
+                        <div
+                          className="dentist-avatar"
+                          style={{ background: avatarColor(d.name) }}
                         >
-                          {statusLabel(d.status)}
-                        </span>
-                      </td>
-                      <td onClick={(e) => e.stopPropagation()}>
-                        <div className="row-actions">
-                          <button
-                            className="btn-icon"
-                            onClick={() => openEdit(d)}
-                            title="Editar"
-                          >
-                            ✏️
-                          </button>
-                          <button
-                            className="btn-icon del"
-                            onClick={() => openDelete(d.id)}
-                            title="Excluir"
-                          >
-                            🗑️
-                          </button>
+                          {initials(d.name)}
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        <div className="dentist-details-panel">
-          <DentistDetailsPanel dentist={selectedDentist} token={token} />
-        </div>
+                        <div>
+                          <div className="dentist-name">{d.name}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      {d.specialties && d.specialties.length > 0 ? (
+                        <div className="spec-cell-multi">
+                          {d.specialties.map((spec) => {
+                            const specStyle = SPECIALTY_COLORS[spec] ?? {
+                              dot: "#9CA3AF",
+                            };
+                            return (
+                              <span key={spec} className="spec-cell">
+                                <span
+                                  className="spec-dot"
+                                  style={{ background: specStyle.dot }}
+                                />
+                                {spec}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td>{d.cro}</td>
+                    <td>
+                      <div className="contact-cell">
+                        <span className="contact-line">
+                          <i className="ti ti-phone" aria-hidden="true" /> {d.phone}
+                        </span>
+                        <span className="contact-line">
+                          <i className="ti ti-mail" aria-hidden="true" /> {d.email}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <span
+                        className="badge"
+                        style={{
+                          background: statusStyle.bg,
+                          color: statusStyle.color,
+                        }}
+                      >
+                        {statusLabel(d.status)}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="row-actions">
+                        <button
+                          className="btn-icon"
+                          onClick={() => openDetails(d)}
+                          title="Ver detalhes"
+                        >
+                          👁️
+                        </button>
+                        <button
+                          className="btn-icon"
+                          onClick={() => openEdit(d)}
+                          title="Editar"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="btn-icon del"
+                          onClick={() => openDelete(d.id)}
+                          title="Excluir"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div className="pagination">
@@ -441,6 +420,13 @@ export default function Dentistas() {
         editDentist={editDentist}
         onClose={() => setModalOpen(false)}
         onSaved={handleSaved}
+        token={token}
+      />
+
+      <DentistDetailsModal
+        open={detailsOpen}
+        dentist={detailsDentist}
+        onClose={() => setDetailsOpen(false)}
         token={token}
       />
 
