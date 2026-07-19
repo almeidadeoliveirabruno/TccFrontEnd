@@ -1,7 +1,7 @@
 import "./Sidebar.css";
 import { useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import logo from "../../assets/odontolink-logo.svg";
+import logo from "../../assets/Logo_Alternativa.png";
 import { useAuth } from "../../hooks/useAuth";
 import {
   House,
@@ -14,8 +14,7 @@ import {
   LogOut,
 } from "lucide-react";
 
-
-function ToothIcon({size = 24 }) {
+function ToothIcon({ size = 24 }) {
   return (
     <svg
       width={size}
@@ -55,6 +54,9 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="logo">
         <img src={logo} alt="OdontoLink" />
+        <div className="brand-name-sidebar">
+          Odonto<span>Link</span>
+        </div>
       </div>
 
       <nav className="menu">

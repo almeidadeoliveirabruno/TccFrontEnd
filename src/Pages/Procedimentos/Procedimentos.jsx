@@ -76,35 +76,6 @@ useEffect(() => {
   setPage(1);
 }, [search, catFilter]);
 
-  // const loadProcedures = useCallback(async () => {
-  //   setLoading(true);
-  //   try {
-  //     const r = await fetch(`${API_URL}/procedures?page=${page}&page_size=${pageSize}`, {
-  //       headers: authHeaders(token),
-  //     });
-  //     if (!r.ok) throw new Error();
-  //     const data = await r.json();
-  //     console.log(data)
-  //     setProcedures(data.items);
-  //     setTotalPages(data.total_pages);
-  //     setStats({
-  //       total: data.statistics.total_procedures,
-  //       averagePrice: data.statistics.average_price,
-  //       maxPrice: data.statistics.max_price,
-  //       categories: data.statistics.unique_categories,
-  //     });
-
-
-  //   } catch {
-  //     showToast("Erro ao carregar procedimentos.", "error");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }, [token, page]);
-
-  // useEffect(() => {
-  //   loadProcedures();
-  // }, [loadProcedures]);
 
   function openCreate() {
     setEditProc(null);

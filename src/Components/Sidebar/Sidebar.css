@@ -16,15 +16,28 @@
 /* ========== LOGO ========== */
 .logo {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 28px 20px;
+  padding: 28px 20px 18px;
+  gap: 10px;
 }
 
 .logo img {
-  width: 200px;
+  width: 150px;
   height: auto;
   display: block;
+  object-fit: contain;
+}
+
+.brand-name-sidebar {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1a2e5e;
+}
+
+.brand-name-sidebar span {
+  color: #00A19A;
 }
 
 /* ========== MENU ========== */

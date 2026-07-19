@@ -97,7 +97,6 @@ export default function DentistModal({
     const e = {};
     const cleanPhone = cleanDigits(form.phone);
     const cleanCpf = cleanDigits(form.cpf);
-    const cleanCep = cleanDigits(form.cep);
 
     if (!form.name.trim()) e.name = "Campo obrigatório";
     if (!form.email.trim()) e.email = "Campo obrigatório";
@@ -111,7 +110,6 @@ export default function DentistModal({
     if (!form.neighborhood.trim()) e.neighborhood = "Campo obrigatório";
     if (!form.city.trim()) e.city = "Campo obrigatório";
     if (!form.state.trim()) e.state = "Campo obrigatório";
-    if (!cleanCep) e.cep = "Campo obrigatório";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -464,9 +462,7 @@ export default function DentistModal({
             </div>
 
             <div className="form-group">
-              <label className="form-label">
-                CEP <span className="req">*</span>
-              </label>
+              <label className="form-label">CEP</label>
               <div className="specialty-add-row">
                 <input
                   className={`form-input ${errors.cep ? "input-error" : ""}`}
