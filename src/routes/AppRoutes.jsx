@@ -4,7 +4,9 @@ import Login from "../Pages/Login/Login";
 import Signup from "../Pages/Signup/signup";
 import Procedimentos from "../Pages/Procedimentos/Procedimentos";
 import Dentistas from "../Pages/Dentistas/Dentistas";
+import Agenda from "../Pages/Agenda/Agenda";
 import PrivateRoute from "./PrivateRoute";
+import Pacientes from "../Pages/Pacientes/pacientes";
 
 import AppLayout from "../layouts/AppLayout";
 
@@ -22,6 +24,8 @@ function AppRoutes() {
           <Route element={<AppLayout />}>
             <Route path="/procedimentos" element={<Procedimentos />} />
             <Route path="/dentistas" element={<Dentistas />} />
+            <Route path="/agenda" element={<Agenda />} />
+            <Route path="/pacientes" element={<Pacientes />} />
           </Route>
         </Route>
       </Routes>

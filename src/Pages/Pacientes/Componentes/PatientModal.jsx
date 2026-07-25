@@ -1,11 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  SPECIALTIES,
-  STATUS_OPTIONS,
-  EMPTY_FORM,
-  DAYS_OF_WEEK,
-  EMPTY_SCHEDULE,
-} from "../constants";
+import { GENDER_OPTIONS, EMPTY_PATIENT_FORM } from "../constants";
 import { API_URL, authHeaders } from "../../../utils/api";
 import {
   cleanDigits,
@@ -13,51 +7,25 @@ import {
   formatCpf,
   formatPhone,
 } from "../../../utils/masks";
-import DentistSchedules from "./DentistSchedules";
 
-export default function DentistModal({
-  open,
-  editDentist,
-  onClose,
-  onSaved,
-  token,
-}) {
-  const [form, setForm] = useState(EMPTY_FORM);
+export default function PatientModal({ open, editPatient, onClose, onSaved, token }) {
+  const [form, setForm] = useState(EMPTY_PATIENT_FORM);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [cepLookupError, setCepLookupError] = useState("");
-  const [fullCpf, setFullCpf] = useState(""); // só exibição, não editável
-  const [scheduleDraft, setScheduleDraft] = useState([]); // só usado na criação
-  const [newScheduleItem, setNewScheduleItem] = useState(EMPTY_SCHEDULE);
-  const [usedSpecialties, setUsedSpecialties] = useState([]);
-  const [newSpecialtyInput, setNewSpecialtyInput] = useState("");
-
-  // Sugestões = lista fixa (pontos de partida comuns) + o que a própria
-  // clínica já usou em outros dentistas, sem repetir.
-  const specialtySuggestions = Array.from(
-    new Set([...SPECIALTIES, ...usedSpecialties]),
-  ).sort();
-
-  useEffect(() => {
-    if (!open) return;
-    fetch(`${API_URL}/dentists/specialties`, { headers: authHeaders(token) })
-      .then((r) => r.json())
-      .then((data) => setUsedSpecialties(Array.isArray(data) ? data : []))
-      .catch(() => setUsedSpecialties([]));
-  }, [open, token]);
 
   useEffect(() => {
     if (!open) return;
     setErrors({});
 
-    if (editDentist) {
-      // Busca o detalhe completo: a linha da tabela só tem os campos da
-      // listagem (sem endereço). Sem isso, salvar sobrescreveria o
-      // endereço real com campos em branco.
+    if (editPatient) {
+      // Busca o detalhe completo: o item da lista só tem id/nome/telefone/e-mail
+      // (PatientResponseCard). Sem isso, salvar sobrescreveria endereço, CPF,
+      // data de nascimento etc. com campos em branco.
       setLoadingDetail(true);
-      fetch(`${API_URL}/dentists/${editDentist.id}`, {
+      fetch(`${API_URL}/patients/${editPatient.id}`, {
         headers: authHeaders(token),
       })
         .then((r) => {
@@ -69,10 +37,12 @@ export default function DentistModal({
             name: data.name,
             email: data.email,
             phone: formatPhone(data.phone ?? ""),
-            cpf: "",
-            cro: data.cro,
-            specialties: data.specialties ?? [],
-            status: data.status,
+            cpf: formatCpf(data.cpf ?? ""),
+            birth_date: data.birth_date ?? "",
+            gender: data.gender ?? "",
+            health_plan: data.health_plan ?? "",
+            profession: data.profession ?? "",
+            observations: data.observations ?? "",
             street: data.street,
             number: data.number,
             complement: data.complement ?? "",
@@ -81,35 +51,36 @@ export default function DentistModal({
             state: data.state,
             cep: formatCep(data.cep ?? ""),
           });
-          setFullCpf(data.cpf ?? "");
         })
-        .catch(() => setForm(EMPTY_FORM))
+        .catch(() => setForm(EMPTY_PATIENT_FORM))
         .finally(() => setLoadingDetail(false));
     } else {
-      setForm(EMPTY_FORM);
-      setFullCpf("");
-      setScheduleDraft([]);
-      setNewScheduleItem(EMPTY_SCHEDULE);
+      setForm(EMPTY_PATIENT_FORM);
     }
-  }, [open, editDentist, token]);
+  }, [open, editPatient, token]);
 
   function validate() {
     const e = {};
     const cleanPhone = cleanDigits(form.phone);
     const cleanCpf = cleanDigits(form.cpf);
+    const cleanCep = cleanDigits(form.cep);
 
     if (!form.name.trim()) e.name = "Campo obrigatório";
     if (!form.email.trim()) e.email = "Campo obrigatório";
     if (!cleanPhone) e.phone = "Campo obrigatório";
-    if (!editDentist && !cleanCpf) e.cpf = "Campo obrigatório";
-    if (!form.cro.trim()) e.cro = "Campo obrigatório";
-    if (form.specialties.length === 0)
-      e.specialties = "Selecione ao menos uma especialidade";
+    if (!cleanCpf) e.cpf = "Campo obrigatório";
+    if (!form.birth_date) e.birth_date = "Campo obrigatório";
+    else if (form.birth_date > new Date().toISOString().split("T")[0]) {
+      e.birth_date = "A data de nascimento não pode ser no futuro";
+    }
+    if (!form.gender) e.gender = "Campo obrigatório";
     if (!form.street.trim()) e.street = "Campo obrigatório";
     if (!form.number.trim()) e.number = "Campo obrigatório";
     if (!form.neighborhood.trim()) e.neighborhood = "Campo obrigatório";
     if (!form.city.trim()) e.city = "Campo obrigatório";
     if (!form.state.trim()) e.state = "Campo obrigatório";
+    if (!cleanCep) e.cep = "Campo obrigatório";
+
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -118,72 +89,55 @@ export default function DentistModal({
     if (!validate()) return;
     setLoading(true);
 
-    const cleanPhone = cleanDigits(form.phone);
-    const cleanCpf = cleanDigits(form.cpf);
-    const cleanCep = cleanDigits(form.cep);
-
     const body = {
       name: form.name.trim(),
       email: form.email.trim(),
-      phone: cleanPhone,
-      cro: form.cro.trim(),
-      specialties: form.specialties,
-      status: form.status,
+      phone: cleanDigits(form.phone),
+      cpf: cleanDigits(form.cpf),
+      birth_date: form.birth_date,
+      gender: form.gender,
+      observations: form.observations.trim() || null,
+      health_plan: form.health_plan.trim() || null,
+      profession: form.profession.trim() || null,
       street: form.street.trim(),
       number: form.number.trim(),
       complement: form.complement.trim() || null,
       neighborhood: form.neighborhood.trim(),
       city: form.city.trim(),
       state: form.state.trim(),
-      cep: cleanCep,
+      cep: cleanDigits(form.cep),
     };
-    // CPF só vai no corpo na criação — a rota de update não aceita trocar CPF.
-    if (!editDentist) {
-      body.cpf = cleanCpf;
-      // Horários também só vão junto na criação. Em edição, os horários
-      // já existem de forma independente e são gerenciados pelo painel
-      // DentistSchedules (cada ação lá já persiste na hora).
-      if (scheduleDraft.length > 0) {
-        body.schedules = scheduleDraft;
-      }
-    }
 
     try {
-      const url = editDentist
-        ? `${API_URL}/dentists/${editDentist.id}`
-        : `${API_URL}/dentists`;
-      const method = editDentist ? "PUT" : "POST";
+      const url = editPatient
+        ? `${API_URL}/patients/${editPatient.id}`
+        : `${API_URL}/patients`;
+      const method = editPatient ? "PUT" : "POST";
       const r = await fetch(url, {
         method,
-        headers: authHeaders(token),
+        headers: {
+          ...authHeaders(token),
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(body),
       });
+
       if (r.status === 409) {
+        setErrors({
+          cpf: "Já existe um paciente com esse CPF cadastrado nesta clínica",
+        });
+        return;
+      }
+      if (r.status === 422) {
         const errorBody = await r.json().catch(() => null);
-        const detail = String(
-          errorBody?.detail || errorBody?.message || "",
-        ).toLowerCase();
-
-        let duplicateField = "cro";
-        let duplicateMessage =
-          "Já existe um dentista com esse CRO nesta clínica";
-
-        if (detail.includes("cpf")) {
-          duplicateField = "cpf";
-          duplicateMessage = "Já existe um dentista com esse CPF nesta clínica";
-        } else if (detail.includes("cro")) {
-          duplicateField = "cro";
-          duplicateMessage = "Já existe um dentista com esse CRO nesta clínica";
-        } else if (!editDentist && detail.includes("dentista")) {
-          duplicateField = "cpf";
-          duplicateMessage = "Já existe um dentista com esse CPF nesta clínica";
-        }
-
-        setErrors({ [duplicateField]: duplicateMessage });
+        setErrors({
+          birth_date:
+            errorBody?.detail || "Verifique a data de nascimento informada",
+        });
         return;
       }
       if (!r.ok) throw new Error();
-      onSaved(editDentist ? "Dentista atualizado!" : "Dentista criado!");
+      onSaved(editPatient ? "Paciente atualizado!" : "Paciente criado!");
     } catch {
       onSaved(null);
     } finally {
@@ -242,81 +196,14 @@ export default function DentistModal({
     }
   }
 
-  function toggleSpecialty(spec) {
-    setForm((f) => ({
-      ...f,
-      specialties: f.specialties.includes(spec)
-        ? f.specialties.filter((s) => s !== spec)
-        : [...f.specialties, spec],
-    }));
-    setErrors((err) => ({ ...err, specialties: undefined }));
-  }
-
-  async function addCustomSpecialty() {
-    const value = newSpecialtyInput.trim();
-    if (!value) return;
-
-    const normalizedValue = value.toLowerCase();
-    const alreadyExists = [...form.specialties, ...usedSpecialties].some(
-      (s) => s.toLowerCase() === normalizedValue,
-    );
-
-    if (alreadyExists) {
-      setNewSpecialtyInput("");
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/dentists/specialties`, {
-        method: "POST",
-        headers: {
-          ...authHeaders(token),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name: value }),
-      });
-
-      const createdValue = response.ok
-        ? ((await response.json().catch(() => null))?.name ?? value)
-        : value;
-
-      setUsedSpecialties((prev) =>
-        Array.from(new Set([...prev, createdValue])),
-      );
-      setForm((f) => ({
-        ...f,
-        specialties: [...f.specialties, createdValue],
-      }));
-      setErrors((err) => ({ ...err, specialties: undefined }));
-    } catch {
-      setUsedSpecialties((prev) => Array.from(new Set([...prev, value])));
-      setForm((f) => ({
-        ...f,
-        specialties: [...f.specialties, value],
-      }));
-      setErrors((err) => ({ ...err, specialties: undefined }));
-    } finally {
-      setNewSpecialtyInput("");
-    }
-  }
-
-  function addScheduleDraft() {
-    setScheduleDraft((list) => [...list, newScheduleItem]);
-    setNewScheduleItem(EMPTY_SCHEDULE);
-  }
-
-  function removeScheduleDraft(index) {
-    setScheduleDraft((list) => list.filter((_, i) => i !== index));
-  }
-
-  const dayLabel = (v) => DAYS_OF_WEEK.find((d) => d.value === v)?.label ?? v;
+  const todayStr = new Date().toISOString().split("T")[0];
 
   return (
     <div className={`modal-overlay ${open ? "open" : ""}`}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-title">
-            {editDentist ? "Editar dentista" : "Novo dentista"}
+            {editPatient ? "Editar paciente" : "Novo paciente"}
           </div>
           <button className="btn-close" onClick={onClose}>
             ✕
@@ -324,7 +211,7 @@ export default function DentistModal({
         </div>
 
         {loadingDetail ? (
-          <div className="table-loading">Carregando dados do dentista...</div>
+          <div className="table-loading">Carregando dados do paciente...</div>
         ) : (
           <>
             <div className="form-row">
@@ -336,7 +223,7 @@ export default function DentistModal({
                   className={`form-input ${errors.name ? "input-error" : ""}`}
                   value={form.name}
                   onChange={set("name")}
-                  placeholder="Ex: Pedro Augusto da Silva"
+                  placeholder="Ex: João da Silva"
                 />
                 {errors.name && (
                   <span className="form-error">{errors.name}</span>
@@ -344,15 +231,18 @@ export default function DentistModal({
               </div>
               <div className="form-group">
                 <label className="form-label">
-                  CRO <span className="req">*</span>
+                  Data de nascimento <span className="req">*</span>
                 </label>
                 <input
-                  className={`form-input ${errors.cro ? "input-error" : ""}`}
-                  value={form.cro}
-                  onChange={set("cro")}
-                  placeholder="SP 123456"
+                  type="date"
+                  max={todayStr}
+                  className={`form-input ${errors.birth_date ? "input-error" : ""}`}
+                  value={form.birth_date}
+                  onChange={set("birth_date")}
                 />
-                {errors.cro && <span className="form-error">{errors.cro}</span>}
+                {errors.birth_date && (
+                  <span className="form-error">{errors.birth_date}</span>
+                )}
               </div>
             </div>
 
@@ -366,7 +256,7 @@ export default function DentistModal({
                   type="email"
                   value={form.email}
                   onChange={set("email")}
-                  placeholder="pedro.augusto@clinica.com"
+                  placeholder="joao@email.com"
                 />
                 {errors.email && (
                   <span className="form-error">{errors.email}</span>
@@ -380,7 +270,7 @@ export default function DentistModal({
                   className={`form-input ${errors.phone ? "input-error" : ""}`}
                   value={form.phone}
                   onChange={setMasked("phone", formatPhone)}
-                  placeholder="(11) 99988-1111"
+                  placeholder="(11) 99999-1111"
                   inputMode="numeric"
                 />
                 {errors.phone && (
@@ -389,15 +279,7 @@ export default function DentistModal({
               </div>
             </div>
 
-            {editDentist ? (
-              <div className="form-group">
-                <label className="form-label">CPF</label>
-                <input className="form-input" value={fullCpf} disabled />
-                <span className="form-hint">
-                  CPF não pode ser alterado após o cadastro
-                </span>
-              </div>
-            ) : (
+            <div className="form-row">
               <div className="form-group">
                 <label className="form-label">
                   CPF <span className="req">*</span>
@@ -411,78 +293,54 @@ export default function DentistModal({
                 />
                 {errors.cpf && <span className="form-error">{errors.cpf}</span>}
               </div>
-            )}
-
-            <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Status</label>
+                <label className="form-label">
+                  Gênero <span className="req">*</span>
+                </label>
                 <select
-                  className="filter-select"
-                  value={form.status}
-                  onChange={set("status")}
+                  className={`filter-select ${errors.gender ? "input-error" : ""}`}
+                  value={form.gender}
+                  onChange={set("gender")}
+                  style={{ width: "100%" }}
                 >
-                  {STATUS_OPTIONS.map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
+                  <option value="">Selecione...</option>
+                  {GENDER_OPTIONS.map((g) => (
+                    <option key={g.value} value={g.value}>
+                      {g.label}
                     </option>
                   ))}
                 </select>
+                {errors.gender && (
+                  <span className="form-error">{errors.gender}</span>
+                )}
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Convênio</label>
+                <input
+                  className="form-input"
+                  value={form.health_plan}
+                  onChange={set("health_plan")}
+                  placeholder="Ex: Amil Dental"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Profissão</label>
+                <input
+                  className="form-input"
+                  value={form.profession}
+                  onChange={set("profession")}
+                  placeholder="Ex: Professor"
+                />
               </div>
             </div>
 
             <div className="form-group">
               <label className="form-label">
-                Especialidades <span className="req">*</span>
+                CEP <span className="req">*</span>
               </label>
-              <div
-                className={`cat-grid ${errors.specialties ? "cat-error" : ""}`}
-              >
-                {specialtySuggestions.map((spec) => (
-                  <button
-                    key={spec}
-                    type="button"
-                    className={`cat-chip ${form.specialties.includes(spec) ? "selected" : ""}`}
-                    onClick={() => toggleSpecialty(spec)}
-                  >
-                    {spec}
-                  </button>
-                ))}
-              </div>
-              {errors.specialties && (
-                <span className="form-error">{errors.specialties}</span>
-              )}
-
-              <div className="specialty-add-row">
-                <input
-                  className="form-input"
-                  list="specialty-suggestions"
-                  value={newSpecialtyInput}
-                  onChange={(e) => setNewSpecialtyInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addCustomSpecialty();
-                    }
-                  }}
-                  placeholder="Não achou? Digite uma nova especialidade..."
-                />
-                <datalist id="specialty-suggestions">
-                  {specialtySuggestions.map((spec) => (
-                    <option key={spec} value={spec} />
-                  ))}
-                </datalist>
-                <button
-                  type="button"
-                  className="btn-cancel"
-                  onClick={addCustomSpecialty}
-                >
-                  + Adicionar
-                </button>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">CEP</label>
               <div className="specialty-add-row">
                 <input
                   className={`form-input ${errors.cep ? "input-error" : ""}`}
@@ -597,87 +455,24 @@ export default function DentistModal({
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Horários de atendimento</label>
-
-              {editDentist ? (
-                <DentistSchedules dentistId={editDentist.id} token={token} />
-              ) : (
-                <div className="schedule-manager">
-                  {scheduleDraft.length === 0 ? (
-                    <p className="form-hint">
-                      Nenhum horário adicionado ainda.
-                    </p>
-                  ) : (
-                    <ul className="schedule-list">
-                      {scheduleDraft.map((s, i) => (
-                        <li key={i} className="schedule-row">
-                          <span>
-                            {dayLabel(s.day_of_week)} · {s.time_begin} às{" "}
-                            {s.time_end}
-                          </span>
-                          <button
-                            type="button"
-                            className="btn-icon del"
-                            onClick={() => removeScheduleDraft(i)}
-                            title="Remover"
-                          >
-                            🗑️
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <div className="schedule-add-row">
-                    <select
-                      className="filter-select"
-                      value={newScheduleItem.day_of_week}
-                      onChange={(e) =>
-                        setNewScheduleItem((f) => ({
-                          ...f,
-                          day_of_week: Number(e.target.value),
-                        }))
-                      }
-                    >
-                      {DAYS_OF_WEEK.map((d) => (
-                        <option key={d.value} value={d.value}>
-                          {d.label}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="time"
-                      className="form-input"
-                      value={newScheduleItem.time_begin}
-                      onChange={(e) =>
-                        setNewScheduleItem((f) => ({
-                          ...f,
-                          time_begin: e.target.value,
-                        }))
-                      }
-                    />
-                    <span>às</span>
-                    <input
-                      type="time"
-                      className="form-input"
-                      value={newScheduleItem.time_end}
-                      onChange={(e) =>
-                        setNewScheduleItem((f) => ({
-                          ...f,
-                          time_end: e.target.value,
-                        }))
-                      }
-                    />
-                    <button
-                      type="button"
-                      className="btn-cancel"
-                      onClick={addScheduleDraft}
-                    >
-                      + Adicionar
-                    </button>
-                  </div>
-                </div>
-              )}
+            {/* Campo em destaque: funciona como uma anamnese simplificada —
+                detalhes do atendimento, condições de saúde, alergias etc. */}
+            <div className="form-group anamnesis-field">
+              <label className="form-label anamnesis-label">
+                <i className="ti ti-stethoscope" aria-hidden="true" />
+                Observações / Anamnese
+              </label>
+              <p className="anamnesis-hint">
+                Registre condições de saúde, alergias, medicamentos em uso ou
+                qualquer informação relevante para o atendimento.
+              </p>
+              <textarea
+                className="form-input anamnesis-textarea"
+                rows={5}
+                value={form.observations}
+                onChange={set("observations")}
+                placeholder="Ex: Paciente alérgico a penicilina, histórico de hipertensão, sensibilidade dentária..."
+              />
             </div>
 
             <div className="modal-footer">
