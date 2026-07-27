@@ -7,6 +7,7 @@ import Toast from "../../components/Toast/Toast";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import PatientModal from "./Componentes/PatientModal";
 import PatientDetailsPanel from "./Componentes/PatientDetailsPanel";
+import {formatPhone } from "../../utils/masks";
 
 const PAGE_SIZE = 6;
 
@@ -89,7 +90,7 @@ export default function Pacientes() {
 
   useEffect(() => {
     loadPatients(1, false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [token, debouncedSearch]);
 
   const loadDetail = useCallback(
@@ -191,7 +192,7 @@ export default function Pacientes() {
               <span className="search-icon">🔍</span>
               <input
                 className="search-input"
-                placeholder="Buscar por nome ou telefone..."
+                placeholder="Buscar por nome..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -223,7 +224,7 @@ export default function Pacientes() {
                       </div>
                       <div className="patient-list-info">
                         <div className="patient-name">{p.name}</div>
-                        <div className="patient-phone-sub">{p.phone}</div>
+                        <div className="patient-phone-sub">{formatPhone(p.phone)}</div>
                       </div>
                       <i
                         className="ti ti-chevron-right patient-list-chevron"

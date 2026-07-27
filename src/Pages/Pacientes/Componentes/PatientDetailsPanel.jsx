@@ -8,7 +8,7 @@ import {
   formatBirthDateDisplay,
   getMockPatientTimeline,
 } from "../constants";
-import { formatCpf } from "../../../utils/masks";
+import { formatCpf, formatPhone } from "../../../utils/masks";
 
 export default function PatientDetailsPanel({ patient, loading, onEdit, onDelete }) {
   const [tab, setTab] = useState("resumo");
@@ -61,7 +61,7 @@ export default function PatientDetailsPanel({ patient, loading, onEdit, onDelete
               </span>
               <span className="patient-meta-item">
                 <i className="ti ti-phone" aria-hidden="true" />
-                {patient.phone}
+                {formatPhone(patient.phone)}
               </span>
             </div>
 

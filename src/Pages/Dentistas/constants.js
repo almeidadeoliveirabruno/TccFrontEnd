@@ -22,16 +22,16 @@ export const SPECIALTY_COLORS = {
 
 // Chaves batem com o enum DentistStatus do backend (models/dentist.py)
 export const STATUS_OPTIONS = [
-  { value: "ativo", label: "Ativo" },
-  { value: "inativo", label: "Inativo" },
-  { value: "ferias", label: "Férias" },
-  { value: "afastado", label: "Afastado" },
+  { value: "Ativo", label: "Ativo" },
+  { value: "Inativo", label: "Inativo" },
+  { value: "Férias", label: "Férias" },
+  { value: "Afastado", label: "Afastado" },
 ];
 
 export const STATUS_COLORS = {
   ativo:    { bg: "#DCFCE7", color: "#15803D" },
   inativo:  { bg: "#FEE2E2", color: "#B91C1C" },
-  ferias:   { bg: "#DBEAFE", color: "#1D4ED8" },
+  férias:   { bg: "#DBEAFE", color: "#1D4ED8" },
   afastado: { bg: "#FEF3C7", color: "#92400E" },
 };
 

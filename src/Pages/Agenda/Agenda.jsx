@@ -59,7 +59,7 @@ export default function Agenda() {
     const params = new URLSearchParams({
       page: "1",
       page_size: "100",
-      status: "ativo",
+      status: "Ativo",
     });
     const r = await fetch(`${API_URL}/dentists?${params}`, {
       headers: authHeaders(token),
