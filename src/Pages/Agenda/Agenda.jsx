@@ -94,10 +94,20 @@ export default function Agenda() {
       const r = await fetch(`${API_URL}/appointments?${params}`, {
         headers: authHeaders(token),
       });
-      if (!r.ok) throw new Error();
+      // if (!r.ok) throw new Error();
+      // const data = await r.json();
+      // setAppointments(Array.isArray(data) ? data : []);
+      // const ids = [...new Set(data.map((a) => a.patient_id))];
+      // await loadPatientsIndex(ids);
       const data = await r.json();
-      setAppointments(Array.isArray(data) ? data : []);
-      const ids = [...new Set(data.map((a) => a.patient_id))];
+
+      const activeAppointments = Array.isArray(data)
+        ? data.filter((apt) => apt.status !== "cancelado")
+        : [];
+
+      setAppointments(activeAppointments);
+
+      const ids = [...new Set(activeAppointments.map((a) => a.patient_id))];
       await loadPatientsIndex(ids);
     } catch {
       showToast("Erro ao carregar agendamentos.", "error");

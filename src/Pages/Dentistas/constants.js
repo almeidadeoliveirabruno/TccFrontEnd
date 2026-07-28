@@ -29,10 +29,10 @@ export const STATUS_OPTIONS = [
 ];
 
 export const STATUS_COLORS = {
-  ativo:    { bg: "#DCFCE7", color: "#15803D" },
-  inativo:  { bg: "#FEE2E2", color: "#B91C1C" },
-  férias:   { bg: "#DBEAFE", color: "#1D4ED8" },
-  afastado: { bg: "#FEF3C7", color: "#92400E" },
+  Ativo:    { bg: "#DCFCE7", color: "#15803D" },
+  Inativo:  { bg: "#FEE2E2", color: "#B91C1C" },
+  Férias:   { bg: "#DBEAFE", color: "#1D4ED8" },
+  Afastado: { bg: "#FEF3C7", color: "#92400E" },
 };
 
 export function statusLabel(status) {

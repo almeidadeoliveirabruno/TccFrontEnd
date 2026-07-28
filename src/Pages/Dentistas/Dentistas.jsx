@@ -13,6 +13,8 @@ import Toast from "../../components/Toast/Toast";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import DentistModal from "./Componentes/DentistModal";
 import DentistDetailsModal from "./Componentes/DentistDetailsModal";
+import {formatPhone } from "../../utils/masks";
+
 
 const AVATAR_PALETTE = [
   "#0CB0C7",
@@ -92,8 +94,8 @@ export default function Dentistas() {
       setTotalPages(data.total_pages);
       setStats({
         total: data.statistics.total_dentists,
-        ativos: data.statistics.by_status?.ativo ?? 0,
-        inativos: data.statistics.by_status?.inativo ?? 0,
+        ativos: data.statistics.by_status?.Ativo ?? 0,
+        inativos: data.statistics.by_status?.Inativo ?? 0,
         specialties: data.statistics.unique_specialties,
       });
     } catch {
@@ -342,7 +344,7 @@ export default function Dentistas() {
                     <td>
                       <div className="contact-cell">
                         <span className="contact-line">
-                          <i className="ti ti-phone" aria-hidden="true" /> {d.phone}
+                          <i className="ti ti-phone" aria-hidden="true" /> {formatPhone(d.phone)}
                         </span>
                         <span className="contact-line">
                           <i className="ti ti-mail" aria-hidden="true" /> {d.email}

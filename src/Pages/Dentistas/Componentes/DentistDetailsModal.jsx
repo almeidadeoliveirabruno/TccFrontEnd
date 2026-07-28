@@ -4,6 +4,7 @@ import { API_URL, authHeaders } from "../../../utils/api";
 import { formatCpf } from "../../../utils/masks";
 import { SPECIALTY_COLORS, STATUS_COLORS, statusLabel } from "../constants";
 import DentistSchedules from "./DentistSchedules";
+import {formatPhone } from "../../../utils/masks";
 
 const AVATAR_PALETTE = [
   "#0CB0C7",
@@ -96,7 +97,7 @@ export default function DentistDetailsModal({ open, dentist, onClose, token }) {
                 <div className="dentist-detail-label">
                   <i className="ti ti-phone" aria-hidden="true" /> Contato
                 </div>
-                <div className="dentist-detail-value">{detail.phone}</div>
+                <div className="dentist-detail-value">{formatPhone(detail.phone)}</div>
                 <div className="dentist-detail-value">{detail.email}</div>
               </div>
 
