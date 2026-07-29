@@ -53,9 +53,6 @@ export default function DentistModal({
     setErrors({});
 
     if (editDentist) {
-      // Busca o detalhe completo: a linha da tabela só tem os campos da
-      // listagem (sem endereço). Sem isso, salvar sobrescreveria o
-      // endereço real com campos em branco.
       setLoadingDetail(true);
       fetch(`${API_URL}/dentists/${editDentist.id}`, {
         headers: authHeaders(token),
@@ -69,7 +66,7 @@ export default function DentistModal({
             name: data.name,
             email: data.email,
             phone: formatPhone(data.phone ?? ""),
-            cpf: "",
+            cpf: data.cpf,
             cro: data.cro,
             specialties: data.specialties ?? [],
             status: data.status,
@@ -392,7 +389,7 @@ export default function DentistModal({
             {editDentist ? (
               <div className="form-group">
                 <label className="form-label">CPF</label>
-                <input className="form-input" value={fullCpf} disabled />
+                <input className="form-input" value={fullCpf} />
                 <span className="form-hint">
                   CPF não pode ser alterado após o cadastro
                 </span>
