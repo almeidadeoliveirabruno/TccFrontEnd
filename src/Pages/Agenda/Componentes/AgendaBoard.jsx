@@ -1,8 +1,6 @@
 import { MessageCircle, CheckCircle2, Clock, XCircle } from "lucide-react";
 import {
   APPOINTMENT_STATUS,
-  DAY_END_HOUR,
-  DAY_START_HOUR,
   DENTIST_COLUMN_COLORS,
   getConfirmationUi,
   SLOT_HEIGHT_PX,
@@ -41,10 +39,11 @@ function AppointmentBlock({
   color,
   selected,
   onSelect,
+  dayStart,
 }) {
   const startMin = timeToMinutes(appointment.time_begin);
   const endMin = timeToMinutes(appointment.time_end);
-  const gridStart = DAY_START_HOUR * 60;
+  const gridStart = dayStart * 60;
   const top = ((startMin - gridStart) / SLOT_MINUTES) * SLOT_HEIGHT_PX;
   const height = Math.max(
     ((endMin - startMin) / SLOT_MINUTES) * SLOT_HEIGHT_PX - 4,
@@ -84,20 +83,23 @@ export default function AgendaBoard({
   selectedAppointmentId,
   onSelectAppointment,
   onEmptySlotClick,
+  selectedDentistId,
+  onSelectDentist,
+  dayStart,
+  dayEnd,
+  unavailableRanges = [],
+  onBlockedSlotClick,
 }) {
-  const totalSlots =
-    ((DAY_END_HOUR - DAY_START_HOUR) * 60) / SLOT_MINUTES;
+  const totalSlots = ((dayEnd - dayStart) * 60) / SLOT_MINUTES;
   const boardHeight = totalSlots * SLOT_HEIGHT_PX;
 
   const timeLabels = [];
-  for (let h = DAY_START_HOUR; h < DAY_END_HOUR; h += 1) {
-    timeLabels.push(minutesToTimeLabel(h * 60));
-  }
-
-  const byDentist = {};
-  for (const d of dentists) byDentist[d.id] = [];
-  for (const apt of appointments) {
-    if (byDentist[apt.dentist_id]) byDentist[apt.dentist_id].push(apt);
+  for (let h = dayStart; h < dayEnd; h += 1) {
+    const slotsFromStart = ((h * 60 - dayStart * 60) / SLOT_MINUTES);
+    timeLabels.push({
+      label: minutesToTimeLabel(h * 60),
+      top: slotsFromStart * SLOT_HEIGHT_PX,
+    });
   }
 
   if (dentists.length === 0) {
@@ -109,14 +111,48 @@ export default function AgendaBoard({
     );
   }
 
+  const activeDentist =
+    dentists.find((d) => d.id === selectedDentistId) ?? dentists[0];
+  const activeColor = dentistColor(activeDentist.name, DENTIST_COLUMN_COLORS);
+  const columnAppointments = appointments.filter(
+    (apt) => apt.dentist_id === activeDentist.id,
+  );
+
   return (
     <div className="agenda-board-wrap">
+      <div className="agenda-dentist-tabs" role="tablist" aria-label="Dentistas">
+        {dentists.map((dentist) => {
+          const color = dentistColor(dentist.name, DENTIST_COLUMN_COLORS);
+          const selected = dentist.id === activeDentist.id;
+          return (
+            <button
+              key={dentist.id}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              className={`agenda-dentist-tab ${selected ? "selected" : ""}`}
+              style={{ "--dentist-accent": color }}
+              onClick={() => onSelectDentist?.(dentist.id)}
+            >
+              <span className="agenda-dentist-tab-avatar" style={{ background: color }}>
+                {dentistInitials(dentist.name)}
+              </span>
+              <span className="agenda-dentist-tab-name">{dentist.name}</span>
+            </button>
+          );
+        })}
+      </div>
+
       <div className="agenda-board">
         <div className="agenda-time-col">
           <div className="agenda-col-header-spacer" />
           <div className="agenda-time-labels" style={{ height: boardHeight }}>
-            {timeLabels.map((label) => (
-              <span key={label} className="agenda-time-label">
+            {timeLabels.map(({ label, top }) => (
+              <span
+                key={label}
+                className="agenda-time-label"
+                style={{ top: `${top}px` }}
+              >
                 {label}
               </span>
             ))}
@@ -124,59 +160,75 @@ export default function AgendaBoard({
         </div>
 
         <div className="agenda-dentists-scroll">
-          {dentists.map((dentist) => {
-            const color = dentistColor(dentist.name, DENTIST_COLUMN_COLORS);
-            const columnAppointments = byDentist[dentist.id] ?? [];
-
-            return (
-              <div key={dentist.id} className="agenda-dentist-col">
-                <div className="agenda-dentist-header">
-                  <div
-                    className="agenda-dentist-avatar"
-                    style={{ background: color }}
-                  >
-                    {dentistInitials(dentist.name)}
-                  </div>
-                  <div>
-                    <strong>{dentist.name}</strong>
-                    <span>{(dentist.specialties ?? []).slice(0, 2).join(" · ") || "Odontologia"}</span>
-                  </div>
-                </div>
-
-                <div
-                  className="agenda-dentist-grid"
-                  style={{ height: boardHeight }}
-                  onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const y = e.clientY - rect.top;
-                    const slotIndex = Math.floor(y / SLOT_HEIGHT_PX);
-                    const minutes =
-                      DAY_START_HOUR * 60 + slotIndex * SLOT_MINUTES;
-                    if (minutes >= DAY_END_HOUR * 60) return;
-                    onEmptySlotClick?.({
-                      dentistId: dentist.id,
-                      timeBegin: minutesToTimeLabel(minutes),
-                    });
-                  }}
-                >
-                  {Array.from({ length: totalSlots }).map((_, i) => (
-                    <div key={i} className="agenda-grid-line" />
-                  ))}
-
-                  {columnAppointments.map((apt) => (
-                    <AppointmentBlock
-                      key={apt.id}
-                      appointment={apt}
-                      patientName={patientMap[apt.patient_id]?.name}
-                      color={color}
-                      selected={selectedAppointmentId === apt.id}
-                      onSelect={onSelectAppointment}
-                    />
-                  ))}
-                </div>
+          <div className="agenda-dentist-col agenda-dentist-col-single">
+            <div className="agenda-dentist-header">
+              <div className="agenda-dentist-avatar" style={{ background: activeColor }}>
+                {dentistInitials(activeDentist.name)}
               </div>
-            );
-          })}
+              <div>
+                <strong>{activeDentist.name}</strong>
+                <span>
+                  {(activeDentist.specialties ?? []).slice(0, 2).join(" · ") ||
+                    "Odontologia"}
+                </span>
+              </div>
+            </div>
+
+            <div
+              className="agenda-dentist-grid"
+              style={{ height: boardHeight }}
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+                const slotIndex = Math.floor(y / SLOT_HEIGHT_PX);
+                const minutes = dayStart * 60 + slotIndex * SLOT_MINUTES;
+                if (minutes >= dayEnd * 60) return;
+                const isUnavailable = unavailableRanges.some(
+                  (r) => minutes >= r.start && minutes < r.end,
+                );
+                if (isUnavailable) {
+                  onBlockedSlotClick?.();
+                  return;
+                }
+                onEmptySlotClick?.({
+                  dentistId: activeDentist.id,
+                  timeBegin: minutesToTimeLabel(minutes),
+                });
+              }}
+            >
+              {Array.from({ length: totalSlots }).map((_, i) => (
+                <div key={i} className="agenda-grid-line" />
+              ))}
+
+              {unavailableRanges.map((r, i) => {
+                const top = ((r.start - dayStart * 60) / SLOT_MINUTES) * SLOT_HEIGHT_PX;
+                const height = ((r.end - r.start) / SLOT_MINUTES) * SLOT_HEIGHT_PX;
+                return (
+                  <div
+                    key={i}
+                    className="agenda-unavailable-block"
+                    style={{ top: `${top}px`, height: `${height}px` }}
+                  >
+                    {height >= 34 && (
+                      <span className="agenda-unavailable-label">Fora do expediente</span>
+                    )}
+                  </div>
+                );
+              })}
+
+              {columnAppointments.map((apt) => (
+                <AppointmentBlock
+                  key={apt.id}
+                  appointment={apt}
+                  patientName={patientMap[apt.patient_id]?.name}
+                  color={activeColor}
+                  selected={selectedAppointmentId === apt.id}
+                  onSelect={onSelectAppointment}
+                  dayStart={dayStart}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -194,8 +246,12 @@ export default function AgendaBoard({
         <ConfirmationBadge
           appointment={{ status: "cancelado", confirmation_message_sent: true }}
         />
+        <span className="agenda-legend-unavailable">
+          <span className="agenda-legend-unavailable-swatch" />
+          Fora do expediente
+        </span>
         <span className="agenda-legend-hint">
-          Horário: {formatTimeShort(`${DAY_START_HOUR}:00`)} – {DAY_END_HOUR}:00 · clique em um horário vazio para agendar
+          Horário: {formatTimeShort(`${dayStart}:00`)} – {dayEnd}:00 · clique em um horário vazio para agendar
         </span>
       </div>
     </div>

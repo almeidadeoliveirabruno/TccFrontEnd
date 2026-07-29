@@ -1,7 +1,42 @@
-export const DAY_START_HOUR = 8;
-export const DAY_END_HOUR = 19;
+// Valores padrão usados até o usuário configurar um intervalo próprio em
+// "Configurações da agenda". O intervalo escolhido é salvo no localStorage.
+export const DEFAULT_DAY_START_HOUR = 8;
+export const DEFAULT_DAY_END_HOUR = 19;
+export const MIN_DAY_HOUR = 0;
+export const MAX_DAY_HOUR = 23;
+export const AGENDA_HOURS_STORAGE_KEY = "agenda:hours-range";
+
 export const SLOT_MINUTES = 30;
 export const SLOT_HEIGHT_PX = 52;
+
+export function loadAgendaHoursRange() {
+  try {
+    const raw = localStorage.getItem(AGENDA_HOURS_STORAGE_KEY);
+    if (!raw) return { start: DEFAULT_DAY_START_HOUR, end: DEFAULT_DAY_END_HOUR };
+    const parsed = JSON.parse(raw);
+    const start = Number(parsed.start);
+    const end = Number(parsed.end);
+    if (
+      Number.isFinite(start) &&
+      Number.isFinite(end) &&
+      start >= MIN_DAY_HOUR &&
+      end <= MAX_DAY_HOUR &&
+      start < end
+    ) {
+      return { start, end };
+    }
+  } catch {
+    // ignora e cai no padrão
+  }
+  return { start: DEFAULT_DAY_START_HOUR, end: DEFAULT_DAY_END_HOUR };
+}
+
+export function saveAgendaHoursRange(range) {
+  localStorage.setItem(AGENDA_HOURS_STORAGE_KEY, JSON.stringify(range));
+}
+
+/** Última coluna (dentista) selecionada na agenda, para lembrar entre visitas. */
+export const AGENDA_SELECTED_DENTIST_STORAGE_KEY = "agenda:selected-dentist";
 
 export const APPOINTMENT_STATUS = {
   agendado: {

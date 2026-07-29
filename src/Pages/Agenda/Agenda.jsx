@@ -14,8 +14,14 @@ import WeekDatePicker from "./Componentes/WeekDatePicker";
 import AgendaBoard from "./Componentes/AgendaBoard";
 import AppointmentDetailPanel from "./Componentes/AppointmentDetailPanel";
 import AppointmentModal from "./Componentes/AppointmentModal";
-import { getConfirmationUi } from "./constants";
-import { toISODate } from "./utils";
+import AgendaSettingsModal from "./Componentes/AgendaSettingsModal";
+import {
+  AGENDA_SELECTED_DENTIST_STORAGE_KEY,
+  getConfirmationUi,
+  loadAgendaHoursRange,
+  saveAgendaHoursRange,
+} from "./constants";
+import { computeUnavailableRanges, toBackendDayOfWeek, toISODate } from "./utils";
 
 export default function Agenda() {
   const { token } = useAuth();
@@ -30,6 +36,14 @@ export default function Agenda() {
   const [patientMap, setPatientMap] = useState({});
   const [loading, setLoading] = useState(true);
 
+  const [selectedDentistId, setSelectedDentistId] = useState(() => {
+    return localStorage.getItem(AGENDA_SELECTED_DENTIST_STORAGE_KEY) || null;
+  });
+
+  const [hoursRange, setHoursRange] = useState(() => loadAgendaHoursRange());
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [activeSchedules, setActiveSchedules] = useState([]);
+
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -40,7 +54,7 @@ export default function Agenda() {
 
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
-  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
 
   const [toast, setToast] = useState({
     visible: false,
@@ -87,6 +101,28 @@ export default function Agenda() {
     setPatientMap(map);
   }, [token]);
 
+  const loadDentistSchedules = useCallback(async (dentistId) => {
+    if (!dentistId) {
+      setActiveSchedules([]);
+      return;
+    }
+    try {
+      const r = await fetch(`${API_URL}/dentists/${dentistId}/schedules`, {
+        headers: authHeaders(token),
+      });
+      if (!r.ok) {
+        const body = await r.text().catch(() => "");
+        throw new Error(`HTTP ${r.status} ${body}`);
+      }
+      const data = await r.json();
+      console.log("Expediente carregado para dentist_id", dentistId, data);
+      setActiveSchedules(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Erro ao carregar expediente do dentista:", err);
+      setActiveSchedules([]);
+    }
+  }, [token]);
+
   const loadAppointments = useCallback(async () => {
     setLoading(true);
     try {
@@ -120,6 +156,38 @@ export default function Agenda() {
   useEffect(() => {
     loadDentists().catch(() => showToast("Erro ao carregar dentistas.", "error"));
   }, [loadDentists]);
+
+  useEffect(() => {
+    if (dentists.length === 0) return;
+    const stillValid = dentists.some((d) => d.id === selectedDentistId);
+    if (!stillValid) {
+      handleSelectDentist(dentists[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dentists]);
+
+  function handleSelectDentist(dentistId) {
+    setSelectedDentistId(dentistId);
+    localStorage.setItem(AGENDA_SELECTED_DENTIST_STORAGE_KEY, dentistId);
+  }
+
+  useEffect(() => {
+    loadDentistSchedules(selectedDentistId);
+  }, [selectedDentistId, loadDentistSchedules]);
+
+  const unavailableRanges = useMemo(() => {
+    return computeUnavailableRanges(
+      activeSchedules,
+      toBackendDayOfWeek(selectedDate.getDay()),
+      hoursRange.start * 60,
+      hoursRange.end * 60,
+    );
+  }, [activeSchedules, selectedDate, hoursRange]);
+
+  function handleSaveHoursRange(range) {
+    setHoursRange(range);
+    saveAgendaHoursRange(range);
+  }
 
   useEffect(() => {
     loadAppointments();
@@ -190,22 +258,27 @@ export default function Agenda() {
     setModalOpen(true);
   }
 
-  async function handleConfirmManual() {
+  async function updateAppointmentStatusRequest(id, newStatus) {
+    const r = await fetch(`${API_URL}/appointments/${id}/status`, {
+      method: "PATCH",
+      headers: authHeaders(token),
+      body: JSON.stringify({ status: newStatus }),
+    });
+    if (!r.ok) throw new Error();
+  }
+
+  async function handleStatusChange(newStatus) {
     if (!detail) return;
-    setConfirmLoading(true);
+    setStatusUpdateLoading(true);
     try {
-      const r = await fetch(`${API_URL}/appointments/${detail.id}/confirm`, {
-        method: "PATCH",
-        headers: authHeaders(token),
-      });
-      if (!r.ok) throw new Error();
-      showToast("Consulta marcada como confirmada.");
+      await updateAppointmentStatusRequest(detail.id, newStatus);
+      showToast("Status do agendamento atualizado.");
       await loadAppointments();
       await loadDetail(detail.id);
     } catch {
-      showToast("Não foi possível confirmar.", "error");
+      showToast("Não foi possível atualizar o status.", "error");
     } finally {
-      setConfirmLoading(false);
+      setStatusUpdateLoading(false);
     }
   }
 
@@ -213,12 +286,7 @@ export default function Agenda() {
     if (!detail) return;
     setCancelLoading(true);
     try {
-      const r = await fetch(`${API_URL}/appointments/${detail.id}/status`, {
-        method: "PATCH",
-        headers: authHeaders(token),
-        body: JSON.stringify({ status: "cancelado" }),
-      });
-      if (!r.ok) throw new Error();
+      await updateAppointmentStatusRequest(detail.id, "cancelado");
       showToast("Agendamento cancelado.");
       setCancelOpen(false);
       await loadAppointments();
@@ -241,15 +309,14 @@ export default function Agenda() {
         <div>
           <h1 className="agenda-title">Agenda</h1>
           <p className="agenda-subtitle">
-            Visualize todos os dentistas e gerencie os agendamentos da clínica.
+            Selecione um dentista e gerencie os agendamentos da clínica.
           </p>
         </div>
         <div className="agenda-header-actions">
           <button
             type="button"
             className="agenda-btn-ghost"
-            disabled
-            title="Em breve"
+            onClick={() => setSettingsOpen(true)}
           >
             Configurações da agenda
           </button>
@@ -258,8 +325,6 @@ export default function Agenda() {
           </button>
         </div>
       </header>
-
-      <WeekDatePicker selectedDate={selectedDate} onChangeDate={setSelectedDate} />
 
       <div className="stats-grid agenda-stats">
         <div className="stat-card">
@@ -300,9 +365,11 @@ export default function Agenda() {
             <span className="stat-label">Dentistas</span>
           </div>
           <div className="stat-value">{stats.dentists}</div>
-          <div className="stat-sub">colunas na grade · {stats.pendingMsg} sem envio</div>
+          <div className="stat-sub">ativos na clínica · {stats.pendingMsg} sem envio</div>
         </div>
       </div>
+
+      <WeekDatePicker selectedDate={selectedDate} onChangeDate={setSelectedDate} />
 
       <div className="agenda-main">
         <div className="agenda-board-panel">
@@ -316,6 +383,14 @@ export default function Agenda() {
               selectedAppointmentId={selectedCardId}
               onSelectAppointment={handleSelectAppointment}
               onEmptySlotClick={(slot) => openCreate(slot)}
+              selectedDentistId={selectedDentistId}
+              onSelectDentist={handleSelectDentist}
+              dayStart={hoursRange.start}
+              dayEnd={hoursRange.end}
+              unavailableRanges={unavailableRanges}
+              onBlockedSlotClick={() =>
+                showToast("Esse horário está fora do expediente do dentista.", "error")
+              }
             />
           )}
         </div>
@@ -331,8 +406,8 @@ export default function Agenda() {
           }}
           onEdit={openEditFromPanel}
           onCancel={() => setCancelOpen(true)}
-          onConfirmManual={handleConfirmManual}
-          confirmLoading={confirmLoading}
+          onStatusChange={handleStatusChange}
+          statusUpdateLoading={statusUpdateLoading}
           cancelLoading={cancelLoading}
         />
       </div>
@@ -360,6 +435,13 @@ export default function Agenda() {
         loading={cancelLoading}
         onConfirm={handleCancelConfirm}
         onCancel={() => setCancelOpen(false)}
+      />
+
+      <AgendaSettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        range={hoursRange}
+        onSave={handleSaveHoursRange}
       />
 
       <Toast visible={toast.visible} message={toast.message} type={toast.type} />

@@ -1,10 +1,42 @@
-import { X, MessageCircleOff, Pencil, Ban } from "lucide-react";
+import {
+  X,
+  MessageCircleOff,
+  Pencil,
+  Ban,
+  CheckCircle2,
+  UserX,
+  RotateCcw,
+} from "lucide-react";
 import {
   APPOINTMENT_STATUS,
   getConfirmationUi,
 } from "../constants";
 import { formatLongDate, formatTimeShort } from "../utils";
 import { ConfirmationBadge } from "./AgendaBoard";
+
+// Para cada status atual, quais transições fazem sentido oferecer e com
+// qual rótulo/ícone. O primeiro item de cada lista vira o botão "primary".
+const STATUS_ACTIONS = {
+  agendado: [
+    { status: "confirmado", label: "Marcar como confirmado", icon: CheckCircle2 },
+    { status: "realizado", label: "Marcar como realizado", icon: CheckCircle2 },
+    { status: "faltou", label: "Marcar que o paciente faltou", icon: UserX },
+  ],
+  confirmado: [
+    { status: "realizado", label: "Marcar como realizado", icon: CheckCircle2 },
+    { status: "faltou", label: "Marcar que o paciente faltou", icon: UserX },
+    { status: "agendado", label: "Voltar para agendado", icon: RotateCcw },
+  ],
+  realizado: [
+    { status: "agendado", label: "Voltar para agendado", icon: RotateCcw },
+  ],
+  faltou: [
+    { status: "agendado", label: "Voltar para agendado", icon: RotateCcw },
+  ],
+  cancelado: [
+    { status: "agendado", label: "Reabrir agendamento", icon: RotateCcw },
+  ],
+};
 
 export default function AppointmentDetailPanel({
   detail,
@@ -14,8 +46,8 @@ export default function AppointmentDetailPanel({
   onClose,
   onEdit,
   onCancel,
-  onConfirmManual,
-  confirmLoading,
+  onStatusChange,
+  statusUpdateLoading,
   cancelLoading,
 }) {
   const statusStyle =
@@ -26,6 +58,8 @@ export default function AppointmentDetailPanel({
       const name = p.procedure?.name ?? "Procedimento";
       return p.tooth ? `${name} (dente ${p.tooth})` : name;
     }) ?? [];
+
+  const nextActions = detail ? STATUS_ACTIONS[detail.status] ?? [] : [];
 
   return (
     <aside className="agenda-detail-panel open">
@@ -129,16 +163,23 @@ export default function AppointmentDetailPanel({
               <Pencil size={16} />
               Editar agendamento
             </button>
-            {detail.status !== "confirmado" && detail.status !== "cancelado" ? (
-              <button
-                type="button"
-                className="agenda-action-btn primary"
-                onClick={onConfirmManual}
-                disabled={confirmLoading}
-              >
-                {confirmLoading ? "Salvando..." : "Marcar como confirmado"}
-              </button>
-            ) : null}
+
+            {nextActions.map((action, i) => {
+              const Icon = action.icon;
+              return (
+                <button
+                  key={action.status}
+                  type="button"
+                  className={`agenda-action-btn ${i === 0 ? "primary" : ""}`}
+                  onClick={() => onStatusChange(action.status)}
+                  disabled={statusUpdateLoading}
+                >
+                  <Icon size={16} />
+                  {statusUpdateLoading ? "Salvando..." : action.label}
+                </button>
+              );
+            })}
+
             {detail.status !== "cancelado" ? (
               <button
                 type="button"
