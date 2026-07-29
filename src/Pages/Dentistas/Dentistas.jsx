@@ -13,7 +13,7 @@ import Toast from "../../components/Toast/Toast";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import DentistModal from "./Componentes/DentistModal";
 import DentistDetailsModal from "./Componentes/DentistDetailsModal";
-import {formatPhone } from "../../utils/masks";
+import {formatPhone} from "../../utils/masks";
 
 
 const AVATAR_PALETTE = [

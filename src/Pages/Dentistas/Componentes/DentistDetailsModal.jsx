@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import "../Dentistas.css";
 import { API_URL, authHeaders } from "../../../utils/api";
-import { formatCpf } from "../../../utils/masks";
 import { SPECIALTY_COLORS, STATUS_COLORS, statusLabel } from "../constants";
 import DentistSchedules from "./DentistSchedules";
-import {formatPhone } from "../../../utils/masks";
+import {formatPhone, formatCpf } from "../../../utils/masks";
 
 const AVATAR_PALETTE = [
   "#0CB0C7",

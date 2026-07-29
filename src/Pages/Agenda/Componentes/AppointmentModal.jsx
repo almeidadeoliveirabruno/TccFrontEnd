@@ -3,6 +3,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { API_URL, authHeaders } from "../../../utils/api";
 import { toISODate } from "../utils";
 
+
 const EMPTY_PROCEDURE = { procedure_id: "", tooth: "" };
 
 export default function AppointmentModal({
