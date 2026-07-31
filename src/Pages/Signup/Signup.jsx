@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { signup } from "../../Services/auth";
+import logo from "../../assets/Logo_Alternativa.png";
 import "./Signup.css";
 
 function validarCNPJ(cnpj) {
@@ -167,14 +168,11 @@ function Signup() {
 
                 <div className="signup-left">
 
-                    <svg width="160" height="160" viewBox="0 0 140 140">
-                        <path
-                            d="M70 18 C45 18 28 36 30 58 C31 70 34 80 36 92 C38 104 40 118 48 118 C54 118 56 108 60 98 C62 92 65 88 70 88 C75 88 78 92 80 98 C84 108 86 118 92 118 C100 118 102 104 104 92 C106 80 109 70 110 58 C112 36 95 18 70 18 Z"
-                            fill="none"
-                            stroke="#1daa7a"
-                            strokeWidth="7"
-                        />
-                    </svg>
+                    <img
+                        src={logo}
+                        alt="Logo alternativa"
+                        className="signup-logo"
+                    />
 
                     <div className="brand-name">
                         Odonto<span>Link</span>

@@ -28,14 +28,12 @@ export default function DentistModal({
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [cepLookupError, setCepLookupError] = useState("");
-  const [fullCpf, setFullCpf] = useState(""); // só exibição, não editável
   const [scheduleDraft, setScheduleDraft] = useState([]); // só usado na criação
   const [newScheduleItem, setNewScheduleItem] = useState(EMPTY_SCHEDULE);
   const [usedSpecialties, setUsedSpecialties] = useState([]);
   const [newSpecialtyInput, setNewSpecialtyInput] = useState("");
 
-  // Sugestões = lista fixa (pontos de partida comuns) + o que a própria
-  // clínica já usou em outros dentistas, sem repetir.
+  // Sugestões = lista fixa + as já usadas na clínica, sem repetir
   const specialtySuggestions = Array.from(
     new Set([...SPECIALTIES, ...usedSpecialties]),
   ).sort();
@@ -66,7 +64,7 @@ export default function DentistModal({
             name: data.name,
             email: data.email,
             phone: formatPhone(data.phone ?? ""),
-            cpf: data.cpf,
+            cpf: data.cpf || "",          
             cro: data.cro,
             specialties: data.specialties ?? [],
             status: data.status,
@@ -78,13 +76,11 @@ export default function DentistModal({
             state: data.state,
             cep: formatCep(data.cep ?? ""),
           });
-          setFullCpf(data.cpf ?? "");
         })
         .catch(() => setForm(EMPTY_FORM))
         .finally(() => setLoadingDetail(false));
     } else {
       setForm(EMPTY_FORM);
-      setFullCpf("");
       setScheduleDraft([]);
       setNewScheduleItem(EMPTY_SCHEDULE);
     }
@@ -98,7 +94,7 @@ export default function DentistModal({
     if (!form.name.trim()) e.name = "Campo obrigatório";
     if (!form.email.trim()) e.email = "Campo obrigatório";
     if (!cleanPhone) e.phone = "Campo obrigatório";
-    if (!editDentist && !cleanCpf) e.cpf = "Campo obrigatório";
+    if (!cleanCpf) e.cpf = "Campo obrigatório"; // CPF obrigatório sempre
     if (!form.cro.trim()) e.cro = "Campo obrigatório";
     if (form.specialties.length === 0)
       e.specialties = "Selecione ao menos uma especialidade";
@@ -133,16 +129,12 @@ export default function DentistModal({
       city: form.city.trim(),
       state: form.state.trim(),
       cep: cleanCep,
+      cpf: cleanCpf, 
     };
-    // CPF só vai no corpo na criação — a rota de update não aceita trocar CPF.
-    if (!editDentist) {
-      body.cpf = cleanCpf;
-      // Horários também só vão junto na criação. Em edição, os horários
-      // já existem de forma independente e são gerenciados pelo painel
-      // DentistSchedules (cada ação lá já persiste na hora).
-      if (scheduleDraft.length > 0) {
-        body.schedules = scheduleDraft;
-      }
+
+    // Horários só vão na criação
+    if (!editDentist && scheduleDraft.length > 0) {
+      body.schedules = scheduleDraft;
     }
 
     try {
@@ -158,20 +150,24 @@ export default function DentistModal({
       if (r.status === 409) {
         const errorBody = await r.json().catch(() => null);
         const detail = String(
-          errorBody?.detail || errorBody?.message || "",
+          errorBody?.detail || errorBody?.message || ""
         ).toLowerCase();
 
         let duplicateField = "cro";
-        let duplicateMessage =
-          "Já existe um dentista com esse CRO nesta clínica";
+        let duplicateMessage = "Já existe um dentista com esse CRO nesta clínica";
 
+        // Detecção mais confiável
         if (detail.includes("cpf")) {
           duplicateField = "cpf";
           duplicateMessage = "Já existe um dentista com esse CPF nesta clínica";
         } else if (detail.includes("cro")) {
           duplicateField = "cro";
           duplicateMessage = "Já existe um dentista com esse CRO nesta clínica";
+        } else if (detail.includes("e‑mail") || detail.includes("e-mail") || detail.includes("email")) {
+          duplicateField = "email";
+          duplicateMessage = "Já existe um dentista com esse e‑mail nesta clínica";
         } else if (!editDentist && detail.includes("dentista")) {
+          // fallback para criação (caso a mensagem não especifique o campo)
           duplicateField = "cpf";
           duplicateMessage = "Já existe um dentista com esse CPF nesta clínica";
         }
@@ -386,29 +382,20 @@ export default function DentistModal({
               </div>
             </div>
 
-            {editDentist ? (
-              <div className="form-group">
-                <label className="form-label">CPF</label>
-                <input className="form-input" value={fullCpf} />
-                <span className="form-hint">
-                  CPF não pode ser alterado após o cadastro
-                </span>
-              </div>
-            ) : (
-              <div className="form-group">
-                <label className="form-label">
-                  CPF <span className="req">*</span>
-                </label>
-                <input
-                  className={`form-input ${errors.cpf ? "input-error" : ""}`}
-                  value={form.cpf}
-                  onChange={setMasked("cpf", formatCpf)}
-                  placeholder="000.000.000-00"
-                  inputMode="numeric"
-                />
-                {errors.cpf && <span className="form-error">{errors.cpf}</span>}
-              </div>
-            )}
+            {/* Campo CPF - sempre editável e obrigatório */}
+            <div className="form-group">
+              <label className="form-label">
+                CPF <span className="req">*</span>
+              </label>
+              <input
+                className={`form-input ${errors.cpf ? "input-error" : ""}`}
+                value={form.cpf}
+                onChange={setMasked("cpf", formatCpf)}
+                placeholder="000.000.000-00"
+                inputMode="numeric"
+              />
+              {errors.cpf && <span className="form-error">{errors.cpf}</span>}
+            </div>
 
             <div className="form-row">
               <div className="form-group">

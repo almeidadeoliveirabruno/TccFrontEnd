@@ -9,6 +9,7 @@ import PrivateRoute from "./PrivateRoute";
 import Pacientes from "../Pages/Pacientes/pacientes";
 
 import AppLayout from "../layouts/AppLayout";
+import Atendimentos from "../Pages/Atendimentos/Atendimentos";
 
 function AppRoutes() {
   return (
@@ -26,6 +27,7 @@ function AppRoutes() {
             <Route path="/dentistas" element={<Dentistas />} />
             <Route path="/agenda" element={<Agenda />} />
             <Route path="/pacientes" element={<Pacientes />} />
+            <Route path= "/Atendimentos" element={<Atendimentos/>}/>
           </Route>
         </Route>
       </Routes>

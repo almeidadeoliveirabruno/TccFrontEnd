@@ -13,25 +13,26 @@ import {
 } from "../constants";
 import { formatLongDate, formatTimeShort } from "../utils";
 import { ConfirmationBadge } from "./AgendaBoard";
+import {formatPhone} from "../../../utils/masks";
 
 // Para cada status atual, quais transições fazem sentido oferecer e com
-// qual rótulo/ícone. O primeiro item de cada lista vira o botão "primary".
+// qual rótulo/ícone. O primeiro item de cada lista vira o chip "primary".
 const STATUS_ACTIONS = {
   agendado: [
-    { status: "confirmado", label: "Marcar como confirmado", icon: CheckCircle2 },
-    { status: "realizado", label: "Marcar como realizado", icon: CheckCircle2 },
-    { status: "faltou", label: "Marcar que o paciente faltou", icon: UserX },
+    { status: "confirmado", label: "Confirmar", icon: CheckCircle2 },
+    { status: "realizado", label: "Realizado", icon: CheckCircle2 },
+    { status: "faltou", label: "Faltou", icon: UserX },
   ],
   confirmado: [
-    { status: "realizado", label: "Marcar como realizado", icon: CheckCircle2 },
-    { status: "faltou", label: "Marcar que o paciente faltou", icon: UserX },
-    { status: "agendado", label: "Voltar para agendado", icon: RotateCcw },
+    { status: "realizado", label: "Realizado", icon: CheckCircle2 },
+    { status: "faltou", label: "Faltou", icon: UserX },
+    { status: "agendado", label: "Voltar p/ agendado", icon: RotateCcw },
   ],
   realizado: [
-    { status: "agendado", label: "Voltar para agendado", icon: RotateCcw },
+    { status: "agendado", label: "Voltar p/ agendado", icon: RotateCcw },
   ],
   faltou: [
-    { status: "agendado", label: "Voltar para agendado", icon: RotateCcw },
+    { status: "agendado", label: "Voltar p/ agendado", icon: RotateCcw },
   ],
   cancelado: [
     { status: "agendado", label: "Reabrir agendamento", icon: RotateCcw },
@@ -87,7 +88,7 @@ export default function AppointmentDetailPanel({
               </div>
               <div>
                 <dt>Telefone</dt>
-                <dd>{patient?.phone ?? "—"}</dd>
+                <dd>{patient?.phone ? formatPhone(patient.phone) : "—"}</dd>
               </div>
               <div>
                 <dt>Data</dt>
@@ -107,7 +108,7 @@ export default function AppointmentDetailPanel({
                 <dt>Procedimento(s)</dt>
                 <dd>{procedures.join(", ") || "—"}</dd>
               </div>
-              <div>
+              <div className="full">
                 <dt>Status da consulta</dt>
                 <dd>
                   <span
@@ -120,6 +121,26 @@ export default function AppointmentDetailPanel({
                     {statusStyle.label}
                   </span>
                 </dd>
+                {nextActions.length > 0 && (
+                  <div className="agenda-status-actions">
+                    {nextActions.map((action, i) => {
+                      const Icon = action.icon;
+                      return (
+                        <button
+                          key={action.status}
+                          type="button"
+                          className={`agenda-status-chip ${i === 0 ? "primary" : ""}`}
+                          onClick={() => onStatusChange(action.status)}
+                          disabled={statusUpdateLoading}
+                          title={action.label}
+                        >
+                          <Icon size={13} />
+                          {statusUpdateLoading ? "Salvando..." : action.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               {detail.notes ? (
                 <div className="full">
@@ -137,6 +158,14 @@ export default function AppointmentDetailPanel({
                 <strong>Confirmação com o paciente</strong>
                 <p>{confirmation.label}</p>
               </div>
+              <button
+                type="button"
+                className="agenda-whatsapp-resend-btn"
+                disabled
+                title="Integração WhatsApp em desenvolvimento"
+              >
+                Reenviar
+              </button>
             </div>
             <ConfirmationBadge appointment={detail} />
             <p className="agenda-detail-whatsapp-note">
@@ -149,36 +178,12 @@ export default function AppointmentDetailPanel({
             <button
               type="button"
               className="agenda-action-btn"
-              disabled
-              title="Integração WhatsApp em desenvolvimento"
-            >
-              Reenviar mensagem
-            </button>
-            <button
-              type="button"
-              className="agenda-action-btn"
               onClick={onEdit}
               disabled={detail.status === "cancelado"}
             >
               <Pencil size={16} />
               Editar agendamento
             </button>
-
-            {nextActions.map((action, i) => {
-              const Icon = action.icon;
-              return (
-                <button
-                  key={action.status}
-                  type="button"
-                  className={`agenda-action-btn ${i === 0 ? "primary" : ""}`}
-                  onClick={() => onStatusChange(action.status)}
-                  disabled={statusUpdateLoading}
-                >
-                  <Icon size={16} />
-                  {statusUpdateLoading ? "Salvando..." : action.label}
-                </button>
-              );
-            })}
 
             {detail.status !== "cancelado" ? (
               <button
