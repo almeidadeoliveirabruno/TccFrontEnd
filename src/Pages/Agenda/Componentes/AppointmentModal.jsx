@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { API_URL, authHeaders } from "../../../utils/api";
 import { toISODate } from "../utils";
+import {formatPhone} from "../../../utils/masks";
 
 
 const EMPTY_PROCEDURE = { procedure_id: "", tooth: "" };
@@ -360,7 +361,7 @@ export default function AppointmentModal({
                 </option>
                 {patients.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} · {p.phone}
+                    {p.name} · {formatPhone(p.phone)}
                   </option>
                 ))}
               </select>

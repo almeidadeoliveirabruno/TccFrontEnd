@@ -6,13 +6,57 @@ import {
   genderIcon,
   calculateAge,
   formatBirthDateDisplay,
-  getMockPatientTimeline,
 } from "../constants";
 import { formatCpf, formatPhone } from "../../../utils/masks";
 
-export default function PatientDetailsPanel({ patient, loading, onEdit, onDelete }) {
+function formatConsultDate(dateStr) {
+  if (!dateStr) return "";
+  const [y, m, d] = dateStr.split("-");
+  if (!y || !m || !d) return dateStr;
+  return `${d}/${m}/${y}`;
+}
+
+// Notação FDI: sempre 2 dígitos numéricos, quadrante 1-8 e posição 1-8
+// (1-4 dentição permanente, 5-8 dentição decídua).
+function isValidFdiTooth(value) {
+  return /^[1-8][1-8]$/.test(value);
+}
+
+export default function PatientDetailsPanel({
+  patient,
+  summary,
+  history,
+  loading,
+  loadingHistory,
+  onLoadHistory,
+  onUpdateProcedureTooth,
+  onEdit,
+  onDelete,
+}) {
   const [tab, setTab] = useState("resumo");
   const [menuOpen, setMenuOpen] = useState(false);
+  // { key, value, saving, error } do procedimento sendo editado no histórico
+  const [editingProc, setEditingProc] = useState(null);
+
+  async function handleSaveTooth(procedureId, key) {
+    const value = editingProc?.value ?? "";
+
+    if (value !== "" && !isValidFdiTooth(value)) {
+      setEditingProc((prev) => ({
+        ...prev,
+        error: "Dente inválido. Use notação FDI: 2 dígitos, ex. 11, 36.",
+      }));
+      return;
+    }
+
+    setEditingProc((prev) => ({ ...prev, saving: true, error: null }));
+    const ok = await onUpdateProcedureTooth(procedureId, value === "" ? null : value);
+    if (ok) {
+      setEditingProc(null);
+    } else {
+      setEditingProc((prev) => (prev && prev.key === key ? { ...prev, saving: false } : prev));
+    }
+  }
 
   if (loading) {
     return (
@@ -33,8 +77,9 @@ export default function PatientDetailsPanel({ patient, loading, onEdit, onDelete
     );
   }
 
-  const timeline = getMockPatientTimeline(patient.id);
   const age = calculateAge(patient.birth_date);
+  const lastConsult = summary?.last_consult;
+  const nextConsult = summary?.next_consult;
 
   return (
     <div className="patient-detail-panel">
@@ -117,7 +162,10 @@ export default function PatientDetailsPanel({ patient, loading, onEdit, onDelete
         </button>
         <button
           className={`patient-tab-btn ${tab === "historico" ? "active" : ""}`}
-          onClick={() => setTab("historico")}
+          onClick={() => {
+            setTab("historico");
+            onLoadHistory();
+          }}
         >
           Histórico
         </button>
@@ -132,8 +180,16 @@ export default function PatientDetailsPanel({ patient, loading, onEdit, onDelete
               </div>
               <div>
                 <div className="patient-info-label">Última consulta</div>
-                <div className="patient-info-value">{timeline.lastConsult.date}</div>
-                <div className="patient-info-sub">{timeline.lastConsult.title}</div>
+                {lastConsult ? (
+                  <>
+                    <div className="patient-info-value">
+                      {formatConsultDate(lastConsult.date)}
+                    </div>
+                    <div className="patient-info-sub">{lastConsult.dentist}</div>
+                  </>
+                ) : (
+                  <div className="patient-info-value">Nenhuma consulta realizada</div>
+                )}
               </div>
             </div>
 
@@ -143,16 +199,19 @@ export default function PatientDetailsPanel({ patient, loading, onEdit, onDelete
               </div>
               <div>
                 <div className="patient-info-label">Próxima consulta</div>
-                <div className="patient-info-value">
-                  {timeline.nextConsult.date} · {timeline.nextConsult.time}
-                </div>
-                <div className="patient-info-sub">{timeline.nextConsult.dentist}</div>
+                {nextConsult ? (
+                  <>
+                    <div className="patient-info-value">
+                      {formatConsultDate(nextConsult.date)} · {nextConsult.time_begin}
+                    </div>
+                    <div className="patient-info-sub">{nextConsult.dentist}</div>
+                  </>
+                ) : (
+                  <div className="patient-info-value">Nenhuma consulta agendada</div>
+                )}
               </div>
             </div>
           </div>
-          <p className="patient-mock-note">
-            Dados de consulta ilustrativos — em breve integrados à agenda.
-          </p>
 
           <div className="patient-anamnesis-card">
             <div className="patient-anamnesis-label">
@@ -168,22 +227,101 @@ export default function PatientDetailsPanel({ patient, loading, onEdit, onDelete
         </>
       ) : (
         <div className="patient-history-card">
-          <ul className="patient-history-list">
-            {timeline.history.map((item) => (
-              <li key={item.id} className="patient-history-item">
-                <span className="patient-history-dot" />
-                <div>
-                  <div className="patient-history-date">
-                    {item.date} · {item.title}
+          {loadingHistory ? (
+            <div className="table-loading">Carregando histórico...</div>
+          ) : !history || history.length === 0 ? (
+            <p className="patient-mock-note">Nenhum histórico encontrado.</p>
+          ) : (
+            <ul className="patient-history-list">
+              {history.map((item) => (
+                <li key={item.appointment_id} className="patient-history-item">
+                  <span className="patient-history-dot" />
+                  <div>
+                    <div className="patient-history-date">
+                      {formatConsultDate(item.date)} · {item.time_begin}
+                    </div>
+                    <div className="patient-history-dentist">{item.dentist}</div>
+                    {item.procedures?.length > 0 && (
+                      <ul className="patient-history-procedures">
+                        {item.procedures.map((proc) => {
+                          const key = `${item.appointment_id}-${proc.id}`;
+                          const isEditing = editingProc?.key === key;
+
+                          return (
+                            <li key={proc.id} className="patient-procedure-item">
+                              {isEditing ? (
+                                <span className="patient-procedure-edit">
+                                  <span>{proc.name}</span>
+                                  <input
+                                    className="patient-procedure-tooth-input"
+                                    value={editingProc.value}
+                                    maxLength={2}
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    placeholder="—"
+                                    autoFocus
+                                    disabled={editingProc.saving}
+                                    onChange={(e) => {
+                                      const digits = e.target.value.replace(/\D/g, "").slice(0, 2);
+                                      setEditingProc((prev) => ({ ...prev, value: digits, error: null }));
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") handleSaveTooth(proc.id, key);
+                                      if (e.key === "Escape") setEditingProc(null);
+                                    }}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="btn-icon-sm"
+                                    title="Salvar"
+                                    disabled={editingProc.saving}
+                                    onClick={() => handleSaveTooth(proc.id, key)}
+                                  >
+                                    <i className="ti ti-check" aria-hidden="true" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn-icon-sm"
+                                    title="Cancelar"
+                                    disabled={editingProc.saving}
+                                    onClick={() => setEditingProc(null)}
+                                  >
+                                    <i className="ti ti-x" aria-hidden="true" />
+                                  </button>
+                                  {editingProc.error && (
+                                    <span className="patient-procedure-error">{editingProc.error}</span>
+                                  )}
+                                </span>
+                              ) : (
+                                <span className="patient-procedure-display">
+                                  {proc.display}
+                                  <button
+                                    type="button"
+                                    className="btn-icon-sm patient-procedure-edit-btn"
+                                    title="Editar dente (FDI)"
+                                    onClick={() =>
+                                      setEditingProc({
+                                        key,
+                                        value: proc.tooth ?? "",
+                                        saving: false,
+                                        error: null,
+                                      })
+                                    }
+                                  >
+                                    <i className="ti ti-pencil" aria-hidden="true" />
+                                  </button>
+                                </span>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
                   </div>
-                  <div className="patient-history-dentist">{item.dentist}</div>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <p className="patient-mock-note">
-            Histórico ilustrativo — em breve integrado ao prontuário.
-          </p>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </div>

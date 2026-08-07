@@ -26,6 +26,10 @@ export default function Pacientes() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
+  const [patientSummary, setPatientSummary] = useState(null);
+  const [patientHistory, setPatientHistory] = useState(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editPatient, setEditPatient] = useState(null);
 
@@ -117,9 +121,103 @@ export default function Pacientes() {
     [token],
   );
 
+  const loadSummary = useCallback(
+    async (id) => {
+      if (!id) {
+        setPatientSummary(null);
+        return;
+      }
+      try {
+        const r = await fetch(`${API_URL}/patients/${id}/summary`, {
+          headers: authHeaders(token),
+        });
+        if (!r.ok) throw new Error();
+        const data = await r.json();
+        setPatientSummary(data);
+      } catch {
+        showToast("Erro ao carregar resumo do paciente.", "error");
+        setPatientSummary(null);
+      }
+    },
+    [token],
+  );
+
+  const loadHistory = useCallback(
+    async (id) => {
+      if (!id) {
+        setPatientHistory(null);
+        return;
+      }
+      setLoadingHistory(true);
+      try {
+        const r = await fetch(`${API_URL}/patients/${id}/history`, {
+          headers: authHeaders(token),
+        });
+        if (!r.ok) throw new Error();
+        const data = await r.json();
+        setPatientHistory(data);
+      } catch {
+        showToast("Erro ao carregar histórico do paciente.", "error");
+        setPatientHistory(null);
+      } finally {
+        setLoadingHistory(false);
+      }
+    },
+    [token],
+  );
+
   useEffect(() => {
     loadDetail(selectedId);
-  }, [selectedId, loadDetail]);
+    loadSummary(selectedId);
+    // sempre que o paciente selecionado mudar, o histórico deve ser
+    // buscado novamente quando o usuário abrir a aba "Histórico"
+    setPatientHistory(null);
+  }, [selectedId, loadDetail, loadSummary]);
+
+  // Atualiza o dente (notação FDI) de um procedimento já lançado no
+  // histórico. Retorna true/false pro componente saber se pode fechar
+  // o modo de edição.
+  const updateProcedureTooth = useCallback(
+    async (procedureItemId, tooth) => {
+      try {
+        const r = await fetch(`${API_URL}/appointments/procedures/${procedureItemId}/tooth`, {
+          method: "PATCH",
+          headers: {
+            ...authHeaders(token),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ tooth }),
+        });
+        if (!r.ok) throw new Error();
+        const updated = await r.json();
+
+        setPatientHistory((prev) =>
+          prev
+            ? prev.map((appt) => ({
+                ...appt,
+                procedures: appt.procedures.map((proc) =>
+                  proc.id === procedureItemId
+                    ? { ...proc, tooth: updated.tooth, display: updated.display }
+                    : proc,
+                ),
+              }))
+            : prev,
+        );
+        return true;
+      } catch {
+        showToast("Erro ao atualizar o dente do procedimento.", "error");
+        return false;
+      }
+    },
+    [token],
+  );
+
+  // evita disparar a request de histórico mais de uma vez para o
+  // mesmo paciente (ex: clicar várias vezes na aba)
+  function handleLoadHistory() {
+    if (!selectedId || loadingHistory || patientHistory !== null) return;
+    loadHistory(selectedId);
+  }
 
   function openCreate() {
     setEditPatient(null);
@@ -252,7 +350,12 @@ export default function Pacientes() {
 
         <PatientDetailsPanel
           patient={selectedPatient}
+          summary={patientSummary}
+          history={patientHistory}
           loading={loadingDetail}
+          loadingHistory={loadingHistory}
+          onLoadHistory={handleLoadHistory}
+          onUpdateProcedureTooth={updateProcedureTooth}
           onEdit={openEdit}
           onDelete={openDelete}
         />

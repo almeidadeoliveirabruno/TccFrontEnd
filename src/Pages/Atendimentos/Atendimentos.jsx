@@ -72,7 +72,6 @@ export default function Atendimentos() {
         ...(startDate && { start_date: startDate }),
         ...(endDate && { end_date: endDate }),
       });
-      // rota conforme router: prefix "/appointments" + path "/appointments/table"
       const r = await fetch(`${API_URL}/appointments/appointments/table?${params}`, {
         headers: authHeaders(token),
       });
