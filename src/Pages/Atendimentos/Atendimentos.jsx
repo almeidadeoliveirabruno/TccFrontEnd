@@ -4,8 +4,7 @@ import { STATUS_OPTIONS, STATUS_VALUE, STATUS_LABEL, STATUS_COLORS } from "./con
 import { API_URL, authHeaders } from "../../utils/api";
 import { useAuth } from "../../hooks/useAuth";
 import Toast from "../../components/Toast/Toast";
-import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
-import AtendimentoModal from "./Componentes/atendimentomodal";
+import AppointmentDetailModal from "./Componentes/AppointmentDetailModal";
 
 const STAT_ICONS = [
   { icon: "ti-calendar-event", bg: "#E4F6F8", color: "#0a9db2" },
@@ -46,12 +45,10 @@ export default function Atendimentos() {
   const [total, setTotal] = useState(0);
   const [statistics, setStatistics] = useState({});
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editId, setEditId] = useState(null);
-
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  // modal de detalhes/edição (status, dente, observações). Não existe
+  // mais modal de criação aqui -- consulta é criada na Agenda.
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailId, setDetailId] = useState(null);
 
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
 
@@ -97,51 +94,9 @@ export default function Atendimentos() {
     setPage(1);
   }, [patientSearch, dentistSearch, statusFilter, startDate, endDate]);
 
-  function openCreate() {
-    setEditId(null);
-    setModalOpen(true);
-  }
-
-  function openEdit(id) {
-    setEditId(id);
-    setModalOpen(true);
-  }
-
-  function openDelete(id) {
-    setDeleteId(id);
-    setDeleteOpen(true);
-  }
-
-  async function handleDelete() {
-    setDeleteLoading(true);
-    try {
-      const r = await fetch(`${API_URL}/appointments/${deleteId}`, {
-        method: "DELETE",
-        headers: authHeaders(token),
-      });
-      if (!r.ok) throw new Error();
-      showToast("Atendimento excluído.");
-      setDeleteOpen(false);
-      await loadAppointments();
-    } catch {
-      showToast("Erro ao excluir.", "error");
-    } finally {
-      setDeleteLoading(false);
-    }
-  }
-
-  async function handleConfirm(id) {
-    try {
-      const r = await fetch(`${API_URL}/appointments/${id}/confirm`, {
-        method: "PATCH",
-        headers: authHeaders(token),
-      });
-      if (!r.ok) throw new Error();
-      showToast("Atendimento confirmado!");
-      await loadAppointments();
-    } catch {
-      showToast("Erro ao confirmar atendimento.", "error");
-    }
+  function openDetail(id) {
+    setDetailId(id);
+    setDetailOpen(true);
   }
 
   async function handleSaved(message) {
@@ -150,7 +105,7 @@ export default function Atendimentos() {
       return;
     }
     showToast(message);
-    setModalOpen(false);
+    setDetailOpen(false);
     await loadAppointments();
   }
 
@@ -163,9 +118,6 @@ export default function Atendimentos() {
           <h1 className="proc-title">Atendimentos</h1>
           <p className="proc-subtitle">Gerencie os atendimentos da sua clínica</p>
         </div>
-        <button className="btn-primary" onClick={openCreate}>
-          + Novo atendimento
-        </button>
       </div>
 
       <div className="stats-grid">
@@ -265,11 +217,14 @@ export default function Atendimentos() {
             </thead>
             <tbody>
               {appointments.map((a) => {
-                const style = STATUS_COLORS[a.status] ?? STATUS_COLORS.SCHEDULED;
+                const style = STATUS_COLORS[a.status] ?? STATUS_COLORS.agendado;
                 return (
-                  <tr key={a.id}>
+                  <tr key={a.id} onClick={() => openDetail(a.id)} style={{ cursor: "pointer" }}>
                     <td>
                       <div className="proc-name">{a.pacient_name}</div>
+                      {a.procedures?.length > 0 && (
+                        <div className="proc-desc">{a.procedures.join(", ")}</div>
+                      )}
                       {a.confirmation_message_sent && (
                         <div className="proc-desc">Confirmação enviada</div>
                       )}
@@ -288,21 +243,9 @@ export default function Atendimentos() {
                       </span>
                     </td>
                     <td>
-                      <div className="row-actions">
-                        {a.status === STATUS_VALUE.Agendado && (
-                          <button
-                            className="btn-icon"
-                            onClick={() => handleConfirm(a.id)}
-                            title="Confirmar"
-                          >
-                            ✅
-                          </button>
-                        )}
-                        <button className="btn-icon" onClick={() => openEdit(a.id)} title="Editar">
+                      <div className="row-actions" onClick={(e) => e.stopPropagation()}>
+                        <button className="btn-icon" onClick={() => openDetail(a.id)} title="Ver detalhes">
                           ✏️
-                        </button>
-                        <button className="btn-icon del" onClick={() => openDelete(a.id)} title="Excluir">
-                          🗑️
                         </button>
                       </div>
                     </td>
@@ -336,22 +279,12 @@ export default function Atendimentos() {
         </button>
       </div>
 
-      <AtendimentoModal
-        open={modalOpen}
-        editId={editId}
-        onClose={() => setModalOpen(false)}
+      <AppointmentDetailModal
+        open={detailOpen}
+        appointmentId={detailId}
+        onClose={() => setDetailOpen(false)}
         onSaved={handleSaved}
         token={token}
-      />
-
-      <ConfirmModal
-        open={deleteOpen}
-        title="Excluir atendimento"
-        loading={deleteLoading}
-        confirmLabel="Excluir"
-        loadingLabel="Excluindo..."
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteOpen(false)}
       />
 
       <Toast {...toast} />

@@ -22,6 +22,14 @@ export default function Pacientes() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // NOVO: estatísticas vindas de data.statistics (mesmo padrão da tela de Dentistas)
+  const [stats, setStats] = useState({
+    total: 0,
+    novos30d: 0,
+    atendidos30d: 0,
+    ativos: 0,
+  });
+
   const [selectedId, setSelectedId] = useState(null);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -72,6 +80,15 @@ export default function Pacientes() {
         setPatients((prev) => (append ? [...prev, ...data.items] : data.items));
         setTotalPages(data.total_pages);
         setPage(targetPage);
+
+        if (data.statistics) {
+          setStats({
+            total: data.statistics.total_patients ?? 0,
+            novos30d: data.statistics.new_patients_last_30_days ?? 0,
+            atendidos30d: data.statistics.patients_attended_last_30_days ?? 0,
+            ativos: data.statistics.active_patients ?? 0,
+          });
+        }
 
         if (!append && data.items.length > 0) {
           setSelectedId((current) =>
@@ -281,6 +298,68 @@ export default function Pacientes() {
         <button className="btn-primary" onClick={openCreate}>
           + Novo paciente
         </button>
+      </div>
+
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: "#E4F6F8" }}>
+              <i
+                className="ti ti-users"
+                style={{ color: "#0a9db2" }}
+                aria-hidden="true"
+              />
+            </div>
+            <span className="stat-label">Total de pacientes</span>
+          </div>
+          <div className="stat-value">{stats.total}</div>
+          <div className="stat-sub">pacientes cadastrados</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: "#DCFCE7" }}>
+              <i
+                className="ti ti-user-plus"
+                style={{ color: "#15803D" }}
+                aria-hidden="true"
+              />
+            </div>
+            <span className="stat-label">Novos pacientes</span>
+          </div>
+          <div className="stat-value">{stats.novos30d}</div>
+          <div className="stat-sub">nos últimos 30 dias</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: "#EEEDFE" }}>
+              <i
+                className="ti ti-calendar-check"
+                style={{ color: "#534AB7" }}
+                aria-hidden="true"
+              />
+            </div>
+            <span className="stat-label">Atendidos</span>
+          </div>
+          <div className="stat-value">{stats.atendidos30d}</div>
+          <div className="stat-sub">nos últimos 30 dias</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: "#FFF7ED" }}>
+              <i
+                className="ti ti-activity"
+                style={{ color: "#C2410C" }}
+                aria-hidden="true"
+              />
+            </div>
+            <span className="stat-label">Pacientes ativos</span>
+          </div>
+          <div className="stat-value">{stats.ativos}</div>
+          <div className="stat-sub">atendidos nos últimos 180 dias</div>
+        </div>
       </div>
 
       <div className="patient-layout">
