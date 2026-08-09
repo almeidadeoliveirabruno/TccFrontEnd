@@ -57,7 +57,7 @@ export default function Pacientes() {
   const loadPatients = useCallback(
     async (targetPage, append) => {
       setLoadingList(true);
-      try {
+      try  {
         const params = new URLSearchParams({
           page: targetPage,
           page_size: PAGE_SIZE,
