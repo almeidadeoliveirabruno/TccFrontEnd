@@ -38,7 +38,7 @@ const items = [
   { to: "/pacientes", label: "Pacientes", Icon: UserRound },
   { to: "/dentistas", label: "Dentistas", Icon: ToothIcon },
   { to: "/agenda", label: "Agenda", Icon: CalendarDays },
-  { to: "/atendimentos", label: "Atendimentos", Icon: FileText },
+  { to: "/historico", label: "Histórico", Icon: FileText },
   { to: "/procedimentos", label: "Procedimentos", Icon: Pencil },
   { to: "/financeiro", label: "Financeiro", Icon: CircleDollarSign },
   { to: "/relatorios", label: "Relatórios", Icon: ChartColumn },

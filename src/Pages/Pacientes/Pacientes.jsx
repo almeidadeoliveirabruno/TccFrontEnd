@@ -22,7 +22,7 @@ export default function Pacientes() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // NOVO: estatísticas vindas de data.statistics (mesmo padrão da tela de Dentistas)
+  
   const [stats, setStats] = useState({
     total: 0,
     novos30d: 0,

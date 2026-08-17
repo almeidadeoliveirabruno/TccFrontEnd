@@ -7,6 +7,8 @@ import Dentistas from "../Pages/Dentistas/Dentistas";
 import Agenda from "../Pages/Agenda/Agenda";
 import PrivateRoute from "./PrivateRoute";
 import Pacientes from "../Pages/Pacientes/pacientes";
+import Financeiro from "../Pages/Financeiro/Financeiro";
+import Lancamentos from "../Pages/Financeiro/Lancamentos";
 
 import AppLayout from "../layouts/AppLayout";
 import Atendimentos from "../Pages/Atendimentos/Atendimentos";
@@ -27,7 +29,9 @@ function AppRoutes() {
             <Route path="/dentistas" element={<Dentistas />} />
             <Route path="/agenda" element={<Agenda />} />
             <Route path="/pacientes" element={<Pacientes />} />
-            <Route path= "/Atendimentos" element={<Atendimentos/>}/>
+            <Route path= "/historico" element={<Atendimentos/>}/>
+            <Route path = "/financeiro" element={<Financeiro/>}/>
+            <Route path="/financeiro/lancamentos" element={<Lancamentos />} />
           </Route>
         </Route>
       </Routes>

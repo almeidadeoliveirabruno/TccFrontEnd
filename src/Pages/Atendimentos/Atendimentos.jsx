@@ -5,6 +5,7 @@ import { API_URL, authHeaders } from "../../utils/api";
 import { useAuth } from "../../hooks/useAuth";
 import Toast from "../../components/Toast/Toast";
 import AppointmentDetailModal from "./Componentes/AppointmentDetailModal";
+import ReceivableModal from "./Componentes/ReceivableModal";
 
 const STAT_ICONS = [
   { icon: "ti-calendar-event", bg: "#E4F6F8", color: "#0a9db2" },
@@ -12,6 +13,14 @@ const STAT_ICONS = [
   { icon: "ti-checkbox", bg: "#EEEDFE", color: "#534AB7" },
   { icon: "ti-calendar-x", bg: "#FEE2E2", color: "#B91C1C" },
 ];
+
+// cor do ícone de cifrão de acordo com o status do receivable daquela consulta
+const RECEIVABLE_ICON_COLOR = {
+  pago: "#16a34a",
+  pendente: "#f59e0b",
+  parcial: "#f59e0b",
+  cancelado: "#dc2626",
+};
 
 // statistics vem como dict[str, float|int] genérico do backend;
 // aqui só transformamos a chave em um rótulo legível.
@@ -45,10 +54,14 @@ export default function Atendimentos() {
   const [total, setTotal] = useState(0);
   const [statistics, setStatistics] = useState({});
 
-  // modal de detalhes/edição (status, dente, observações). Não existe
-  // mais modal de criação aqui -- consulta é criada na Agenda.
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailId, setDetailId] = useState(null);
+
+  const [payOpen, setPayOpen] = useState(false);
+  const [payAppointment, setPayAppointment] = useState(null);
+  // status do receivable de cada consulta, indexado por appointment id
+  // -- alimenta a cor do ícone de cifrão na tabela
+  const [receivableStatus, setReceivableStatus] = useState({});
 
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
 
@@ -56,6 +69,22 @@ export default function Atendimentos() {
     setToast({ visible: true, message, type });
     setTimeout(() => setToast((t) => ({ ...t, visible: false })), 3000);
   }
+
+  const loadReceivableStatus = useCallback(
+    async (appointmentId) => {
+      try {
+        const r = await fetch(`${API_URL}/receivables/by-appointment/${appointmentId}`, {
+          headers: authHeaders(token),
+        });
+        if (!r.ok) return;
+        const data = await r.json();
+        setReceivableStatus((prev) => ({ ...prev, [appointmentId]: data.status }));
+      } catch {
+        // silencioso -- ícone fica neutro (cinza) se a busca falhar
+      }
+    },
+    [token],
+  );
 
   const loadAppointments = useCallback(async () => {
     setLoading(true);
@@ -74,16 +103,19 @@ export default function Atendimentos() {
       });
       if (!r.ok) throw new Error();
       const data = await r.json();
-      setAppointments(data.items ?? []);
+      const items = data.items ?? [];
+      setAppointments(items);
       setTotalPages(data.total_pages ?? 1);
       setTotal(data.total ?? 0);
       setStatistics(data.statistics ?? {});
+      // busca o status financeiro de cada linha da página atual
+      items.forEach((a) => loadReceivableStatus(a.id));
     } catch {
       showToast("Erro ao carregar atendimentos.", "error");
     } finally {
       setLoading(false);
     }
-  }, [token, page, patientSearch, dentistSearch, statusFilter, startDate, endDate]);
+  }, [token, page, patientSearch, dentistSearch, statusFilter, startDate, endDate, loadReceivableStatus]);
 
   useEffect(() => {
     loadAppointments();
@@ -99,6 +131,11 @@ export default function Atendimentos() {
     setDetailOpen(true);
   }
 
+  function openPay(appointment) {
+    setPayAppointment(appointment);
+    setPayOpen(true);
+  }
+
   async function handleSaved(message) {
     if (!message) {
       showToast("Erro ao salvar atendimento.", "error");
@@ -109,13 +146,27 @@ export default function Atendimentos() {
     await loadAppointments();
   }
 
+  async function handlePaySaved(message) {
+    if (!message) {
+      showToast("Erro ao salvar pagamento.", "error");
+      return;
+    }
+    showToast(message);
+    setPayOpen(false);
+    // só atualiza o status daquela linha -- não precisa recarregar a tabela
+    // inteira, pagamento não muda status/valor do atendimento em si
+    if (payAppointment) {
+      loadReceivableStatus(payAppointment.id);
+    }
+  }
+
   const statEntries = Object.entries(statistics).slice(0, 4);
 
   return (
     <div className="proc-page">
       <div className="proc-header">
         <div>
-          <h1 className="proc-title">Atendimentos</h1>
+          <h1 className="proc-title">Histórico de Atendimentos</h1>
           <p className="proc-subtitle">Gerencie os atendimentos da sua clínica</p>
         </div>
       </div>
@@ -218,6 +269,16 @@ export default function Atendimentos() {
             <tbody>
               {appointments.map((a) => {
                 const style = STATUS_COLORS[a.status] ?? STATUS_COLORS.agendado;
+                const recStatus = receivableStatus[a.id];
+                const moneyColor = RECEIVABLE_ICON_COLOR[recStatus] ?? "#9CA3AF";
+                const moneyTitle =
+                  recStatus === "pago"
+                    ? "Pago"
+                    : recStatus === "cancelado"
+                    ? "Cobrança cancelada"
+                    : recStatus === "parcial"
+                    ? "Pagamento parcial"
+                    : "Registrar pagamento";
                 return (
                   <tr key={a.id} onClick={() => openDetail(a.id)} style={{ cursor: "pointer" }}>
                     <td>
@@ -244,6 +305,13 @@ export default function Atendimentos() {
                     </td>
                     <td>
                       <div className="row-actions" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          className="btn-icon"
+                          onClick={() => openPay(a)}
+                          title={moneyTitle}
+                        >
+                          <i className="ti ti-currency-dollar" style={{ color: moneyColor }} aria-hidden="true" />
+                        </button>
                         <button className="btn-icon" onClick={() => openDetail(a.id)} title="Ver detalhes">
                           ✏️
                         </button>
@@ -284,6 +352,18 @@ export default function Atendimentos() {
         appointmentId={detailId}
         onClose={() => setDetailOpen(false)}
         onSaved={handleSaved}
+        token={token}
+      />
+
+      <ReceivableModal
+        open={payOpen}
+        appointmentId={payAppointment?.id}
+        patientName={payAppointment?.pacient_name}
+        dentistName={payAppointment?.dentist_name}
+        appointmentTime={payAppointment?.time_day}
+        totalPrice={payAppointment?.total_price}
+        onClose={() => setPayOpen(false)}
+        onSaved={handlePaySaved}
         token={token}
       />
 

@@ -346,9 +346,6 @@ export default function Dentistas() {
                         <span className="contact-line">
                           <i className="ti ti-phone" aria-hidden="true" /> {formatPhone(d.phone)}
                         </span>
-                        <span className="contact-line">
-                          <i className="ti ti-mail" aria-hidden="true" /> {d.email}
-                        </span>
                       </div>
                     </td>
                     <td>
