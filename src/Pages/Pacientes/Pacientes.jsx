@@ -56,7 +56,7 @@ export default function Pacientes() {
     setTimeout(() => setToast((t) => ({ ...t, visible: false })), 3000);
   }
 
-  // debounce simples pra não disparar uma request a cada tecla digitada
+  // O debounce impede que varias requests sejam disparados a cada tecla pressionada. Pode ser interessante o uso em outros lugares do projeto.
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 400);
     return () => clearTimeout(t);
@@ -184,16 +184,14 @@ export default function Pacientes() {
   );
 
   useEffect(() => {
-    loadDetail(selectedId);
-    loadSummary(selectedId);
-    // sempre que o paciente selecionado mudar, o histórico deve ser
-    // buscado novamente quando o usuário abrir a aba "Histórico"
-    setPatientHistory(null);
-  }, [selectedId, loadDetail, loadSummary]);
+  loadDetail(selectedId);
+  loadSummary(selectedId);
+  setPatientHistory(null);
 
-  // Atualiza o dente (notação FDI) de um procedimento já lançado no
-  // histórico. Retorna true/false pro componente saber se pode fechar
-  // o modo de edição.
+  if (selectedId) {
+    loadHistory(selectedId);
+  }
+}, [selectedId, loadDetail, loadSummary, loadHistory]);
   const updateProcedureTooth = useCallback(
     async (procedureItemId, tooth) => {
       try {
