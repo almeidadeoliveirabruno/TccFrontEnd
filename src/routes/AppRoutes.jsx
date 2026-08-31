@@ -9,6 +9,7 @@ import PrivateRoute from "./PrivateRoute";
 import Pacientes from "../Pages/Pacientes/pacientes";
 import Financeiro from "../Pages/Financeiro/Financeiro";
 import Lancamentos from "../Pages/Financeiro/Lancamentos";
+import Dashboard from "../Pages/Dashboard/Dashboard"
 
 import AppLayout from "../layouts/AppLayout";
 import Atendimentos from "../Pages/Atendimentos/Atendimentos";
@@ -32,6 +33,7 @@ function AppRoutes() {
             <Route path= "/historico" element={<Atendimentos/>}/>
             <Route path = "/financeiro" element={<Financeiro/>}/>
             <Route path="/financeiro/lancamentos" element={<Lancamentos />} />
+            <Route path ='/dashboard' element = {<Dashboard/>}/>
           </Route>
         </Route>
       </Routes>

@@ -37,9 +37,7 @@ function Login() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(data.access_token);
         localStorage.setItem("token", data.access_token);
-        console.log("Entrei aqui");
         navigate("/procedimentos");
       } else {
         setError("Credenciais inválidas");
