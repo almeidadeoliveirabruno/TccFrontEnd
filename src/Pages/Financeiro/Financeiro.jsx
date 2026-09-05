@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import "../Atendimentos/Atendimentos.css";
 import "./Financeiro.css";
 import { API_URL, authHeaders } from "../../utils/api";
@@ -31,6 +32,9 @@ const TABLE_PAGE_SIZE = 6;
 
 export default function Financeiro() {
   const { token } = useAuth();
+
+  // ---- qual tabela está visível ----
+  const [activeTable, setActiveTable] = useState("despesas"); // "despesas" | "receitas"
 
   // ---- período compartilhado pelas duas tabelas ----
   const [dateFrom, setDateFrom] = useState("");
@@ -71,8 +75,6 @@ export default function Financeiro() {
     setTimeout(() => setToast((t) => ({ ...t, visible: false })), 3000);
   }
 
-  // categorias pro <select> de filtro -- vem do enum do backend, não de
-  // um mapa local, pra nunca desincronizar
   useEffect(() => {
     fetch(`${API_URL}/expenses/categories`, { headers: authHeaders(token) })
       .then((r) => (r.ok ? r.json() : []))
@@ -98,9 +100,6 @@ export default function Financeiro() {
       const data = await r.json();
       setDespesas(data.items ?? []);
       setDespesasTotalPages(data.total_pages || 1);
-      // statistics sempre vem sobre o total da clínica, independente dos
-      // filtros aplicados na listagem -- por isso é seguro alimentar os
-      // cards a partir dessa mesma chamada
       setExpenseStats(data.statistics?.expense_statistics ?? null);
     } catch {
       showToast("Erro ao carregar despesas.", "error");
@@ -142,7 +141,6 @@ export default function Financeiro() {
     loadReceitas();
   }, [loadReceitas]);
 
-  // período compartilhado reseta a paginação das duas tabelas
   useEffect(() => {
     setDespesasPage(1);
     setReceitasPage(1);
@@ -239,6 +237,12 @@ export default function Financeiro() {
   const donutTotal = totalReceitas + totalDespesas;
   const receitaPercent = donutTotal > 0 ? (totalReceitas / donutTotal) * 100 : 0;
 
+  const donutData = [
+    { name: "Receitas", value: totalReceitas, color: "#0CB0C7" },
+    { name: "Despesas", value: totalDespesas, color: "#F87171" },
+    { name: "A receber", value: aReceber, color: "#FBBF24" },
+  ].filter((d) => d.value > 0);
+
   return (
     <div className="finance-page">
       <div className="finance-header">
@@ -248,9 +252,6 @@ export default function Financeiro() {
             Visão geral das receitas e despesas da clínica
           </p>
         </div>
-        <button className="btn-primary" onClick={openCreateExpense}>
-          + Nova despesa
-        </button>
       </div>
 
       <div className="finance-stats-grid">
@@ -315,13 +316,30 @@ export default function Financeiro() {
           </div>
         ) : (
           <div className="donut-wide-content">
-            <div
-              className="donut-chart donut-chart-lg"
-              style={{
-                background: `conic-gradient(#0CB0C7 0% ${receitaPercent}%, #F87171 ${receitaPercent}% 100%)`,
-              }}
-            >
-              <div className="donut-hole donut-hole-lg">
+            <div className="donut-chart-recharts">
+              <ResponsiveContainer width={220} height={220}>
+                <PieChart>
+                  <Pie
+                    data={donutData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={68}
+                    outerRadius={100}
+                    paddingAngle={2}
+                    stroke="none"
+                  >
+                    {donutData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => formatCurrency(value)}
+                    wrapperStyle={{ zIndex: 50, pointerEvents: "none" }}
+                    allowEscapeViewBox={{ x: true, y: true }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="donut-hole-overlay">
                 <span className="donut-value">{receitaPercent.toFixed(0)}%</span>
                 <span className="donut-label">Receita</span>
               </div>
@@ -365,11 +383,28 @@ export default function Financeiro() {
         </div>
       </div>
 
-      <div className="finance-tables-grid">
-        {/* ---------- DESPESAS ---------- */}
+      <div className="finance-table-toggle">
+        <button
+          className={`finance-tab finance-tab-despesa ${activeTable === "despesas" ? "active" : ""}`}
+          onClick={() => setActiveTable("despesas")}
+        >
+          Despesas
+        </button>
+        <button
+          className={`finance-tab finance-tab-receita ${activeTable === "receitas" ? "active" : ""}`}
+          onClick={() => setActiveTable("receitas")}
+        >
+          Entradas
+        </button>
+      </div>
+
+      {activeTable === "despesas" ? (
         <div className="finance-panel">
           <div className="finance-panel-header">
             <h2>Despesas</h2>
+            <button className="btn-primary" onClick={openCreateExpense}>
+              + Nova despesa
+            </button>
           </div>
 
           <div className="finance-table-toolbar">
@@ -502,8 +537,7 @@ export default function Financeiro() {
             </button>
           </div>
         </div>
-
-        {/* ---------- ENTRADAS ---------- */}
+      ) : (
         <div className="finance-panel">
           <div className="finance-panel-header">
             <h2>Entradas</h2>
@@ -602,7 +636,7 @@ export default function Financeiro() {
             </button>
           </div>
         </div>
-      </div>
+      )}
 
       <ExpenseModal
         open={expenseModalOpen}

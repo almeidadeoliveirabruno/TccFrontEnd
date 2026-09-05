@@ -64,7 +64,7 @@ export default function DentistModal({
             name: data.name,
             email: data.email,
             phone: formatPhone(data.phone ?? ""),
-            cpf: data.cpf || "",          
+            cpf: formatCpf(data.cpf || ""),         
             cro: data.cro,
             specialties: data.specialties ?? [],
             status: data.status,
@@ -94,7 +94,7 @@ export default function DentistModal({
     if (!form.name.trim()) e.name = "Campo obrigatório";
     if (!form.email.trim()) e.email = "Campo obrigatório";
     if (!cleanPhone) e.phone = "Campo obrigatório";
-    if (!cleanCpf) e.cpf = "Campo obrigatório"; // CPF obrigatório sempre
+    if (!cleanCpf) e.cpf = "Campo obrigatório"; 
     if (!form.cro.trim()) e.cro = "Campo obrigatório";
     if (form.specialties.length === 0)
       e.specialties = "Selecione ao menos uma especialidade";
@@ -132,7 +132,7 @@ export default function DentistModal({
       cpf: cleanCpf, 
     };
 
-    // Horários só vão na criação
+    
     if (!editDentist && scheduleDraft.length > 0) {
       body.schedules = scheduleDraft;
     }
@@ -156,7 +156,6 @@ export default function DentistModal({
         let duplicateField = "cro";
         let duplicateMessage = "Já existe um dentista com esse CRO nesta clínica";
 
-        // Detecção mais confiável
         if (detail.includes("cpf")) {
           duplicateField = "cpf";
           duplicateMessage = "Já existe um dentista com esse CPF nesta clínica";
@@ -167,7 +166,6 @@ export default function DentistModal({
           duplicateField = "email";
           duplicateMessage = "Já existe um dentista com esse e‑mail nesta clínica";
         } else if (!editDentist && detail.includes("dentista")) {
-          // fallback para criação (caso a mensagem não especifique o campo)
           duplicateField = "cpf";
           duplicateMessage = "Já existe um dentista com esse CPF nesta clínica";
         }
@@ -382,7 +380,7 @@ export default function DentistModal({
               </div>
             </div>
 
-            {/* Campo CPF - sempre editável e obrigatório */}
+          
             <div className="form-group">
               <label className="form-label">
                 CPF <span className="req">*</span>

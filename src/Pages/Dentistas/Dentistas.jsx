@@ -10,7 +10,6 @@ import {
 import { API_URL, authHeaders } from "../../utils/api";
 import { useAuth } from "../../hooks/useAuth";
 import Toast from "../../components/Toast/Toast";
-import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import DentistModal from "./Componentes/DentistModal";
 import DentistDetailsModal from "./Componentes/DentistDetailsModal";
 import {formatPhone} from "../../utils/masks";
@@ -59,10 +58,6 @@ export default function Dentistas() {
 
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsDentist, setDetailsDentist] = useState(null);
-
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [toast, setToast] = useState({
     visible: false,
@@ -127,29 +122,6 @@ export default function Dentistas() {
   function openDetails(dentist) {
     setDetailsDentist(dentist);
     setDetailsOpen(true);
-  }
-
-  function openDelete(id) {
-    setDeleteId(id);
-    setDeleteOpen(true);
-  }
-
-  async function handleDelete() {
-    setDeleteLoading(true);
-    try {
-      const r = await fetch(`${API_URL}/dentists/${deleteId}`, {
-        method: "DELETE",
-        headers: authHeaders(token),
-      });
-      if (!r.ok) throw new Error();
-      showToast("Dentista excluído.");
-      setDeleteOpen(false);
-      await loadDentists();
-    } catch {
-      showToast("Erro ao excluir.", "error");
-    } finally {
-      setDeleteLoading(false);
-    }
   }
 
   async function handleSaved(message) {
@@ -375,13 +347,6 @@ export default function Dentistas() {
                         >
                           ✏️
                         </button>
-                        <button
-                          className="btn-icon del"
-                          onClick={() => openDelete(d.id)}
-                          title="Excluir"
-                        >
-                          🗑️
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -427,16 +392,6 @@ export default function Dentistas() {
         dentist={detailsDentist}
         onClose={() => setDetailsOpen(false)}
         token={token}
-      />
-
-      <ConfirmModal
-        open={deleteOpen}
-        title="Excluir dentista"
-        loading={deleteLoading}
-        confirmLabel="Excluir"
-        loadingLabel="Excluindo..."
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteOpen(false)}
       />
 
       <Toast {...toast} />

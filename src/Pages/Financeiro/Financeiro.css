@@ -113,28 +113,29 @@
 .donut-wide-content {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 48px;
   padding: 8px 24px;
 }
 
-.donut-chart {
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
+/* ===== DONUT com Recharts ===== */
+.donut-chart-recharts {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
-.donut-chart-lg {
-  width: 200px;
-  height: 200px;
-}
-
-.donut-hole {
-  width: 108px;
-  height: 108px;
+.donut-hole-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 136px;
+  height: 136px;
   border-radius: 50%;
   background: #fff;
   display: flex;
@@ -142,11 +143,7 @@
   align-items: center;
   justify-content: center;
   box-shadow: inset 0 2px 6px rgba(15, 23, 42, 0.06);
-}
-
-.donut-hole-lg {
-  width: 136px;
-  height: 136px;
+  pointer-events: none;
 }
 
 .donut-value { font-size: 22px; font-weight: 800; color: #111827; }
@@ -161,6 +158,7 @@
 .donut-legend-wide {
   flex: 1;
   gap: 14px;
+  max-width: 320px;
 }
 .donut-legend-wide .legend-item {
   font-size: 15px;
@@ -181,10 +179,11 @@
   flex-shrink: 0;
 }
 
-/* ===== TOOLBAR DE PERÍODO (compartilhada pelas duas tabelas) ===== */
+
 .finance-period-toolbar {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 20px;
   align-items: center;
   margin-bottom: 20px;
@@ -203,12 +202,47 @@
   white-space: nowrap;
 }
 
-/* ===== GRID DE DUAS TABELAS ===== */
-.finance-tables-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  align-items: start;
+.finance-table-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.finance-tab {
+  padding: 10px 22px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.finance-tab-despesa {
+  background: #FEF2F2;
+  color: #EF4444;
+}
+.finance-tab-despesa:hover {
+  background: #FEE2E2;
+}
+.finance-tab-despesa.active {
+  background: #F87171;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(248, 113, 113, 0.3);
+}
+
+.finance-tab-receita {
+  background: #DCFCE7;
+  color: #15803D;
+}
+.finance-tab-receita:hover {
+  background: #BBF7D0;
+}
+.finance-tab-receita.active {
+  background: #22C55E;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
 }
 
 .finance-table-toolbar {
@@ -220,6 +254,5 @@
 
 @media (max-width: 900px) {
   .finance-stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .finance-tables-grid { grid-template-columns: 1fr; }
   .donut-wide-content { flex-direction: column; gap: 20px; }
 }

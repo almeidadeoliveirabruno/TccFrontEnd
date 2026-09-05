@@ -4,7 +4,6 @@ import { CATEGORIES, CAT_COLORS } from "./constants";
 import { API_URL, authHeaders } from "../../utils/api";
 import { useAuth } from "../../hooks/useAuth";
 import Toast from "../../components/Toast/Toast";
-import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import ProcedureModal from "./Componentes/proceduremodal";
 
 export default function Procedimentos() {
@@ -26,10 +25,6 @@ export default function Procedimentos() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editProc, setEditProc] = useState(null);
-
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
 
@@ -85,29 +80,6 @@ useEffect(() => {
   function openEdit(proc) {
     setEditProc(proc);
     setModalOpen(true);
-  }
-
-  function openDelete(id) {
-    setDeleteId(id);
-    setDeleteOpen(true);
-  }
-
-  async function handleDelete() {
-    setDeleteLoading(true);
-    try {
-      const r = await fetch(`${API_URL}/procedures/${deleteId}`, {
-        method: "DELETE",
-        headers: authHeaders(token),
-      });
-      if (!r.ok) throw new Error();
-      showToast("Procedimento excluído.");
-      setDeleteOpen(false);
-      await loadProcedures();
-    } catch {
-      showToast("Erro ao excluir.", "error");
-    } finally {
-      setDeleteLoading(false);
-    }
   }
 
   async function handleSaved(message) {
@@ -255,9 +227,6 @@ useEffect(() => {
                         <button className="btn-icon" onClick={() => openEdit(p)} title="Editar">
                           ✏️
                         </button>
-                        <button className="btn-icon del" onClick={() => openDelete(p.id)} title="Excluir">
-                          🗑️
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -296,16 +265,6 @@ useEffect(() => {
         onClose={() => setModalOpen(false)}
         onSaved={handleSaved}
         token={token}
-      />
-
-      <ConfirmModal
-        open={deleteOpen}
-        title="Excluir procedimento"
-        loading={deleteLoading}
-        confirmLabel="Excluir"
-        loadingLabel="Excluindo..."
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteOpen(false)}
       />
 
       <Toast {...toast} />
