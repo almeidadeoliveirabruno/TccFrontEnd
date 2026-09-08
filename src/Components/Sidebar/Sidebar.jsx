@@ -34,14 +34,14 @@ function ToothIcon({ size = 24 }) {
 }
 
 const items = [
-  { to: "/dashboard", label: "Home", Icon: House },
+  { to: "/home", label: "Home", Icon: House },
   { to: "/pacientes", label: "Pacientes", Icon: UserRound },
   { to: "/dentistas", label: "Dentistas", Icon: ToothIcon },
   { to: "/agenda", label: "Agenda", Icon: CalendarDays },
   { to: "/historico", label: "Histórico", Icon: FileText },
   { to: "/procedimentos", label: "Procedimentos", Icon: Pencil },
   { to: "/financeiro", label: "Financeiro", Icon: CircleDollarSign },
-  { to: "/relatorios", label: "Relatórios", Icon: ChartColumn },
+  { to: "/dashboard", label: "Relatórios", Icon: ChartColumn },
 ];
 
 export default function Sidebar() {

@@ -36,6 +36,7 @@ export default function ProcedureModal({
     if (!form.category) e.category = "Selecione uma categoria";
     if (form.price === "" || isNaN(Number(form.price)))
       e.price = "Campo obrigatório";
+    if (form.price < 0) e.price = "Preço não pode ser negativo";
     if (form.duration === "" || isNaN(Number(form.duration)))
       e.duration = "Campo obrigatório";
     setErrors(e);
@@ -43,37 +44,50 @@ export default function ProcedureModal({
   }
 
   async function handleSave() {
-    if (!validate()) return;
-    setLoading(true);
-    const body = {
-      name: form.name.trim(),
-      description: form.description.trim(),
-      category: form.category,
-      price: parseFloat(form.price),
-      duration: parseInt(form.duration),
-    };
-    try {
-      const url = editProc
-        ? `${API_URL}/procedures/${editProc.id}`
-        : `${API_URL}/procedures/`;
-      const method = editProc ? "PUT" : "POST";
-      const r = await fetch(url, {
-        method,
-        headers: authHeaders(token),
-        body: JSON.stringify(body),
-      });
-      if (r.status === 409) {
-        setErrors({ name: "Já existe um procedimento com esse nome" });
-        return;
+  if (!validate()) return;
+  setLoading(true);
+  const body = {
+    name: form.name.trim(),
+    description: form.description.trim(),
+    category: form.category,
+    price: parseFloat(form.price),
+    duration: parseInt(form.duration),
+  };
+  try {
+    const url = editProc
+      ? `${API_URL}/procedures/${editProc.id}`
+      : `${API_URL}/procedures/`;
+    const method = editProc ? "PUT" : "POST";
+    const r = await fetch(url, {
+      method,
+      headers: authHeaders(token),
+      body: JSON.stringify(body),
+    });
+
+    if (!r.ok) {
+      const data = await r.json().catch(() => null);
+      const detail = data?.detail ?? "";
+      const lowerDetail = detail.toLowerCase();
+
+      if (r.status === 409 || lowerDetail.includes("nome")) {
+        setErrors({ name: detail || "Já existe um procedimento com esse nome" });
+      } else if (lowerDetail.includes("preço")) {
+        setErrors({ price: detail });
+      } else if (lowerDetail.includes("duração")) {
+        setErrors({ duration: detail });
+      } else {
+        onSaved(null);
       }
-      if (!r.ok) throw new Error();
-      onSaved(editProc ? "Procedimento atualizado!" : "Procedimento criado!");
-    } catch {
-      onSaved(null);
-    } finally {
-      setLoading(false);
+      return;
     }
+
+    onSaved(editProc ? "Procedimento atualizado!" : "Procedimento criado!");
+  } catch {
+    onSaved(null);
+  } finally {
+    setLoading(false);
   }
+}
 
   function set(field) {
     return (e) => {
