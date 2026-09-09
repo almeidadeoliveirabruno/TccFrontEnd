@@ -21,9 +21,7 @@ export default function PatientModal({ open, editPatient, onClose, onSaved, toke
     setErrors({});
 
     if (editPatient) {
-      // Busca o detalhe completo: o item da lista só tem id/nome/telefone/e-mail
-      // (PatientResponseCard). Sem isso, salvar sobrescreveria endereço, CPF,
-      // data de nascimento etc. com campos em branco.
+     
       setLoadingDetail(true);
       fetch(`${API_URL}/patients/${editPatient.id}`, {
         headers: authHeaders(token),

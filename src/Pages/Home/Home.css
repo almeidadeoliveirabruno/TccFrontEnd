@@ -1,0 +1,365 @@
+/* ===== PAGE ===== */
+.home-page {
+  min-height: 100vh;
+  padding: 32px;
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.08), transparent 35%),
+    radial-gradient(circle at top right, rgba(167, 139, 250, 0.08), transparent 35%),
+    radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent 40%),
+    #f8fafc;
+}
+
+.home-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  gap: 16px;
+}
+
+.home-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.home-subtitle {
+  color: #64748b;
+  font-size: 15px;
+}
+
+.home-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.home-date i { color: #0CB0C7; font-size: 16px; }
+
+/* ===== STATS (mesmo padrão visual da tela de Dentistas) ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, .85);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, .8);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, .05);
+  transition: all .25s ease;
+  padding: 24px;
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, .08);
+}
+.stat-card:nth-child(1) { border-top: 2px solid #22d3ee; }
+.stat-card:nth-child(2) { border-top: 2px solid #34d399; }
+.stat-card:nth-child(3) { border-top: 2px solid #818cf8; }
+.stat-card:nth-child(4) { border-top: 2px solid #fb923c; }
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.stat-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.stat-icon i { font-size: 16px; }
+
+.stat-label {
+  font-size: 11px;
+  color: #9CA3AF;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1;
+}
+
+.stat-sub {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin-top: 4px;
+}
+
+/* ===== GRIDS PRINCIPAIS ===== */
+.home-main-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+  align-items: stretch;
+}
+
+.home-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ===== CARD BASE (agenda, faturamento, procedimentos, novos pacientes) ===== */
+.dash-card {
+  background: rgba(255, 255, 255, .88);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, .8);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, .05);
+  padding: 20px;
+}
+
+.dash-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.dash-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.dash-card-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0CB0C7;
+  text-decoration: none;
+}
+.dash-card-link:hover { text-decoration: underline; }
+
+.table-loading,
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #9CA3AF;
+  font-size: 14px;
+}
+.empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+.badge {
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-weight: 600;
+  font-size: 12px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* ===== AGENDA (próximos atendimentos) ===== */
+.upcoming-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.agenda-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.agenda-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 6px;
+  border-bottom: 1px solid #F3F4F6;
+}
+.agenda-row:last-child { border-bottom: none; }
+
+.agenda-time {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0a9db2;
+  width: 42px;
+  flex-shrink: 0;
+}
+
+.agenda-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.agenda-patient {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.agenda-procedure {
+  font-size: 12.5px;
+  color: #9CA3AF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== FATURAMENTO (reservado) ===== */
+.revenue-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.revenue-placeholder {
+  flex: 1;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #9CA3AF;
+  font-size: 13px;
+  border: 1.5px dashed #E5E7EB;
+  border-radius: 16px;
+}
+.revenue-placeholder i { font-size: 26px; color: #CBD5E1; }
+
+/* ===== DONUT (procedimentos) ===== */
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.donut-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.donut-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.donut-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.donut-legend-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.donut-legend-value {
+  font-weight: 700;
+  color: #111827;
+}
+
+/* ===== NOVOS PACIENTES ===== */
+.new-patients-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.new-patient-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 6px;
+  border-bottom: 1px solid #F3F4F6;
+}
+.new-patient-row:last-child { border-bottom: none; }
+
+.new-patient-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.new-patient-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.new-patient-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.new-patient-phone {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.new-patient-date {
+  font-size: 12.5px;
+  color: #9CA3AF;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .home-main-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .home-page { padding: 20px; }
+  .home-header { flex-direction: column; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .home-bottom-grid { grid-template-columns: 1fr; }
+  .donut-wrap { flex-direction: column; align-items: flex-start; }
+}

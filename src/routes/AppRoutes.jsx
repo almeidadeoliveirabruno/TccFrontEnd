@@ -10,7 +10,7 @@ import Pacientes from "../Pages/Pacientes/pacientes";
 import Financeiro from "../Pages/Financeiro/Financeiro";
 import Lancamentos from "../Pages/Financeiro/Lancamentos";
 import Dashboard from "../Pages/Dashboard/Dashboard"
-
+import Home from "../Pages/Home/Home";
 import AppLayout from "../layouts/AppLayout";
 import Atendimentos from "../Pages/Atendimentos/Atendimentos";
 
@@ -26,6 +26,8 @@ function AppRoutes() {
         {/* Rotas protegidas */}
         <Route element={<PrivateRoute />}>
           <Route element={<AppLayout />}>
+
+            <Route path="/home" element={<Home />} />
             <Route path="/procedimentos" element={<Procedimentos />} />
             <Route path="/dentistas" element={<Dentistas />} />
             <Route path="/agenda" element={<Agenda />} />
