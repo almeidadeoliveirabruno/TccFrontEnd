@@ -113,20 +113,20 @@
 .home-dashboard-flex {
   display: flex;
   gap: 16px;
-  align-items: stretch; 
+  align-items: stretch;
   margin-bottom: 16px;
 }
 
-/* Coluna esquerda: Próximos atendimentos + Procedimentos mais realizados */
+/* Coluna esquerda: Próximos atendimentos (ocupa toda a altura da linha) */
 .dashboard-col-left {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  flex: 1; 
+  flex: 1;
   min-width: 0;
 }
 
-/* Coluna direita: Faturamento + Novos pacientes */
+/* Coluna direita: Procedimentos + Novos pacientes empilhados */
 .dashboard-col-right {
   display: flex;
   flex-direction: column;
@@ -135,13 +135,22 @@
   min-width: 0;
 }
 
-/* Cada card dentro das colunas ocupa metade da altura da coluna */
+/* Cada card dentro das colunas ocupa a altura disponível */
 .dashboard-col-left .dash-card,
 .dashboard-col-right .dash-card {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0; /* evita overflow em conteúdo com scroll interno */
+}
+
+/* Linha inferior: faturamento em largura total */
+.dashboard-row-bottom {
+  margin-bottom: 16px;
+}
+
+.dashboard-row-bottom .dash-card {
+  width: 100%;
 }
 
 /* ===== CARD BASE (agenda, faturamento, procedimentos, novos pacientes) ===== */
@@ -210,24 +219,28 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
+  flex: 1;
 }
 
 .agenda-row {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 6px;
-  border-bottom: 1px solid #F3F4F6;
+  align-items: flex-start;
+  gap: 22px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #F9FAFB;
+  border: 1px solid #F1F5F9;
+  flex: 1;
 }
-.agenda-row:last-child { border-bottom: none; }
 
 .agenda-time {
   font-size: 13px;
   font-weight: 700;
   color: #0a9db2;
-  width: 42px;
+  width: 48px;
   flex-shrink: 0;
+  padding-top: 1px;
 }
 
 .agenda-info {

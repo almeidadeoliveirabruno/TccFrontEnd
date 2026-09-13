@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import "./Home.css";
 import { useAuth } from "../../hooks/useAuth";
 import { API_URL, authHeaders } from "../../utils/api";
 import UpcomingAppointments from "./Componentes/UpcomingAppointments";
-import RevenueChartCard from "./Componentes/RevenueChartCard";
+import RevenueExpenseChart from "../Dashboard/Componentes/RevenueExpenseChart";
 import ProceduresDistribution from "./Componentes/ProceduresDistribution";
 import NewPatients from "./Componentes/NewPatients";
 import { jwtDecode } from "jwt-decode";
@@ -26,6 +26,20 @@ export default function Home() {
     dentists: 0,
     expenses: 0,
   });
+
+  const { chartStart, chartEnd } = useMemo(() => {
+    const end = new Date();
+    const start = new Date();
+    start.setMonth(start.getMonth() - 5); // últimos 6 meses (incluindo o atual)
+    start.setDate(1);
+
+    const toISODate = (d) => d.toISOString().slice(0, 10);
+
+    return {
+      chartStart: toISODate(start),
+      chartEnd: toISODate(end),
+    };
+  }, []);
 
   const loadStats = useCallback(async () => {
     setLoadingStats(true);
@@ -132,12 +146,19 @@ export default function Home() {
       <div className="home-dashboard-flex">
         <div className="dashboard-col-left">
           <UpcomingAppointments token={token} />
-          <ProceduresDistribution token={token} />
         </div>
         <div className="dashboard-col-right">
-          <RevenueChartCard />
+          <ProceduresDistribution token={token} />
           <NewPatients token={token} />
         </div>
+      </div>
+
+      <div className="dashboard-row-bottom">
+        <RevenueExpenseChart
+          startDate={chartStart}
+          endDate={chartEnd}
+          viewAllHref="/dashboard"
+        />
       </div>
     </div>
   );

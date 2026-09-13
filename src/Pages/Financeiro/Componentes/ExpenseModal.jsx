@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { API_URL, authHeaders } from "../../../utils/api";
-import { EXPENSE_CATEGORY_LABELS } from "../Constants";
+import { EXPENSE_CATEGORY_LABELS } from "../constants";
 
 const EMPTY_FORM = {
   description: "",
@@ -10,6 +10,7 @@ const EMPTY_FORM = {
   notes: "",
 };
 
+// Trocar
 function mapValidationErrors(detail) {
   const fieldErrors = {};
   if (!Array.isArray(detail)) return fieldErrors;

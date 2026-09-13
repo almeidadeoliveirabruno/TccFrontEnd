@@ -12,6 +12,16 @@ const STATUS_STYLE = {
   CONFIRMADO: { bg: "#DCFCE7", color: "#15803D" },
 };
 
+function formatTime(value) {
+  if (!value) return "";
+  return value.slice(0, 5); // "08:00:00" -> "08:00"
+}
+
+function firstName(name) {
+  if (!name) return "";
+  return name.trim().split(/\s+/)[0];
+}
+
 export default function UpcomingAppointments({ token }) {
   const [dentists, setDentists] = useState([]);
   const [dentistId, setDentistId] = useState("");
@@ -35,7 +45,11 @@ export default function UpcomingAppointments({ token }) {
       })
       .then((data) => {
         if (!active) return;
-        setDentists(data ?? []);
+        const list = data ?? [];
+        setDentists(list);
+        if (list.length > 0) {
+          setDentistId(String(list[0].id));
+        }
       })
       .catch(() => {
         if (active) setDentists([]);
@@ -96,7 +110,7 @@ export default function UpcomingAppointments({ token }) {
       <div className="dash-card-header">
         <span className="dash-card-title">
           Próximos atendimentos
-          {dentistName ? ` · ${dentistName.split(" ")[0]}` : ""}
+          {dentistName ? ` · ${firstName(dentistName)}` : ""}
         </span>
 
         <a className="dash-card-link" href="/agenda">
@@ -118,7 +132,7 @@ export default function UpcomingAppointments({ token }) {
 
           {dentists.map((dentist) => (
             <option key={dentist.id} value={dentist.id}>
-              {dentist.name.split(" ")[0]} 
+              {firstName(dentist.name)}
             </option>
           ))}
         </select>
@@ -148,7 +162,7 @@ export default function UpcomingAppointments({ token }) {
 
             return (
               <li key={i} className="agenda-row">
-                <span className="agenda-time">{a.time_begin}</span>
+                <span className="agenda-time">{formatTime(a.time_begin)}</span>
 
                 <div className="agenda-info">
                   <span className="agenda-patient">

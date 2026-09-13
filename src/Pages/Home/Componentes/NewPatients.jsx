@@ -47,7 +47,7 @@ export default function NewPatients({ token }) {
       <div className="dash-card-header">
         <span className="dash-card-title">Novos pacientes</span>
         <a className="dash-card-link" href="/pacientes">
-          Ver todos
+          Ver pacientes
         </a>
       </div>
 

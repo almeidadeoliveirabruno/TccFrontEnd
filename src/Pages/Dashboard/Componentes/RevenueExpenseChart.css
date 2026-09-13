@@ -1,0 +1,141 @@
+/* ===== CHART CARD ===== */
+.chart-card {
+  background: rgba(255, 255, 255, .88);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, .8);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, .05);
+  padding: 22px 24px;
+}
+
+.chart-card-wide {
+  flex: 2;
+  min-width: 0;
+  width: 100%;
+}
+
+.chart-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.chart-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.chart-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.chart-card-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0CB0C7;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.chart-card-link:hover { text-decoration: underline; }
+
+.chart-legend-inline {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.chart-body {
+  min-height: 100px;
+}
+
+.chart-loading,
+.chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 220px;
+  color: #9CA3AF;
+  font-size: 14px;
+}
+
+/* ===== CUSTOM TOOLTIP ===== */
+.chart-tooltip {
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid #ECEEF1;
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  font-size: 13px;
+}
+
+.chart-tooltip-label {
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.chart-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #475569;
+}
+
+.chart-tooltip-row-muted {
+  color: #94a3b8;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.chart-tooltip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.chart-tooltip-row strong {
+  margin-left: auto;
+  color: #111827;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 640px) {
+  .chart-card {
+    padding: 18px;
+  }
+}

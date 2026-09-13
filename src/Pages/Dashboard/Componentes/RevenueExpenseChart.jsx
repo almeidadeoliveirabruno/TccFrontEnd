@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import "./RevenueExpenseChart.css";
 import { API_URL, authHeaders } from "../../../utils/api";
 import { useAuth } from "../../../hooks/useAuth";
 import {
@@ -70,7 +71,7 @@ function CustomTooltip({ active, payload, label }) {
   );
 }
 
-export default function RevenueExpenseChart({ startDate, endDate }) {
+export default function RevenueExpenseChart({ startDate, endDate, viewAllHref, viewAllLabel = "Ver dashboard" }) {
   const { token } = useAuth();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -109,15 +110,23 @@ export default function RevenueExpenseChart({ startDate, endDate }) {
     <div className="chart-card chart-card-wide">
       <div className="chart-card-header">
         <h3 className="chart-card-title">Receitas × Despesas</h3>
-        <div className="chart-legend-inline">
-          <span className="legend-item">
-            <span className="legend-dot" style={{ background: "#3B82F6" }} />
-            Receita · {formatCurrency(lastRevenue)}
-          </span>
-          <span className="legend-item">
-            <span className="legend-dot" style={{ background: "#EF4444" }} />
-            Despesa · {formatCurrency(lastExpense)}
-          </span>
+        <div className="chart-header-right">
+          <div className="chart-legend-inline">
+            <span className="legend-item">
+              <span className="legend-dot" style={{ background: "#3B82F6" }} />
+              Receita · {formatCurrency(lastRevenue)}
+            </span>
+            <span className="legend-item">
+              <span className="legend-dot" style={{ background: "#EF4444" }} />
+              Despesa · {formatCurrency(lastExpense)}
+            </span>
+          </div>
+
+          {viewAllHref && (
+            <a className="chart-card-link" href={viewAllHref}>
+              {viewAllLabel}
+            </a>
+          )}
         </div>
       </div>
 
