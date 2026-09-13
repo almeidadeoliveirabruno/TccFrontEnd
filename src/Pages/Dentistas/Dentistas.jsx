@@ -212,13 +212,16 @@ export default function Dentistas() {
 
       <div className="dentist-toolbar">
         <div className="search-wrap">
-          <span className="search-icon">🔍</span>
-          <input
-            className="search-input"
-            placeholder="Buscar dentista..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <span className="filter-label">Dentistas</span>
+            <div className="search-input-wrap">
+              <span className="search-icon">🔍</span>
+              <input
+                className="search-input"
+                placeholder="Buscar dentista..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
         </div>
 
         <div className="filter-group">

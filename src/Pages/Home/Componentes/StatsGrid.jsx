@@ -59,7 +59,7 @@ export default function StatsGrid({ token }) {
         iconColor="#0a9db2"
         label="Pacientes cadastrados"
         value={show(data.patients)}
-        sub="pacientes na clínica"
+        sub="pacientes"
       />
       <StatCard
         icon="ti-calendar-check"
@@ -75,7 +75,7 @@ export default function StatsGrid({ token }) {
         iconColor="#534AB7"
         label="Dentistas ativos"
         value={show(data.dentists)}
-        sub="profissionais ativos"
+        sub="profissionais"
       />
       <StatCard
         icon="ti-cash"

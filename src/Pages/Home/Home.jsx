@@ -6,6 +6,7 @@ import UpcomingAppointments from "./Componentes/UpcomingAppointments";
 import RevenueChartCard from "./Componentes/RevenueChartCard";
 import ProceduresDistribution from "./Componentes/ProceduresDistribution";
 import NewPatients from "./Componentes/NewPatients";
+import { jwtDecode } from "jwt-decode";
 
 function todayLabel() {
   return new Date().toLocaleDateString("pt-BR", {
@@ -16,8 +17,8 @@ function todayLabel() {
 }
 
 export default function Home() {
-  const { token, user } = useAuth();
-
+  const { token} = useAuth();
+  const payload = token ? jwtDecode(token) : null;
   const [loadingStats, setLoadingStats] = useState(true);
   const [stats, setStats] = useState({
     patients: 0,
@@ -65,7 +66,7 @@ export default function Home() {
     <div className="home-page">
       <div className="home-header">
         <div>
-          <h1 className="home-title">Olá, {user?.name ?? "Doutor(a)"}! 👋</h1>
+          <h1 className="home-title">Olá, {payload?.nome.split(' ')[0] ?? "Doutor(a)"}! 👋</h1>
           <p className="home-subtitle">Aqui está o resumo da sua clínica hoje.</p>
         </div>
         <div className="home-date">
@@ -128,14 +129,15 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="home-main-grid">
-        <UpcomingAppointments token={token} dentistId={user?.dentist_id} />
-        <RevenueChartCard />
-      </div>
-
-      <div className="home-bottom-grid">
-        <ProceduresDistribution token={token} />
-        <NewPatients token={token} />
+      <div className="home-dashboard-flex">
+        <div className="dashboard-col-left">
+          <UpcomingAppointments token={token} />
+          <ProceduresDistribution token={token} />
+        </div>
+        <div className="dashboard-col-right">
+          <RevenueChartCard />
+          <NewPatients token={token} />
+        </div>
       </div>
     </div>
   );

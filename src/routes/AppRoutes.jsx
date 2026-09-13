@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "../Pages/Login/Login";
-import Signup from "../Pages/Signup/signup";
+import Signup from "../Pages/Signup/Signup";
 import Procedimentos from "../Pages/Procedimentos/Procedimentos";
 import Dentistas from "../Pages/Dentistas/Dentistas";
 import Agenda from "../Pages/Agenda/Agenda";

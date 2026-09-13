@@ -7,19 +7,36 @@ import "./Login.css";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [remember, setRemember] = useState(false);
 
   const navigate = useNavigate();
 
+  function set(setter, field) {
+          return (e) => {
+              setter(e.target.value);
+              setErrors((err) => ({ ...err, [field]: undefined }));
+          };
+      }
+  
+
+
   const validateForm = () => {
-    if (!email || !password) {
-      setError("Email e senha são obrigatórios");
+
+    const e = {}
+
+    if (!email) {
+      e.email = "Email é obrigatório";
+    }
+    if (!password) {
+      e.password = "Senha é obrigatória";
+    }
+    if (Object.keys(e).length > 0) {
+      setErrors(e);
       return false;
     }
-
-    setError("");
+    setErrors({});
     return true;
   };
 
@@ -38,13 +55,13 @@ function Login() {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem("token", data.access_token);
-        navigate("/procedimentos");
+        navigate("/home");
       } else {
-        setError("Credenciais inválidas");
+        setErrors({ geral: "Credenciais inválidas" });
       }
     } catch {
       setLoading(false);
-      setError("Erro de conexão");
+      setErrors({ geral: "Erro de conexão" });
     }
   };
 
@@ -73,6 +90,7 @@ function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
+            {errors.email && (<span className="form-error">{errors.email}</span>)}
           </div>
 
           <div className="field-wrap">
@@ -84,6 +102,7 @@ function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+             {errors.password && (<span className="form-error">{errors.password}</span>)}
           </div>
 
           <div className="row-check">
@@ -99,7 +118,7 @@ function Login() {
             <span className="forgot">Esqueci minha senha</span>
           </div>
 
-          {error && <p className="error-msg">{error}</p>}
+          {errors.geral && <p className="error-msg">{errors.geral}</p>}
 
           <button
             className="btn-entrar"

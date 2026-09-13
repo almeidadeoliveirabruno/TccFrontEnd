@@ -6,9 +6,9 @@ export default function RevenueChartCard() {
     <div className="dash-card revenue-card">
       <div className="dash-card-header">
         <span className="dash-card-title">Faturamento</span>
-        <select className="filter-select" disabled defaultValue="mes">
-          <option value="mes">Este mês</option>
-        </select>
+        <a className="dash-card-link" href="/financeiro">
+          Ver financeiro
+        </a>
       </div>
 
       <div className="revenue-placeholder">

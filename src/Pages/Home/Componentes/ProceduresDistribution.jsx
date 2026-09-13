@@ -29,7 +29,10 @@ export default function ProceduresDistribution({ token }) {
   return (
     <div className="dash-card">
       <div className="dash-card-header">
-        <span className="dash-card-title">Procedimentos mais realizados</span>
+        <span className="dash-card-title">Procedimentos </span>
+         <a className="dash-card-link" href="/procedimentos">
+          Ver procedimentos
+        </a>
       </div>
 
       {loading ? (
@@ -40,13 +43,13 @@ export default function ProceduresDistribution({ token }) {
         </div>
       ) : (
         <div className="donut-wrap">
-          <PieChart width={140} height={140}>
+          <PieChart width={140} height={240}>
             <Pie
               data={data}
               dataKey="percentage"
               nameKey="category_name"
               innerRadius={45}
-              outerRadius={68}
+              outerRadius={70}
               paddingAngle={2}
               stroke="none"
             >

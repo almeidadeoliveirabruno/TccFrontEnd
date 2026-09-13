@@ -101,8 +101,11 @@
 }
 
 .search-wrap {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   flex: 1;
+  align-items: center;
   max-width: 380px;
 }
 
@@ -127,6 +130,13 @@
   font-family: inherit;
   transition: border-color 0.15s;
 }
+
+.search-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+
 .search-input:focus { border-color: #0CB0C7; }
 .search-input::placeholder { color: #9CA3AF; }
 
@@ -206,11 +216,11 @@ thead th {
   border-bottom: 1px solid #ECEEF1;
 }
 
-thead th:nth-child(1) { width: 26%; }
+thead th:nth-child(1) { width: 19%; }
 thead th:nth-child(2) { width: 18%; }
-thead th:nth-child(3) { width: 12%; }
-thead th:nth-child(4) { width: 22%; }
-thead th:nth-child(5) { width: 12%; }
+thead th:nth-child(3) { width: 18%; }
+thead th:nth-child(4) { width: 24%; }
+thead th:nth-child(5) { width: 11%; }
 thead th:nth-child(6) { width: 10%; }
 
 tbody tr {

@@ -11,6 +11,7 @@ export default function StatCards({ startDate, endDate }) {
     profit: 0,
   });
   const [attendancePercentage, setAttendancePercentage] = useState(0);
+  const [AppointmentsDone, setAppointmentsDone] = useState(0);
   const [totalAppointments, setTotalAppointments] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -33,6 +34,7 @@ export default function StatCards({ startDate, endDate }) {
       setProfit(await profitRes.json());
       const attendanceData = await attendanceRes.json();
       setAttendancePercentage(attendanceData.attendance_percentage);
+      setAppointmentsDone(attendanceData.total);
       const appointmentsData = await appointmentsRes.json();
       setTotalAppointments(
         appointmentsData.reduce((sum, item) => sum + item.count, 0),
@@ -96,9 +98,9 @@ export default function StatCards({ startDate, endDate }) {
           <div className="stat-icon" style={{ background: "#EEEDFE" }}>
             <i className="ti ti-calendar-check" style={{ color: "#534AB7" }} aria-hidden="true" />
           </div>
-          <span className="stat-label">Atendimentos</span>
+          <span className="stat-label">Atendimentos Realizados</span>
         </div>
-        <div className="stat-value">{loading ? "..." : totalAppointments}</div>
+        <div className="stat-value">{loading ? "..." : AppointmentsDone}</div>
         <div className="stat-sub">
           {loading ? "" : `${attendancePercentage.toFixed(1)}% de presença`}
         </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 import { API_URL, authHeaders } from "../../../utils/api";
 
 const STATUS_LABEL = {
@@ -11,22 +12,21 @@ const STATUS_STYLE = {
   CONFIRMADO: { bg: "#DCFCE7", color: "#15803D" },
 };
 
-export default function UpcomingAppointments({ token, dentistId }) {
+export default function UpcomingAppointments({ token }) {
+  const [dentists, setDentists] = useState([]);
+  const [dentistId, setDentistId] = useState("");
   const [dentistName, setDentistName] = useState("");
+
   const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingDentists, setLoadingDentists] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
+  // Busca os dentistas para preencher o seletor
   useEffect(() => {
-    if (!dentistId) {
-      setLoading(false);
-      return;
-    }
     let active = true;
-    setLoading(true);
-    setError(false);
 
-    fetch(`${API_URL}/home/next-appointment-by-dentist?dentist_id=${dentistId}`, {
+    fetch(`${API_URL}/dentists/basic`, {
       headers: authHeaders(token),
     })
       .then((r) => {
@@ -35,6 +35,47 @@ export default function UpcomingAppointments({ token, dentistId }) {
       })
       .then((data) => {
         if (!active) return;
+        setDentists(data ?? []);
+      })
+      .catch(() => {
+        if (active) setDentists([]);
+      })
+      .finally(() => {
+        if (active) setLoadingDentists(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [token]);
+
+  // Busca as consultas quando um dentista é selecionado
+  useEffect(() => {
+    if (!dentistId) {
+      setAppointments([]);
+      setDentistName("");
+      setLoading(false);
+      return;
+    }
+
+    let active = true;
+
+    setLoading(true);
+    setError(false);
+
+    fetch(
+      `${API_URL}/home/next-appointment-by-dentist?dentist_id=${dentistId}`,
+      {
+        headers: authHeaders(token),
+      }
+    )
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
+      .then((data) => {
+        if (!active) return;
+
         setDentistName(data.dentist_name ?? "");
         setAppointments(data.appointments ?? []);
       })
@@ -54,16 +95,38 @@ export default function UpcomingAppointments({ token, dentistId }) {
     <div className="dash-card upcoming-card">
       <div className="dash-card-header">
         <span className="dash-card-title">
-          Próximos atendimentos{dentistName ? ` · ${dentistName}` : ""}
+          Próximos atendimentos
+          {dentistName ? ` · ${dentistName.split(" ")[0]}` : ""}
         </span>
+
         <a className="dash-card-link" href="/agenda">
           Ver agenda
         </a>
       </div>
 
+      <div className="upcoming-filter">
+        <select
+          value={dentistId}
+          onChange={(e) => setDentistId(e.target.value)}
+          disabled={loadingDentists}
+        >
+          <option value="">
+            {loadingDentists
+              ? "Carregando dentistas..."
+              : "Selecione um dentista"}
+          </option>
+
+          {dentists.map((dentist) => (
+            <option key={dentist.id} value={dentist.id}>
+              {dentist.name.split(" ")[0]} 
+            </option>
+          ))}
+        </select>
+      </div>
+
       {!dentistId ? (
         <div className="empty-state">
-          <p>Selecione um dentista para ver a agenda</p>
+          <p>Selecione um dentista para ver os próximos atendimentos</p>
         </div>
       ) : loading ? (
         <div className="table-loading">Carregando agenda...</div>
@@ -79,21 +142,33 @@ export default function UpcomingAppointments({ token, dentistId }) {
       ) : (
         <ul className="agenda-list">
           {appointments.map((a, i) => {
-            const style = STATUS_STYLE[a.appointment_status] ?? STATUS_STYLE.AGENDADO;
+            const style =
+              STATUS_STYLE[a.appointment_status] ??
+              STATUS_STYLE.AGENDADO;
+
             return (
               <li key={i} className="agenda-row">
                 <span className="agenda-time">{a.time_begin}</span>
+
                 <div className="agenda-info">
-                  <span className="agenda-patient">{a.patient_name}</span>
+                  <span className="agenda-patient">
+                    {a.patient_name}
+                  </span>
+
                   <span className="agenda-procedure">
                     {a.procedure_name?.join(", ") || "—"}
                   </span>
                 </div>
+
                 <span
                   className="badge"
-                  style={{ background: style.bg, color: style.color }}
+                  style={{
+                    background: style.bg,
+                    color: style.color,
+                  }}
                 >
-                  {STATUS_LABEL[a.appointment_status] ?? a.appointment_status}
+                  {STATUS_LABEL[a.appointment_status] ??
+                    a.appointment_status}
                 </span>
               </li>
             );

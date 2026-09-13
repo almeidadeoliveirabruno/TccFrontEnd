@@ -69,57 +69,52 @@ function Signup() {
     const [mostrarSenha, setMostrarSenha] = useState(false);
     const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
 
-    const [error, setError] = useState("");
+   
+    const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
 
+    function set(setter, field) {
+        return (e) => {
+            setter(e.target.value);
+            setErrors((err) => ({ ...err, [field]: undefined }));
+        };
+    }
+
     const validateForm = () => {
 
-        if (
-            !nome ||
-            !email ||
-            !senha ||
-            !confirmarSenha ||
-            !nomeClinica ||
-            !cnpj
-        ) {
+        const e = {};
 
-            setError("Preencha todos os campos.");
-            return false;
+        if (!nome.trim()) e.nome = "Campo obrigatório";
+        if (!email.trim()) e.email = "Campo obrigatório";
+        if (!nomeClinica.trim()) e.nomeClinica = "Campo obrigatório";
+        if (!cnpj) e.cnpj = "Campo obrigatório";
 
+        if (!senha) {
+            e.senha = "Campo obrigatório";
+        } else if (senha.length < 8) {
+            e.senha = "A senha deve possuir pelo menos 8 caracteres";
         }
 
-        if (senha.length < 8) {
-
-            setError("A senha deve possuir pelo menos 8 caracteres.");
-            return false;
-
+        if (!confirmarSenha) {
+            e.confirmarSenha = "Campo obrigatório";
+        } else if (senha !== confirmarSenha) {
+            e.confirmarSenha = "As senhas não coincidem";
         }
 
-        if (senha !== confirmarSenha) {
-
-            setError("As senhas não coincidem.");
-            return false;
-
+        if (cnpj && !validarCNPJ(cnpj)) {
+            e.cnpj = "CNPJ inválido";
         }
 
-        if (!validarCNPJ(cnpj)) {
-
-            setError("CNPJ inválido.");
-            return false;
-
-        }
-
-        setError("");
-
-        return true;
+        setErrors(e);
+        return Object.keys(e).length === 0;
 
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (ev) => {
 
-        e.preventDefault();
+        ev.preventDefault();
 
         if (!validateForm()) return;
 
@@ -140,22 +135,35 @@ function Signup() {
             if (response.ok) {
 
                 navigate("/");
+                return;
 
+            }
+
+            const data = await response.json().catch(() => null);
+            const detail = data?.detail ?? "";
+            const lowerDetail = detail.toLowerCase();
+
+            if (lowerDetail.includes("e-mail") || lowerDetail.includes("email")) {
+                setErrors({ email: detail });
+            } else if (lowerDetail.includes("cnpj")) {
+                setErrors({ cnpj: detail });
+            } else if (
+                lowerDetail.includes("clínica") ||
+                lowerDetail.includes("clinica")
+            ) {
+                setErrors({ nomeClinica: detail });
+            } else if (lowerDetail.includes("senha")) {
+                setErrors({ senha: detail });
+            } else if (lowerDetail.includes("nome")) {
+                setErrors({ nome: detail });
             } else {
-
-                const error = await response.json();
-
-                setError(
-                    error.detail || "Erro ao criar conta."
-                );
-
+                setErrors({ geral: detail || "Erro ao criar conta." });
             }
 
         } catch {
 
             setLoading(false);
-
-            setError("Erro de conexão");
+            setErrors({ geral: "Erro de conexão" });
 
         }
 
@@ -189,43 +197,47 @@ function Signup() {
                     </p>
 
                     <div className="field-wrap">
-                        <p className="field-label">Nome do usuário</p>
+                        <p className="field-label">Nome</p>
 
                         <input
-                            className="signup-input"
+                            className={`signup-input ${errors.nome ? "input-error" : ""}`}
                             type="text"
                             value={nome}
-                            onChange={(e) => setNome(e.target.value)}
+                            onChange={set(setNome, "nome")}
                         />
+                        {errors.nome && (
+                            <span className="form-error">{errors.nome}</span>
+                        )}
                     </div>
 
                     <div className="field-wrap">
                         <p className="field-label">Email</p>
 
                         <input
-                            className="signup-input"
+                            className={`signup-input ${errors.email ? "input-error" : ""}`}
                             type="email"
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={set(setEmail, "email")}
                         />
+                        {errors.email && (
+                            <span className="form-error">{errors.email}</span>
+                        )}
                     </div>
 
                     <div className="field-wrap">
-                        <p className="field-label">Senha</p>
+                        <p className="field-label">Senha (8 caracteres)</p>
 
                         <div className="password-container">
 
                             <input
-                                className="signup-input"
+                                className={`signup-input ${errors.senha ? "input-error" : ""}`}
                                 type={
                                     mostrarSenha
                                         ? "text"
                                         : "password"
                                 }
                                 value={senha}
-                                onChange={(e) =>
-                                    setSenha(e.target.value)
-                                }
+                                onChange={set(setSenha, "senha")}
                             />
 
                             <button
@@ -243,6 +255,9 @@ function Signup() {
                             </button>
 
                         </div>
+                        {errors.senha && (
+                            <span className="form-error">{errors.senha}</span>
+                        )}
 
                     </div>
 
@@ -255,16 +270,14 @@ function Signup() {
                         <div className="password-container">
 
                             <input
-                                className="signup-input"
+                                className={`signup-input ${errors.confirmarSenha ? "input-error" : ""}`}
                                 type={
                                     mostrarConfirmacao
                                         ? "text"
                                         : "password"
                                 }
                                 value={confirmarSenha}
-                                onChange={(e) =>
-                                    setConfirmarSenha(e.target.value)
-                                }
+                                onChange={set(setConfirmarSenha, "confirmarSenha")}
                             />
 
                             <button
@@ -285,22 +298,17 @@ function Signup() {
 
                         </div>
 
-                    </div>
+                        {
+                            errors.confirmarSenha
+                                ? <p className="error-msg">{errors.confirmarSenha}</p>
+                                : confirmarSenha && senha === confirmarSenha && (
+                                    <p className="success-msg">
+                                        ✓ As senhas coincidem
+                                    </p>
+                                )
+                        }
 
-                    {
-                        confirmarSenha &&
-                        (
-                            senha === confirmarSenha
-                                ?
-                                <p className="success-msg">
-                                    ✓ As senhas coincidem
-                                </p>
-                                :
-                                <p className="error-msg">
-                                    As senhas não coincidem
-                                </p>
-                        )
-                    }
+                    </div>
 
                     <div className="clinic-row">
 
@@ -311,13 +319,14 @@ function Signup() {
                             </p>
 
                             <input
-                                className="signup-input"
+                                className={`signup-input ${errors.nomeClinica ? "input-error" : ""}`}
                                 type="text"
                                 value={nomeClinica}
-                                onChange={(e) =>
-                                    setNomeClinica(e.target.value)
-                                }
+                                onChange={set(setNomeClinica, "nomeClinica")}
                             />
+                            {errors.nomeClinica && (
+                                <span className="form-error">{errors.nomeClinica}</span>
+                            )}
 
                         </div>
 
@@ -328,7 +337,7 @@ function Signup() {
                             </p>
 
                             <input
-                                className="signup-input"
+                                className={`signup-input ${errors.cnpj ? "input-error" : ""}`}
                                 type="text"
                                 value={cnpj}
                                 onChange={(e) => {
@@ -342,17 +351,21 @@ function Signup() {
                                         .slice(0, 18);
 
                                     setCnpj(valor);
+                                    setErrors((err) => ({ ...err, cnpj: undefined }));
 
                                 }}
                             />
+                            {errors.cnpj && (
+                                <span className="form-error">{errors.cnpj}</span>
+                            )}
 
                         </div>
 
                     </div>
 
-                    {error &&
+                    {errors.geral &&
                         <p className="error-msg">
-                            {error}
+                            {errors.geral}
                         </p>
                     }
 

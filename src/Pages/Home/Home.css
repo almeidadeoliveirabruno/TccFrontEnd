@@ -44,7 +44,6 @@
 }
 .home-date i { color: #0CB0C7; font-size: 16px; }
 
-/* ===== STATS (mesmo padrão visual da tela de Dentistas) ===== */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -109,19 +108,40 @@
   margin-top: 4px;
 }
 
-/* ===== GRIDS PRINCIPAIS ===== */
-.home-main-grid {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
+/* ===== DASHBOARD (flexbox) ===== */
+
+.home-dashboard-flex {
+  display: flex;
   gap: 16px;
+  align-items: stretch; 
   margin-bottom: 16px;
-  align-items: stretch;
 }
 
-.home-bottom-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+/* Coluna esquerda: Próximos atendimentos + Procedimentos mais realizados */
+.dashboard-col-left {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
+  flex: 1; 
+  min-width: 0;
+}
+
+/* Coluna direita: Faturamento + Novos pacientes */
+.dashboard-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Cada card dentro das colunas ocupa metade da altura da coluna */
+.dashboard-col-left .dash-card,
+.dashboard-col-right .dash-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* evita overflow em conteúdo com scroll interno */
 }
 
 /* ===== CARD BASE (agenda, faturamento, procedimentos, novos pacientes) ===== */
@@ -132,6 +152,9 @@
   border: 1px solid rgba(255, 255, 255, .8);
   box-shadow: 0 20px 40px rgba(15, 23, 42, .05);
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* impede que o conteúdo vaze da borda arredondada */
 }
 
 .dash-card-header {
@@ -139,12 +162,14 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 14px;
+  min-height: 34px; /* trava a altura do header independente do conteúdo à direita */
 }
 
 .dash-card-title {
   font-size: 16px;
   font-weight: 700;
   color: #111827;
+  line-height: 34px; /* mesma altura do header, garante alinhamento vertical */
 }
 
 .dash-card-link {
@@ -225,6 +250,44 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ===== FILTRO DE DENTISTA (upcoming) ===== */
+.upcoming-filter {
+  margin-bottom: 14px;
+}
+
+.upcoming-filter select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #F9FAFB
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%239CA3AF' stroke-width='2' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/></svg>")
+    no-repeat right 14px center;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 10px 36px 10px 14px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.upcoming-filter select:hover {
+  border-color: #CBD5E1;
+}
+
+.upcoming-filter select:focus {
+  outline: none;
+  border-color: #0CB0C7;
+  box-shadow: 0 0 0 3px rgba(12, 176, 199, 0.12);
+}
+
+.upcoming-filter select:disabled {
+  background-color: #F3F4F6;
+  color: #9CA3AF;
+  cursor: not-allowed;
 }
 
 /* ===== FATURAMENTO (reservado) ===== */
@@ -351,15 +414,17 @@
   flex-shrink: 0;
 }
 
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
-  .home-main-grid { grid-template-columns: 1fr; }
+  .home-dashboard-flex { flex-direction: column; }
+  .dashboard-col-left,
+  .dashboard-col-right { flex: initial; }
 }
 
 @media (max-width: 768px) {
   .home-page { padding: 20px; }
   .home-header { flex-direction: column; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .home-bottom-grid { grid-template-columns: 1fr; }
   .donut-wrap { flex-direction: column; align-items: flex-start; }
 }
