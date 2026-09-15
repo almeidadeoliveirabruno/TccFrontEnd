@@ -100,35 +100,13 @@ export default function DentistSchedules({
       ) : (
         <ul className="schedule-list">
           {groupedEntries.map(({ day, items }) => (
-            <li key={day} className="schedule-row">
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: "4px" }}
-              >
-                <strong>{dayLabel(day)}</strong>
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "8px",
-                    alignItems: "center",
-                  }}
-                >
+            <li key={day} className="schedule-row schedule-row-grouped">
+              <div className="schedule-day-block">
+                <span className="schedule-day-name">{dayLabel(day)}</span>
+                <div className="schedule-time-list">
                   {items.map((s) => (
-                    <div
-                      key={s.id}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        padding: "4px 8px",
-                        border: "1px solid #d0d7de",
-                        borderRadius: "8px",
-                        background: "#f8f9fa",
-                      }}
-                    >
-                      <span>
-                        {fmt(s.time_begin)} às {fmt(s.time_end)}
-                      </span>
+                    <span key={s.id} className="schedule-time-chip">
+                      {fmt(s.time_begin)} às {fmt(s.time_end)}
                       {!readOnly && (
                         <button
                           type="button"
@@ -139,7 +117,7 @@ export default function DentistSchedules({
                           🗑️
                         </button>
                       )}
-                    </div>
+                    </span>
                   ))}
                 </div>
               </div>

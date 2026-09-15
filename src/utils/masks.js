@@ -9,6 +9,7 @@ export const formatCpf = (value = "") => {
 };
 
 export const formatPhone = (value = "") => {
+  //remove todos os caracteres que não são dígitos e limita a 11 dígitos
   const digits = cleanDigits(value).slice(0, 11);
   if (digits.length <= 10) {
     return digits.replace(/(\d{2})(\d{4})(\d{0,4})/, (_m, a, b, c) =>

@@ -7,6 +7,7 @@ import {
   EMPTY_SCHEDULE,
 } from "../constants";
 import { API_URL, authHeaders } from "../../../utils/api";
+import { validarCPF, validarTelefone } from "../../../utils/validators";
 import {
   cleanDigits,
   formatCep,
@@ -64,7 +65,7 @@ export default function DentistModal({
             name: data.name,
             email: data.email,
             phone: formatPhone(data.phone ?? ""),
-            cpf: formatCpf(data.cpf || ""),         
+            cpf: formatCpf(data.cpf || ""),
             cro: data.cro,
             specialties: data.specialties ?? [],
             status: data.status,
@@ -92,9 +93,25 @@ export default function DentistModal({
     const cleanCpf = cleanDigits(form.cpf);
 
     if (!form.name.trim()) e.name = "Campo obrigatório";
-    if (!form.email.trim()) e.email = "Campo obrigatório";
-    if (!cleanPhone) e.phone = "Campo obrigatório";
-    if (!cleanCpf) e.cpf = "Campo obrigatório"; 
+
+    if (!form.email.trim()) {
+      e.email = "Campo obrigatório";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      e.email = "E-mail inválido";
+    }
+
+    if (!cleanPhone) {
+      e.phone = "Campo obrigatório";
+    } else if (!validarTelefone(cleanPhone)) {
+      e.phone = "Telefone inválido";
+    }
+
+    if (!cleanCpf) {
+      e.cpf = "Campo obrigatório";
+    } else if (!validarCPF(cleanCpf)) {
+      e.cpf = "CPF inválido";
+    }
+
     if (!form.cro.trim()) e.cro = "Campo obrigatório";
     if (form.specialties.length === 0)
       e.specialties = "Selecione ao menos uma especialidade";
@@ -103,7 +120,11 @@ export default function DentistModal({
     if (!form.neighborhood.trim()) e.neighborhood = "Campo obrigatório";
     if (!form.city.trim()) e.city = "Campo obrigatório";
     if (!form.state.trim()) e.state = "Campo obrigatório";
+
     setErrors(e);
+    if (Object.keys(e).length > 0) {
+      onSaved(null);
+    }
     return Object.keys(e).length === 0;
   }
 
@@ -129,10 +150,9 @@ export default function DentistModal({
       city: form.city.trim(),
       state: form.state.trim(),
       cep: cleanCep,
-      cpf: cleanCpf, 
+      cpf: cleanCpf,
     };
 
-    
     if (!editDentist && scheduleDraft.length > 0) {
       body.schedules = scheduleDraft;
     }
@@ -142,39 +162,61 @@ export default function DentistModal({
         ? `${API_URL}/dentists/${editDentist.id}`
         : `${API_URL}/dentists`;
       const method = editDentist ? "PUT" : "POST";
+
       const r = await fetch(url, {
         method,
-        headers: authHeaders(token),
+        headers: {
+          ...authHeaders(token),
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(body),
       });
-      if (r.status === 409) {
-        const errorBody = await r.json().catch(() => null);
-        const detail = String(
-          errorBody?.detail || errorBody?.message || ""
-        ).toLowerCase();
 
-        let duplicateField = "cro";
-        let duplicateMessage = "Já existe um dentista com esse CRO nesta clínica";
-
-        if (detail.includes("cpf")) {
-          duplicateField = "cpf";
-          duplicateMessage = "Já existe um dentista com esse CPF nesta clínica";
-        } else if (detail.includes("cro")) {
-          duplicateField = "cro";
-          duplicateMessage = "Já existe um dentista com esse CRO nesta clínica";
-        } else if (detail.includes("e‑mail") || detail.includes("e-mail") || detail.includes("email")) {
-          duplicateField = "email";
-          duplicateMessage = "Já existe um dentista com esse e‑mail nesta clínica";
-        } else if (!editDentist && detail.includes("dentista")) {
-          duplicateField = "cpf";
-          duplicateMessage = "Já existe um dentista com esse CPF nesta clínica";
-        }
-
-        setErrors({ [duplicateField]: duplicateMessage });
+      if (r.ok) {
+        onSaved(editDentist ? "Dentista atualizado!" : "Dentista criado!");
         return;
       }
-      if (!r.ok) throw new Error();
-      onSaved(editDentist ? "Dentista atualizado!" : "Dentista criado!");
+
+      const data = await r.json().catch(() => null);
+      const detail = data?.detail ?? data?.message ?? "";
+      const lowerDetail =
+        typeof detail === "string" ? detail.toLowerCase() : "";
+      let newErrors = null;
+
+      if (r.status === 409) {
+        // Duplicidade de CPF, CRO ou e-mail nesta clínica
+        if (lowerDetail.includes("cpf")) {
+          newErrors = { cpf: detail };
+        } else if (lowerDetail.includes("cro")) {
+          newErrors = { cro: detail };
+        } else if (
+          lowerDetail.includes("e‑mail") ||
+          lowerDetail.includes("e-mail") ||
+          lowerDetail.includes("email")
+        ) {
+          newErrors = { email: detail };
+        } else {
+          newErrors = { cro: detail };
+        }
+      } else if (r.status === 400) {
+        // CPF ou telefone inválidos (validação de negócio no backend)
+        if (lowerDetail.includes("cpf")) {
+          newErrors = { cpf: detail };
+        } else if (lowerDetail.includes("telefone")) {
+          newErrors = { phone: detail };
+        } else {
+          onSaved(null);
+        }
+      } else if (r.status === 404) {
+        onSaved(null);
+      } else {
+        onSaved(null);
+      }
+
+      if (newErrors) {
+        setErrors(newErrors);
+        onSaved(null);
+      }
     } catch {
       onSaved(null);
     } finally {
@@ -301,6 +343,29 @@ export default function DentistModal({
   }
 
   const dayLabel = (v) => DAYS_OF_WEEK.find((d) => d.value === v)?.label ?? v;
+  const fmt = (t) => (t ? t.slice(0, 5) : t);
+
+  // Agrupa o rascunho de horários por dia da semana, igual ao que
+  // DentistSchedules faz com os horários já salvos no backend.
+  function groupSchedules(list) {
+    const grouped = [...list]
+      .map((item, index) => ({ ...item, _draftIndex: index }))
+      .sort(
+        (a, b) =>
+          a.day_of_week - b.day_of_week ||
+          a.time_begin.localeCompare(b.time_begin),
+      )
+      .reduce((acc, item) => {
+        const key = item.day_of_week;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(item);
+        return acc;
+      }, {});
+
+    return Object.entries(grouped)
+      .sort(([a], [b]) => Number(a) - Number(b))
+      .map(([day, items]) => ({ day: Number(day), items }));
+  }
 
   return (
     <div className={`modal-overlay ${open ? "open" : ""}`}>
@@ -341,7 +406,7 @@ export default function DentistModal({
                   className={`form-input ${errors.cro ? "input-error" : ""}`}
                   value={form.cro}
                   onChange={set("cro")}
-                  placeholder="SP 123456"
+                  placeholder="123456-SP"
                 />
                 {errors.cro && <span className="form-error">{errors.cro}</span>}
               </div>
@@ -380,7 +445,6 @@ export default function DentistModal({
               </div>
             </div>
 
-          
             <div className="form-group">
               <label className="form-label">
                 CPF <span className="req">*</span>
@@ -592,20 +656,33 @@ export default function DentistModal({
                     </p>
                   ) : (
                     <ul className="schedule-list">
-                      {scheduleDraft.map((s, i) => (
-                        <li key={i} className="schedule-row">
-                          <span>
-                            {dayLabel(s.day_of_week)} · {s.time_begin} às{" "}
-                            {s.time_end}
-                          </span>
-                          <button
-                            type="button"
-                            className="btn-icon del"
-                            onClick={() => removeScheduleDraft(i)}
-                            title="Remover"
-                          >
-                            🗑️
-                          </button>
+                      {groupSchedules(scheduleDraft).map(({ day, items }) => (
+                        <li key={day} className="schedule-row schedule-row-grouped">
+                          <div className="schedule-day-block">
+                            <span className="schedule-day-name">
+                              {dayLabel(day)}
+                            </span>
+                            <div className="schedule-time-list">
+                              {items.map((s) => (
+                                <span
+                                  key={s._draftIndex}
+                                  className="schedule-time-chip"
+                                >
+                                  {fmt(s.time_begin)} às {fmt(s.time_end)}
+                                  <button
+                                    type="button"
+                                    className="btn-icon del"
+                                    onClick={() =>
+                                      removeScheduleDraft(s._draftIndex)
+                                    }
+                                    title="Remover"
+                                  >
+                                    🗑️
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
                         </li>
                       ))}
                     </ul>

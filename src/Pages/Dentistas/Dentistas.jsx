@@ -6,6 +6,7 @@ import {
   STATUS_OPTIONS,
   STATUS_COLORS,
   statusLabel,
+  AVATAR_PALETTE
 } from "./constants";
 import { API_URL, authHeaders } from "../../utils/api";
 import { useAuth } from "../../hooks/useAuth";
@@ -14,15 +15,6 @@ import DentistModal from "./Componentes/DentistModal";
 import DentistDetailsModal from "./Componentes/DentistDetailsModal";
 import {formatPhone} from "../../utils/masks";
 
-
-const AVATAR_PALETTE = [
-  "#0CB0C7",
-  "#818CF8",
-  "#34D399",
-  "#FB923C",
-  "#F472B6",
-  "#60A5FA",
-];
 
 function avatarColor(name) {
   let hash = 0;

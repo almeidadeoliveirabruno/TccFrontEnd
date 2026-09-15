@@ -98,7 +98,7 @@ export default function Atendimentos() {
         ...(startDate && { start_date: startDate }),
         ...(endDate && { end_date: endDate }),
       });
-      const r = await fetch(`${API_URL}/appointments/appointments/table?${params}`, {
+      const r = await fetch(`${API_URL}/appointments/table?${params}`, {
         headers: authHeaders(token),
       });
       if (!r.ok) throw new Error();

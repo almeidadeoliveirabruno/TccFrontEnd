@@ -578,6 +578,7 @@ tbody td {
 .schedule-time-chip {
   display: inline-flex;
   align-items: center;
+  gap: 4px;
   padding: 4px 9px;
   border-radius: 999px;
   background: #E4F6F8;

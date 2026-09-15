@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { GENDER_OPTIONS, EMPTY_PATIENT_FORM } from "../constants";
 import { API_URL, authHeaders } from "../../../utils/api";
+import { validarCPF, validarTelefone } from "../../../utils/validators";
 import {
   cleanDigits,
   formatCep,
@@ -21,7 +22,6 @@ export default function PatientModal({ open, editPatient, onClose, onSaved, toke
     setErrors({});
 
     if (editPatient) {
-     
       setLoadingDetail(true);
       fetch(`${API_URL}/patients/${editPatient.id}`, {
         headers: authHeaders(token),
@@ -63,9 +63,25 @@ export default function PatientModal({ open, editPatient, onClose, onSaved, toke
     const cleanCpf = cleanDigits(form.cpf);
 
     if (!form.name.trim()) e.name = "Campo obrigatório";
-    if (!form.email.trim()) e.email = "Campo obrigatório";
-    if (!cleanPhone) e.phone = "Campo obrigatório";
-    if (!cleanCpf) e.cpf = "Campo obrigatório";
+
+    if (!form.email.trim()) {
+      e.email = "Campo obrigatório";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      e.email = "E-mail inválido";
+    }
+
+    if (!cleanPhone) {
+      e.phone = "Campo obrigatório";
+    } else if (!validarTelefone(cleanPhone)) {
+      e.phone = "Telefone inválido";
+    }
+
+    if (!cleanCpf) {
+      e.cpf = "Campo obrigatório";
+    } else if (!validarCPF(cleanCpf)) {
+      e.cpf = "CPF inválido";
+    }
+
     if (!form.birth_date) e.birth_date = "Campo obrigatório";
     else if (form.birth_date > new Date().toISOString().split("T")[0]) {
       e.birth_date = "A data de nascimento não pode ser no futuro";
@@ -78,6 +94,9 @@ export default function PatientModal({ open, editPatient, onClose, onSaved, toke
     if (!form.state.trim()) e.state = "Campo obrigatório";
 
     setErrors(e);
+    if (Object.keys(e).length > 0) {
+      onSaved(null); 
+    }
     return Object.keys(e).length === 0;
   }
 
@@ -109,6 +128,7 @@ export default function PatientModal({ open, editPatient, onClose, onSaved, toke
         ? `${API_URL}/patients/${editPatient.id}`
         : `${API_URL}/patients`;
       const method = editPatient ? "PUT" : "POST";
+
       const r = await fetch(url, {
         method,
         headers: {
@@ -118,22 +138,37 @@ export default function PatientModal({ open, editPatient, onClose, onSaved, toke
         body: JSON.stringify(body),
       });
 
+      if (r.ok) {
+        onSaved(editPatient ? "Paciente atualizado!" : "Paciente criado!");
+        return;
+      }
+
+      const data = await r.json().catch(() => null);
+      const detail = data?.detail ?? "";
+      const lowerDetail = typeof detail === "string" ? detail.toLowerCase() : "";
+      let newErrors = null;
+
       if (r.status === 409) {
-        setErrors({
-          cpf: "Já existe um paciente com esse CPF cadastrado nesta clínica",
-        });
-        return;
+        // CPF duplicado nesta clínica
+        newErrors = { cpf: detail };
+      } else if (r.status === 422 && lowerDetail.includes("e-mail")) {
+        newErrors = { email: detail };
+      } else if (r.status === 422 && lowerDetail.includes("cpf")) {
+        newErrors = { cpf: detail };
+      } else if (r.status === 422 && lowerDetail.includes("telefone")) {
+        newErrors = { phone: detail };
+      } else if (r.status === 422 && lowerDetail.includes("nascimento")) {
+        newErrors = { birth_date: detail };
+      } else if (r.status === 404) {
+        onSaved(null);
+      } else {
+        onSaved(null);
       }
-      if (r.status === 422) {
-        const errorBody = await r.json().catch(() => null);
-        setErrors({
-          birth_date:
-            errorBody?.detail || "Verifique a data de nascimento informada",
-        });
-        return;
+
+      if (newErrors) {
+        setErrors(newErrors);
+        onSaved(null); 
       }
-      if (!r.ok) throw new Error();
-      onSaved(editPatient ? "Paciente atualizado!" : "Paciente criado!");
     } catch {
       onSaved(null);
     } finally {
@@ -451,8 +486,6 @@ export default function PatientModal({ open, editPatient, onClose, onSaved, toke
               </div>
             </div>
 
-            {/* Campo em destaque: funciona como uma anamnese simplificada —
-                detalhes do atendimento, condições de saúde, alergias etc. */}
             <div className="form-group anamnesis-field">
               <label className="form-label anamnesis-label">
                 <i className="ti ti-stethoscope" aria-hidden="true" />

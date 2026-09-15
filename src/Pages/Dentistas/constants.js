@@ -23,9 +23,7 @@ export const SPECIALTY_COLORS = {
 // Chaves batem com o enum DentistStatus do backend (models/dentist.py)
 export const STATUS_OPTIONS = [
   { value: "Ativo", label: "Ativo" },
-  { value: "Inativo", label: "Inativo" },
-  { value: "Férias", label: "Férias" },
-  { value: "Afastado", label: "Afastado" },
+  { value: "Inativo", label: "Inativo" }
 ];
 
 export const STATUS_COLORS = {
@@ -38,6 +36,15 @@ export const STATUS_COLORS = {
 export function statusLabel(status) {
   return STATUS_OPTIONS.find((s) => s.value === status)?.label ?? status;
 }
+
+export const AVATAR_PALETTE = [
+  "#0CB0C7",
+  "#818CF8",
+  "#34D399",
+  "#FB923C",
+  "#F472B6",
+  "#60A5FA",
+];
 
 export const DAYS_OF_WEEK = [
   { value: 0, label: "Domingo" },
