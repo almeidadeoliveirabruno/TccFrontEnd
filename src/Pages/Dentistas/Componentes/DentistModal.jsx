@@ -286,52 +286,66 @@ export default function DentistModal({
   }
 
   async function addCustomSpecialty() {
-    const value = newSpecialtyInput.trim();
-    if (!value) return;
+  const value = newSpecialtyInput.trim();
+  if (!value) return;
 
-    const normalizedValue = value.toLowerCase();
-    const alreadyExists = [...form.specialties, ...usedSpecialties].some(
-      (s) => s.toLowerCase() === normalizedValue,
-    );
+  const normalizedValue = value.toLowerCase();
 
-    if (alreadyExists) {
-      setNewSpecialtyInput("");
-      return;
-    }
+  // Procura correspondência em TODAS as fontes conhecidas:
+  // lista fixa (SPECIALTIES) + especialidades já usadas na clínica (usedSpecialties)
+  const existingMatch = specialtySuggestions.find(
+    (s) => s.toLowerCase() === normalizedValue,
+  );
 
-    try {
-      const response = await fetch(`${API_URL}/dentists/specialties`, {
-        method: "POST",
-        headers: {
-          ...authHeaders(token),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name: value }),
-      });
-
-      const createdValue = response.ok
-        ? ((await response.json().catch(() => null))?.name ?? value)
-        : value;
-
-      setUsedSpecialties((prev) =>
-        Array.from(new Set([...prev, createdValue])),
-      );
+  if (existingMatch) {
+    // Já existe (em alguma das fontes) -> só marca o chip com a grafia
+    // canônica, sem chamar o backend pra criar de novo
+    if (!form.specialties.includes(existingMatch)) {
       setForm((f) => ({
         ...f,
-        specialties: [...f.specialties, createdValue],
+        specialties: [...f.specialties, existingMatch],
       }));
       setErrors((err) => ({ ...err, specialties: undefined }));
-    } catch {
-      setUsedSpecialties((prev) => Array.from(new Set([...prev, value])));
-      setForm((f) => ({
-        ...f,
-        specialties: [...f.specialties, value],
-      }));
-      setErrors((err) => ({ ...err, specialties: undefined }));
-    } finally {
-      setNewSpecialtyInput("");
     }
+    setNewSpecialtyInput("");
+    return;
   }
+
+  // Daqui pra baixo, é especialidade REALMENTE nova (não está em nenhuma
+  // das fontes conhecidas) -> aí sim cria no backend
+  try {
+    const response = await fetch(`${API_URL}/dentists/specialties`, {
+      method: "POST",
+      headers: {
+        ...authHeaders(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: value }),
+    });
+
+    const createdValue = response.ok
+      ? ((await response.json().catch(() => null))?.name ?? value)
+      : value;
+
+    setUsedSpecialties((prev) =>
+      Array.from(new Set([...prev, createdValue])),
+    );
+    setForm((f) => ({
+      ...f,
+      specialties: [...f.specialties, createdValue],
+    }));
+    setErrors((err) => ({ ...err, specialties: undefined }));
+  } catch {
+    setUsedSpecialties((prev) => Array.from(new Set([...prev, value])));
+    setForm((f) => ({
+      ...f,
+      specialties: [...f.specialties, value],
+    }));
+    setErrors((err) => ({ ...err, specialties: undefined }));
+  } finally {
+    setNewSpecialtyInput("");
+  }
+}
 
   function addScheduleDraft() {
     setScheduleDraft((list) => [...list, newScheduleItem]);
