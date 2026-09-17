@@ -37,3 +37,8 @@ export function formatCurrency(value) {
     currency: "BRL",
   });
 }
+
+export function formatDate(date) {
+  const [year, month, day] = date.split("-");
+  return `${day}/${month}/${year}`;
+}

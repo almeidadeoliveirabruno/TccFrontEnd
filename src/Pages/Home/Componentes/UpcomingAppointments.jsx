@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import {formatDate} from '../../../utils/masks'
 
 import { API_URL, authHeaders } from "../../../utils/api";
 
@@ -8,8 +9,8 @@ const STATUS_LABEL = {
 };
 
 const STATUS_STYLE = {
-  AGENDADO: { bg: "#FEF3C7", color: "#B45309" },
-  CONFIRMADO: { bg: "#DCFCE7", color: "#15803D" },
+  agendado: { bg: "#f1f5f9", color: "#475569" },
+  confirmado: { bg: "#DCFCE7", color: "#15803D" },
 };
 
 function formatTime(value) {
@@ -162,8 +163,10 @@ export default function UpcomingAppointments({ token }) {
 
             return (
               <li key={i} className="agenda-row">
-                <span className="agenda-time">{formatTime(a.time_begin)}</span>
-
+                <div className = "agenda-date-hour">
+                  <span className="agenda-time">{formatDate(a.appointment_date)}</span>
+                  <span className="agenda-time">{formatTime(a.time_begin)}</span>
+                </div>
                 <div className="agenda-info">
                   <span className="agenda-patient">
                     {a.patient_name}

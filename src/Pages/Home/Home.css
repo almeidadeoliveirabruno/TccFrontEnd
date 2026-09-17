@@ -241,6 +241,13 @@
   width: 48px;
   flex-shrink: 0;
   padding-top: 1px;
+  text-align: center;
+}
+
+.agenda-date-hour{
+  flex-direction: column;
+  display: flex;
+  padding-right: 7% ;
 }
 
 .agenda-info {

@@ -7,13 +7,6 @@ import Toast from "../../components/Toast/Toast";
 import AppointmentDetailModal from "./Componentes/AppointmentDetailModal";
 import ReceivableModal from "./Componentes/ReceivableModal";
 
-const STAT_ICONS = [
-  { icon: "ti-calendar-event", bg: "#E4F6F8", color: "#0a9db2" },
-  { icon: "ti-circle-check", bg: "#EAF3DE", color: "#3B6D11" },
-  { icon: "ti-checkbox", bg: "#EEEDFE", color: "#534AB7" },
-  { icon: "ti-calendar-x", bg: "#FEE2E2", color: "#B91C1C" },
-];
-
 // cor do ícone de cifrão de acordo com o status do receivable daquela consulta
 const RECEIVABLE_ICON_COLOR = {
   pago: "#16a34a",
@@ -22,16 +15,10 @@ const RECEIVABLE_ICON_COLOR = {
   cancelado: "#dc2626",
 };
 
-// statistics vem como dict[str, float|int] genérico do backend;
-// aqui só transformamos a chave em um rótulo legível.
-function formatStatLabel(key) {
-  return key
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function formatStatValue(key, value) {
-  if (/price|valor|receita|revenue/i.test(key)) {
+// exibe "—" enquanto os dados ainda não chegaram, em vez de 0 ou undefined
+function show(value, { money = false } = {}) {
+  if (value === undefined || value === null) return "—";
+  if (money) {
     return `R$ ${Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
   }
   return Number(value).toLocaleString("pt-BR");
@@ -160,8 +147,6 @@ export default function Atendimentos() {
     }
   }
 
-  const statEntries = Object.entries(statistics).slice(0, 4);
-
   return (
     <div className="proc-page">
       <div className="proc-header">
@@ -172,78 +157,114 @@ export default function Atendimentos() {
       </div>
 
       <div className="stats-grid">
-        {statEntries.length > 0 ? (
-          statEntries.map(([key, value], i) => {
-            const icon = STAT_ICONS[i % STAT_ICONS.length];
-            return (
-              <div className="stat-card" key={key}>
-                <div className="stat-header">
-                  <div className="stat-icon" style={{ background: icon.bg }}>
-                    <i className={`ti ${icon.icon}`} style={{ color: icon.color }} aria-hidden="true" />
-                  </div>
-                  <span className="stat-label">{formatStatLabel(key)}</span>
-                </div>
-                <div className="stat-value">{formatStatValue(key, value)}</div>
-              </div>
-            );
-          })
-        ) : (
-          <div className="stat-card">
-            <div className="stat-header">
-              <div className="stat-icon" style={{ background: "#E4F6F8" }}>
-                <i className="ti ti-calendar-event" style={{ color: "#0a9db2" }} aria-hidden="true" />
-              </div>
-              <span className="stat-label">Total</span>
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: "#E4F6F8" }}>
+              <i className="ti ti-calendar-event" style={{ color: "#0a9db2" }} aria-hidden="true" />
             </div>
-            <div className="stat-value">{total}</div>
-            <div className="stat-sub">atendimentos no período</div>
+            <span className="stat-label">Total de agendamentos</span>
           </div>
-        )}
+          {/* ajuste a chave abaixo para o nome real que a API devolve em `statistics` */}
+          <div className="stat-value">{show(statistics.total_appointments ?? total)}</div>
+          <div className="stat-sub">agendamentos no período</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: "#FEE2E2" }}>
+              <i className="ti ti-calendar-x" style={{ color: "#B91C1C" }} aria-hidden="true" />
+            </div>
+            <span className="stat-label">Quantidade de faltas</span>
+          </div>
+          <div className="stat-value">{show(statistics.quantidade_de_faltas)}</div>
+          <div className="stat-sub">faltas no período</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: "#EEEDFE" }}>
+              <i className="ti ti-checkbox" style={{ color: "#534AB7" }} aria-hidden="true" />
+            </div>
+            <span className="stat-label">Pacientes atendidos</span>
+          </div>
+          <div className="stat-value">{show(statistics.pacientes_atendidos)}</div>
+          <div className="stat-sub">pacientes atendidos</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon" style={{ background: "#DCFCE7" }}>
+              <i className="ti ti-cash" style={{ color: "#15803D" }} aria-hidden="true" />
+            </div>
+            <span className="stat-label">Receita</span>
+          </div>
+          <div className="stat-value">{show(statistics.receita, { money: true })}</div>
+          <div className="stat-sub">receita no período</div>
+        </div>
       </div>
 
       <div className="proc-toolbar">
         <div className="search-wrap">
-          <span className="search-icon">🔍</span>
-          <input
-            className="search-input"
-            placeholder="Buscar por paciente..."
-            value={patientSearch}
-            onChange={(e) => setPatientSearch(e.target.value)}
-          />
+          <span className="filter-label">Paciente</span>
+          <div className="search-input-wrap">
+            <span className="search-icon">🔍</span>
+            <input
+              className="search-input"
+              placeholder="Buscar por paciente..."
+              value={patientSearch}
+              onChange={(e) => setPatientSearch(e.target.value)}
+            />
+          </div>
         </div>
+
         <div className="search-wrap">
-          <span className="search-icon">🔍</span>
+          <span className="filter-label">Dentista</span>
+          <div className="search-input-wrap">
+            <span className="search-icon">🔍</span>
+            <input
+              className="search-input"
+              placeholder="Buscar por dentista..."
+              value={dentistSearch}
+              onChange={(e) => setDentistSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="search-wrap">
+          <span className="filter-label">Status</span>
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">Todos os status</option>
+            {STATUS_OPTIONS.map((label) => (
+              <option key={label} value={STATUS_VALUE[label]}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="search-wrap">
+          <span className="filter-label">Início</span>
           <input
-            className="search-input"
-            placeholder="Buscar por dentista..."
-            value={dentistSearch}
-            onChange={(e) => setDentistSearch(e.target.value)}
+            type="date"
+            className="filter-select"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
           />
         </div>
-        <select
-          className="filter-select"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">Todos os status</option>
-          {STATUS_OPTIONS.map((label) => (
-            <option key={label} value={STATUS_VALUE[label]}>
-              {label}
-            </option>
-          ))}
-        </select>
-        <input
-          type="date"
-          className="filter-select"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        />
-        <input
-          type="date"
-          className="filter-select"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
+
+        <div className="search-wrap">
+          <span className="filter-label">Fim</span>
+          <input
+            type="date"
+            className="filter-select"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
       </div>
 
       <div className="table-wrap">

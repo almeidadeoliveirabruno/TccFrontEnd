@@ -260,7 +260,7 @@ export default function Dentistas() {
             <thead>
               <tr>
                 <th>Dentista</th>
-                <th>Especialidade</th>
+                {/* <th>Especialidade</th> */}
                 <th>CRO</th>
                 <th>Contato</th>
                 <th>Status</th>
@@ -285,7 +285,7 @@ export default function Dentistas() {
                         </div>
                       </div>
                     </td>
-                    <td>
+                    {/* <td>
                       {d.specialties && d.specialties.length > 0 ? (
                         <div className="spec-cell-multi">
                           {d.specialties.map((spec) => {
@@ -306,7 +306,7 @@ export default function Dentistas() {
                       ) : (
                         "—"
                       )}
-                    </td>
+                    </td> */}
                     <td>{d.cro}</td>
                     <td>
                       <div className="contact-cell">

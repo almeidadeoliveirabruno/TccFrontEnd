@@ -47,10 +47,10 @@
   transform: translateY(-4px);
   box-shadow: 0 20px 40px rgba(15,23,42,.08);
 }
-.stat-card:nth-child(1) { border-top: 2px solid #22d3ee; }
-.stat-card:nth-child(2) { border-top: 2px solid #818cf8; }
-.stat-card:nth-child(3) { border-top: 2px solid #34d399; }
-.stat-card:nth-child(4) { border-top: 2px solid #fb923c; }
+.stat-card:nth-child(1) { border-top: 2px solid #0a9db2; }
+.stat-card:nth-child(2) { border-top: 2px solid #B91C1C; }
+.stat-card:nth-child(3) { border-top: 2px solid #534AB7; }
+.stat-card:nth-child(4) { border-top: 2px solid #15803D; }
 
 .stat-header {
   display: flex;
@@ -95,15 +95,34 @@
 .proc-toolbar {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   gap: 12px;
   margin-bottom: 20px;
 }
 
 .search-wrap {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   flex: 1;
-  min-width: 200px;
+  min-width: 160px;
   max-width: 280px;
+}
+
+/* rótulo acima do campo (PACIENTE, DENTISTA, STATUS, INÍCIO, FIM) */
+.filter-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+/* wrapper que isola o ícone de lupa dentro do próprio input,
+   sem o label interferir no cálculo de "top: 50%" */
+.search-input-wrap {
+  position: relative;
 }
 
 .search-icon {
@@ -112,6 +131,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 14px;
+  line-height: 1;
   pointer-events: none;
 }
 
@@ -131,6 +151,7 @@
 .search-input::placeholder { color: #9CA3AF; }
 
 .filter-select {
+  width: 100%;
   padding: 9px 14px;
   border: 1px solid #ECEEF1;
   border-radius: 10px;
