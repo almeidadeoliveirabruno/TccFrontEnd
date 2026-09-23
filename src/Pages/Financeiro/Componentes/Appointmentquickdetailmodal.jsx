@@ -23,7 +23,7 @@ export default function AppointmentQuickDetailModal({
     setLoading(true);
     setError("");
     setDetail(null);
-    fetch(`${API_URL}/appointments/appointments/${appointmentId}`, {
+    fetch(`${API_URL}/appointments/table/${appointmentId}`, {
       headers: authHeaders(token),
     })
       .then((r) => {

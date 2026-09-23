@@ -164,7 +164,6 @@ export default function Atendimentos() {
             </div>
             <span className="stat-label">Total de agendamentos</span>
           </div>
-          {/* ajuste a chave abaixo para o nome real que a API devolve em `statistics` */}
           <div className="stat-value">{show(statistics.total_de_agendamentos)}</div>
           <div className="stat-sub">agendamentos realizados</div>
         </div>

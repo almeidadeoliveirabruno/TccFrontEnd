@@ -105,7 +105,7 @@
 .type-receita { background: #E4F6F8; color: #0a9db2; }
 .type-despesa { background: #FEF2F2; color: #B91C1C; }
 
-/* ===== DONUT -- versão larga, topo da página ===== */
+
 .finance-donut-wide {
   margin-bottom: 20px;
 }
@@ -118,7 +118,6 @@
   padding: 8px 24px;
 }
 
-/* ===== DONUT com Recharts ===== */
 .donut-chart-recharts {
   position: relative;
   width: 200px;

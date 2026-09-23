@@ -14,6 +14,7 @@ import Toast from "../../components/Toast/Toast";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import ExpenseModal from "./Componentes/ExpenseModal";
 import AppointmentQuickDetailModal from "./Componentes/AppointmentQuickDetailModal";
+import ReceivableModal from "../Atendimentos/Componentes/ReceivableModal";
 
 const DESPESA_STATUS_OPTIONS = [
   { value: "pendente", label: "Pendente" },
@@ -30,13 +31,19 @@ const RECEITA_STATUS_OPTIONS = [
 
 const TABLE_PAGE_SIZE = 6;
 
+// cor do ícone de cifrão de acordo com o status da cobrança
+const RECEIVABLE_ICON_COLOR = {
+  pago: "#16a34a",
+  pendente: "#f59e0b",
+  parcial: "#f59e0b",
+  cancelado: "#dc2626",
+};
+
 export default function Financeiro() {
   const { token } = useAuth();
 
-  // ---- qual tabela está visível ----
   const [activeTable, setActiveTable] = useState("despesas"); // "despesas" | "receitas"
 
-  // ---- período compartilhado pelas duas tabelas ----
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
@@ -67,6 +74,8 @@ export default function Financeiro() {
   const [cancelLoading, setCancelLoading] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailAppointmentId, setDetailAppointmentId] = useState(null);
+  const [payOpen, setPayOpen] = useState(false);
+  const [payReceivable, setPayReceivable] = useState(null);
 
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
 
@@ -227,6 +236,22 @@ export default function Financeiro() {
     setDetailOpen(true);
   }
 
+  function openReceivablePay(item) {
+    setPayReceivable(item);
+    setPayOpen(true);
+  }
+
+  async function handleReceivableSaved(message) {
+    if (!message) {
+      showToast("Erro ao salvar pagamento.", "error");
+      return;
+    }
+    showToast(message);
+    setPayOpen(false);
+    // recarrega a tabela e os cards (receitas, saldo, a receber, donut)
+    await loadReceitas();
+  }
+
   const totalReceitas = Number(receivableStats?.total_pago ?? 0);
   const totalDespesas = Number(expenseStats?.total_pago ?? 0);
   const saldo = totalReceitas - totalDespesas;
@@ -373,7 +398,7 @@ export default function Financeiro() {
           />
         </div>
         <div className="filter-group">
-          <span className="filter-label">até</span>
+          <span className="filter-label">Até</span>
           <input
             type="date"
             className="filter-select"
@@ -408,30 +433,37 @@ export default function Financeiro() {
           </div>
 
           <div className="finance-table-toolbar">
-            <select
-              className="filter-select"
-              value={despesaStatus}
-              onChange={(e) => setDespesaStatus(e.target.value)}
-            >
-              <option value="">Todos os status</option>
-              {DESPESA_STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-            <select
-              className="filter-select"
-              value={despesaCategory}
-              onChange={(e) => setDespesaCategory(e.target.value)}
-            >
-              <option value="">Todas categorias</option>
-              {categories.map((c) => (
-                <option key={c.value ?? c} value={c.value ?? c}>
-                  {c.label ?? expenseCategoryLabel(c)}
-                </option>
-              ))}
-            </select>
+            <div className="filter-group">
+              <span className="filter-label">Status</span>
+              <select
+                className="filter-select"
+                value={despesaStatus}
+                onChange={(e) => setDespesaStatus(e.target.value)}
+              >
+                <option value="">Todos</option>
+                {DESPESA_STATUS_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <span className="filter-label">Categoria</span>
+              <select
+                className="filter-select"
+                value={despesaCategory}
+                onChange={(e) => setDespesaCategory(e.target.value)}
+              >
+                <option value="">Todas</option>
+                {categories.map((c) => (
+                  <option key={c.value ?? c} value={c.value ?? c}>
+                    {c.label ?? expenseCategoryLabel(c)}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="table-wrap">
@@ -544,18 +576,21 @@ export default function Financeiro() {
           </div>
 
           <div className="finance-table-toolbar">
-            <select
-              className="filter-select"
-              value={receitaStatus}
-              onChange={(e) => setReceitaStatus(e.target.value)}
-            >
-              <option value="">Todos os status</option>
-              {RECEITA_STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
+            <div className="filter-group">
+              <span className="filter-label">Status</span>
+              <select
+                className="filter-select"
+                value={receitaStatus}
+                onChange={(e) => setReceitaStatus(e.target.value)}
+              >
+                <option value="">Todos</option>
+                {RECEITA_STATUS_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="table-wrap">
@@ -599,6 +634,25 @@ export default function Financeiro() {
                         </td>
                         <td>
                           <div className="row-actions">
+                            <button
+                              className="btn-icon"
+                              title={
+                                item.status === "pago"
+                                  ? "Pago"
+                                  : item.status === "cancelado"
+                                  ? "Cobrança cancelada"
+                                  : item.status === "parcial"
+                                  ? "Pagamento parcial"
+                                  : "Registrar pagamento"
+                              }
+                              onClick={() => openReceivablePay(item)}
+                            >
+                              <i
+                                className="ti ti-currency-dollar"
+                                style={{ color: RECEIVABLE_ICON_COLOR[item.status] ?? "#9CA3AF" }}
+                                aria-hidden="true"
+                              />
+                            </button>
                             <button
                               className="btn-icon"
                               title="Ver detalhes da consulta"
@@ -670,6 +724,22 @@ export default function Financeiro() {
         open={detailOpen}
         appointmentId={detailAppointmentId}
         onClose={() => setDetailOpen(false)}
+        token={token}
+      />
+
+      <ReceivableModal
+        open={payOpen}
+        appointmentId={payReceivable?.appointment_id}
+        patientName={payReceivable?.patient_name}
+        dentistName={payReceivable?.dentist_name}
+        appointmentTime={
+          payReceivable?.appointment_date
+            ? new Date(payReceivable.appointment_date).toLocaleDateString("pt-BR")
+            : undefined
+        }
+        totalPrice={payReceivable?.total_amount}
+        onClose={() => setPayOpen(false)}
+        onSaved={handleReceivableSaved}
         token={token}
       />
 
