@@ -916,3 +916,9 @@
     width: 100%;
   }
 }
+
+  .agenda-date-month-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
