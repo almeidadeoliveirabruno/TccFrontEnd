@@ -165,8 +165,8 @@ export default function Atendimentos() {
             <span className="stat-label">Total de agendamentos</span>
           </div>
           {/* ajuste a chave abaixo para o nome real que a API devolve em `statistics` */}
-          <div className="stat-value">{show(statistics.total_appointments ?? total)}</div>
-          <div className="stat-sub">agendamentos no período</div>
+          <div className="stat-value">{show(statistics.total_de_agendamentos)}</div>
+          <div className="stat-sub">agendamentos realizados</div>
         </div>
 
         <div className="stat-card">
@@ -177,7 +177,7 @@ export default function Atendimentos() {
             <span className="stat-label">Quantidade de faltas</span>
           </div>
           <div className="stat-value">{show(statistics.quantidade_de_faltas)}</div>
-          <div className="stat-sub">faltas no período</div>
+          <div className="stat-sub">faltas de pacientes </div>
         </div>
 
         <div className="stat-card">
@@ -188,7 +188,7 @@ export default function Atendimentos() {
             <span className="stat-label">Pacientes atendidos</span>
           </div>
           <div className="stat-value">{show(statistics.pacientes_atendidos)}</div>
-          <div className="stat-sub">pacientes atendidos</div>
+          <div className="stat-sub">diferentes pacientes</div>
         </div>
 
         <div className="stat-card">

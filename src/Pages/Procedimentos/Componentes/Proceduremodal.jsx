@@ -36,9 +36,11 @@ export default function ProcedureModal({
     if (!form.category) e.category = "Selecione uma categoria";
     if (form.price === "" || isNaN(Number(form.price)))
       e.price = "Campo obrigatório";
-    if (form.price < 0) e.price = "Preço não pode ser negativo";
+    if (form.price <= 0) e.price = "Preço não pode ser negativo";
     if (form.duration === "" || isNaN(Number(form.duration)))
       e.duration = "Campo obrigatório";
+    if (form.duration <= 0)
+      e.duration = "O tempo de duração não pode negativa ou zero"
     setErrors(e);
     return Object.keys(e).length === 0;
   }

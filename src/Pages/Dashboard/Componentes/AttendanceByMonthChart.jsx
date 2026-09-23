@@ -19,18 +19,15 @@ function CustomTooltip({ active, payload, label }) {
     <div className="chart-tooltip">
       <div className="chart-tooltip-label">{label}</div>
       <div className="chart-tooltip-row">
-        <span className="chart-tooltip-dot" style={{ background: "#EF4444" }} />
-        <span>Taxa de faltas</span>
-        <strong>{row.faltaPercentual.toFixed(1)}%</strong>
-      </div>
-      <div className="chart-tooltip-row chart-tooltip-row-muted">
-        <span>{row.absent} falta(s) de {row.absent + row.realized} agendamentos</span>
+        <span className="chart-tooltip-dot" style={{ background: "#3B82F6" }} />
+        <span>Atendimentos</span>
+        <strong>{row.count}</strong>
       </div>
     </div>
   );
 }
 
-export default function AttendanceByMonthChart({ startDate, endDate }) {
+export default function AppointmentsCountByMonthChart({ startDate, endDate }) {
   const { token } = useAuth();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +36,7 @@ export default function AttendanceByMonthChart({ startDate, endDate }) {
     setLoading(true);
     try {
       const qs = buildQueryParams(startDate, endDate);
-      const r = await fetch(`${API_URL}/dashboard/attendance-summary${qs}`, {
+      const r = await fetch(`${API_URL}/dashboard/appointments-count-by-period${qs}`, {
         headers: authHeaders(token),
       });
       if (!r.ok) throw new Error();
@@ -47,9 +44,7 @@ export default function AttendanceByMonthChart({ startDate, endDate }) {
       setData(
         raw.map((item) => ({
           label: formatMonthLabel(item.year, item.month),
-          realized: item.realized,
-          absent: item.absent,
-          faltaPercentual: 100 - item.attendance_percentage,
+          count: item.count,
         })),
       );
     } catch {
@@ -63,18 +58,16 @@ export default function AttendanceByMonthChart({ startDate, endDate }) {
     load();
   }, [load]);
 
-  const avgFaltas = data.length
-    ? data.reduce((sum, d) => sum + d.faltaPercentual, 0) / data.length
-    : 0;
+  const totalAtendimentos = data.reduce((sum, d) => sum + d.count, 0);
 
   return (
     <div className="chart-card chart-card-full">
       <div className="chart-card-header">
-        <h3 className="chart-card-title">Taxa de faltas por mês</h3>
+        <h3 className="chart-card-title">Atendimentos por mês</h3>
         <div className="chart-legend-inline">
           <span className="legend-item">
-            <span className="legend-dot" style={{ background: "#EF4444" }} />
-            Média do período · {avgFaltas.toFixed(1)}%
+            <span className="legend-dot" style={{ background: "#3B82F6" }} />
+            Total do período · {totalAtendimentos}
           </span>
         </div>
       </div>
@@ -88,9 +81,9 @@ export default function AttendanceByMonthChart({ startDate, endDate }) {
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="faltaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#EF4444" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                <linearGradient id="atendimentosGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
@@ -104,17 +97,16 @@ export default function AttendanceByMonthChart({ startDate, endDate }) {
                 tick={{ fontSize: 12, fill: "#94A3B8" }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(v) => `${v}%`}
                 width={40}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
                 type="monotone"
-                dataKey="faltaPercentual"
-                stroke="#EF4444"
+                dataKey="count"
+                stroke="#3B82F6"
                 strokeWidth={2.5}
-                fill="url(#faltaGradient)"
-                dot={{ r: 4, fill: "#EF4444" }}
+                fill="url(#atendimentosGradient)"
+                dot={{ r: 4, fill: "#3B82F6" }}
                 activeDot={{ r: 6 }}
               />
             </AreaChart>

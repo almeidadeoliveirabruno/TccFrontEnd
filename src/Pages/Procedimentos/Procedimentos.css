@@ -93,16 +93,25 @@
 }
 
 /* ===== TOOLBAR ===== */
+/* ===== TOOLBAR ===== */
 .proc-toolbar {
   display: flex;
   gap: 12px;
   margin-bottom: 20px;
+  align-items: flex-end;
 }
 
 .search-wrap {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   flex: 1;
   max-width: 380px;
+}
+
+.search-input-wrap {
+  position: relative;
+  width: 100%;
 }
 
 .search-icon {
@@ -129,6 +138,20 @@
 .search-input:focus { border-color: #0CB0C7; }
 .search-input::placeholder { color: #9CA3AF; }
 
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-label {
+  font-size: 11px;
+  color: #9CA3AF;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .filter-select {
   padding: 9px 14px;
   border: 1px solid #ECEEF1;
@@ -140,9 +163,9 @@
   outline: none;
   font-family: inherit;
   transition: border-color 0.15s;
+  min-width: 160px;
 }
 .filter-select:focus { border-color: #0CB0C7; }
-
 /* ===== TABLE ===== */
 .table-wrap {
   background: rgba(255,255,255,.88);

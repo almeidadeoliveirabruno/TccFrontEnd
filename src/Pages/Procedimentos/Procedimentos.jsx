@@ -156,7 +156,9 @@ useEffect(() => {
       </div>
 
       <div className="proc-toolbar">
-        <div className="search-wrap">
+      <div className="search-wrap">
+        <span className="filter-label">Nome / Categoria</span>
+        <div className="search-input-wrap">
           <span className="search-icon">🔍</span>
           <input
             className="search-input"
@@ -165,17 +167,22 @@ useEffect(() => {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+      </div>
+
+      <div className="filter-group">
+        <span className="filter-label">Categorias</span>
         <select
           className="filter-select"
           value={catFilter}
           onChange={(e) => setCatFilter(e.target.value)}
         >
-          <option value="">Todas as categorias</option>
+          <option value="">Todas</option>
           {CATEGORIES.map((c) => (
             <option key={c}>{c}</option>
           ))}
         </select>
       </div>
+    </div>
 
       <div className="table-wrap">
         {loading ? (
