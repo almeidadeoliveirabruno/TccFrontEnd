@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Plus, Trash2 } from "lucide-react";
 import { API_URL, authHeaders } from "../../../utils/api";
 import { toISODate } from "../utils";
 import {formatPhone} from "../../../utils/masks";
+import OdontogramModal from "../../Pacientes/Componentes/OdontogramModal";
 
 
 const EMPTY_PROCEDURE = { procedure_id: "", tooth: "" };
@@ -36,6 +38,9 @@ export default function AppointmentModal({
   const [procedureOptions, setProcedureOptions] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
   const [timesLoading, setTimesLoading] = useState(false);
+
+  // Odontograma: armazena o índice da linha de procedimento aberta
+  const [odoRowIndex, setOdoRowIndex] = useState(null);
 
   const isEdit = Boolean(editAppointmentId);
 
@@ -390,15 +395,37 @@ export default function AppointmentModal({
                       </option>
                     ))}
                   </select>
-                  <input
-                    className="form-input"
-                    placeholder="Dente FDI"
-                    maxLength={2}
-                    value={row.tooth}
-                    onChange={(ev) =>
-                      setProcedure(index, "tooth", ev.target.value.replace(/\D/g, ""))
-                    }
-                  />
+                  <button
+                    type="button"
+                    title="Selecionar dente no odontograma"
+                    onClick={() => setOdoRowIndex(index)}
+                    style={{
+                      background: row.tooth ? "linear-gradient(135deg,#0cb0c7,#0ea5e9)" : "#f1f5f9",
+                      border: "1.5px solid " + (row.tooth ? "#0cb0c7" : "#e2e8f0"),
+                      borderRadius: 10,
+                      minWidth: 64,
+                      height: "100%",
+                      alignSelf: "stretch",
+                      fontSize: row.tooth ? 14 : 16,
+                      fontWeight: row.tooth ? 700 : 400,
+                      color: row.tooth ? "#fff" : "#94a3b8",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 4,
+                      paddingInline: 10,
+                      flexShrink: 0,
+                      transition: "all 0.15s ease",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    {row.tooth ? (
+                      <>🦷 {row.tooth}</>
+                    ) : (
+                      <>🦷<span style={{ fontSize: 11, marginLeft: 2 }}>Dente</span></>
+                    )}
+                  </button>
                   {form.procedures.length > 1 ? (
                     <button
                       type="button"
@@ -422,6 +449,16 @@ export default function AppointmentModal({
                 <span className="form-error">{errors.procedures}</span>
               ) : null}
             </div>
+
+            {/* Odontograma – portal para sobrepor todos os modais */}
+            {odoRowIndex !== null && createPortal(
+              <OdontogramModal
+                value={form.procedures[odoRowIndex]?.tooth ?? ""}
+                onSelect={(fdi) => setProcedure(odoRowIndex, "tooth", fdi)}
+                onClose={() => setOdoRowIndex(null)}
+              />,
+              document.body
+            )}
 
             <div className="form-group">
               <label className="form-label">

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { STATUS_OPTIONS, STATUS_VALUE } from "../constants";
 import { API_URL, authHeaders } from "../../../utils/api";
+import OdontogramModal from "../../Pacientes/Componentes/OdontogramModal";
 
 // Abre uma consulta JÁ EXISTENTE. Diferente do AtendimentoModal (que serve
 // só para CRIAR): aqui não dá pra trocar paciente/dentista/data/procedimentos
@@ -20,12 +22,15 @@ export default function AppointmentDetailModal({
   const [notes, setNotes] = useState("");
   const [procedures, setProcedures] = useState([]); // [{ id, name, tooth }]
 
+  // Odontograma
+  const [odoProcId, setOdoProcId] = useState(null); // id do proc com odo aberto
+
   useEffect(() => {
     if (!open || !appointmentId) return;
 
     setLoading(true);
     // rota certa: devolve nomes (pacient_name/dentist_name), não IDs
-    fetch(`${API_URL}/appointments/appointments/${appointmentId}`, {
+    fetch(`${API_URL}/appointments/table/${appointmentId}`, {
       headers: authHeaders(token),
     })
       .then((r) => {
@@ -170,22 +175,54 @@ export default function AppointmentDetailModal({
                     <span style={{ flex: 1, fontSize: 13, color: "#374151" }}>
                       {p.name}
                     </span>
-                    <input
-                      className="form-input"
-                      style={{ width: 90 }}
-                      placeholder="Dente (ex: 36)"
-                      maxLength={2}
-                      value={p.tooth}
-                      onChange={(e) => setTooth(p.id, e.target.value)}
-                    />
+                    <button
+                      type="button"
+                      title="Selecionar dente no odontograma"
+                      onClick={() => setOdoProcId(p.id)}
+                      style={{
+                        background: p.tooth ? "linear-gradient(135deg,#0cb0c7,#0ea5e9)" : "#f1f5f9",
+                        border: "1.5px solid " + (p.tooth ? "#0cb0c7" : "#e2e8f0"),
+                        borderRadius: 10,
+                        minWidth: 64,
+                        height: 34,
+                        fontSize: p.tooth ? 14 : 16,
+                        fontWeight: p.tooth ? 700 : 400,
+                        color: p.tooth ? "#fff" : "#94a3b8",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 4,
+                        paddingInline: 10,
+                        flexShrink: 0,
+                        transition: "all 0.15s ease",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      {p.tooth ? (
+                        <>🦷 {p.tooth}</>
+                      ) : (
+                        <>🦷<span style={{ fontSize: 11, marginLeft: 2 }}>Dente</span></>
+                      )}
+                    </button>
                   </div>
                 ))}
               </div>
               <div className="proc-desc" style={{ marginTop: 6 }}>
-                Deixe em branco se o procedimento for geral ou o dente não
-                tiver sido informado.
+                Clique em 🦷 para selecionar o dente no odontograma. Deixe sem
+                seleção se o procedimento for geral.
               </div>
             </div>
+
+            {/* Odontograma – renderizado via portal para sobrepor o modal pai */}
+            {odoProcId !== null && createPortal(
+              <OdontogramModal
+                value={procedures.find((p) => p.id === odoProcId)?.tooth ?? ""}
+                onSelect={(fdi) => setTooth(odoProcId, fdi)}
+                onClose={() => setOdoProcId(null)}
+              />,
+              document.body
+            )}
 
             <div className="form-group">
               <label className="form-label">Observações</label>
