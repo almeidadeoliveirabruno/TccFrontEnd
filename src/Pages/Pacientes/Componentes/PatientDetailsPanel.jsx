@@ -1,4 +1,5 @@
 import { useState } from "react";
+import OdontogramModal from "./OdontogramModal";
 import {
   avatarColor,
   initials,
@@ -37,6 +38,8 @@ export default function PatientDetailsPanel({
   const [menuOpen, setMenuOpen] = useState(false);
   // { key, value, saving, error } do procedimento sendo editado no histórico
   const [editingProc, setEditingProc] = useState(null);
+  // controla abertura do odontograma
+  const [odontogramOpen, setOdontogramOpen] = useState(false);
 
   async function handleSaveTooth(procedureId, key) {
     const value = editingProc?.value ?? "";
@@ -82,7 +85,8 @@ export default function PatientDetailsPanel({
   const nextConsult = summary?.next_consult;
 
   return (
-    <div className="patient-detail-panel">
+    <>
+      <div className="patient-detail-panel">
       <div className="patient-detail-header">
         <div className="patient-detail-identity">
           <div
@@ -252,24 +256,17 @@ export default function PatientDetailsPanel({
                               {isEditing ? (
                                 <span className="patient-procedure-edit">
                                   <span>{proc.name}</span>
-                                  <input
-                                    className="patient-procedure-tooth-input"
-                                    value={editingProc.value}
-                                    maxLength={2}
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    placeholder="—"
-                                    autoFocus
+                                  {/* Botão para abrir o odontograma */}
+                                  <button
+                                    type="button"
+                                    className="patient-procedure-tooth-picker"
+                                    title="Selecionar dente no odontograma"
                                     disabled={editingProc.saving}
-                                    onChange={(e) => {
-                                      const digits = e.target.value.replace(/\D/g, "").slice(0, 2);
-                                      setEditingProc((prev) => ({ ...prev, value: digits, error: null }));
-                                    }}
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter") handleSaveTooth(proc.id, key);
-                                      if (e.key === "Escape") setEditingProc(null);
-                                    }}
-                                  />
+                                    onClick={() => setOdontogramOpen(true)}
+                                  >
+                                    🦷 {editingProc.value ? `Dente ${editingProc.value}` : "Selecionar dente"}
+                                    <i className="ti ti-chevron-down" aria-hidden="true" />
+                                  </button>
                                   <button
                                     type="button"
                                     className="btn-icon-sm"
@@ -325,5 +322,17 @@ export default function PatientDetailsPanel({
         </div>
       )}
     </div>
+
+      {/* Odontograma modal */}
+      {odontogramOpen && (
+        <OdontogramModal
+          value={editingProc?.value ?? ""}
+          onSelect={(fdi) =>
+            setEditingProc((prev) => prev ? { ...prev, value: fdi, error: null } : prev)
+          }
+          onClose={() => setOdontogramOpen(false)}
+        />
+      )}
+    </>
   );
 }

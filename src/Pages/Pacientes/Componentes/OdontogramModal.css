@@ -1,0 +1,400 @@
+/* ===== OVERLAY ===== */
+.odo-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: odo-fade-in 0.18s ease;
+}
+
+@keyframes odo-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ===== MODAL ===== */
+.odo-modal {
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 32px 80px rgba(15, 23, 42, 0.25);
+  width: 100%;
+  max-width: 860px;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: odo-slide-up 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes odo-slide-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ===== HEADER ===== */
+.odo-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.odo-modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.odo-modal-icon {
+  font-size: 22px;
+}
+
+.odo-close-btn {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.odo-close-btn:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* ===== BANNER DENTE SELECIONADO ===== */
+.odo-selected-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(90deg, rgba(12, 176, 199, 0.08), rgba(99, 102, 241, 0.06));
+  border: 1px solid rgba(12, 176, 199, 0.25);
+  border-radius: 12px;
+  padding: 10px 16px;
+  min-height: 42px;
+}
+
+.odo-selected-label {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.odo-selected-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0a9db2;
+  letter-spacing: 0.04em;
+  min-width: 36px;
+  text-align: center;
+}
+
+.odo-clear-btn {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #64748b;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+.odo-clear-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.odo-selected-hint {
+  font-size: 13px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* ===== RÓTULOS DE SEÇÃO ===== */
+.odo-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #0a9db2;
+  padding-left: 2px;
+}
+
+.odo-section-label--deciduous {
+  color: #7c3aed;
+  margin-top: 4px;
+}
+
+/* ===== JAW (bloco de arcada) ===== */
+.odo-jaw {
+  background: #f9fafb;
+  border: 1px solid #ecedf1;
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.odo-jaw--deciduous {
+  background: #faf5ff;
+  border-color: #e9d5ff;
+}
+
+.odo-jaw-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+.odo-jaw-divider::before,
+.odo-jaw-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+.odo-jaw-divider span {
+  font-size: 10.5px;
+  color: #94a3b8;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* ===== LINHA DE ARCADA ===== */
+.odo-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+}
+.odo-row-upper { align-items: flex-end; }
+.odo-row-lower { align-items: flex-start; }
+
+/* ===== QUADRANTE ===== */
+.odo-quadrant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.odo-quadrant-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.odo-teeth-row {
+  display: flex;
+  gap: 3px;
+}
+
+/* ===== LINHA CENTRAL ===== */
+.odo-midline {
+  width: 1px;
+  background: #cbd5e1;
+  align-self: stretch;
+  margin: 0 4px;
+}
+
+/* ===== DENTE ===== */
+.odo-tooth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding: 5px 4px 4px;
+  cursor: pointer;
+  transition: background 0.13s ease, border-color 0.13s ease, transform 0.12s ease, box-shadow 0.13s ease;
+  outline: none;
+  min-width: 34px;
+}
+
+.odo-tooth:hover {
+  background: rgba(12, 176, 199, 0.08);
+  border-color: rgba(12, 176, 199, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(12, 176, 199, 0.15);
+}
+
+.odo-tooth:focus-visible {
+  border-color: #0cb0c7;
+  box-shadow: 0 0 0 3px rgba(12, 176, 199, 0.25);
+}
+
+/* === Cores por tipo === */
+.odo-tooth.tooth-incisor  { color: #0891b2; }
+.odo-tooth.tooth-canine   { color: #7c3aed; }
+.odo-tooth.tooth-premolar { color: #0369a1; }
+.odo-tooth.tooth-molar    { color: #1d4ed8; }
+
+/* === SELECIONADO === */
+.odo-tooth--selected {
+  background: linear-gradient(135deg, rgba(12, 176, 199, 0.18), rgba(99, 102, 241, 0.14)) !important;
+  border-color: #0cb0c7 !important;
+  box-shadow: 0 0 0 2px rgba(12, 176, 199, 0.3), 0 6px 18px rgba(12, 176, 199, 0.2) !important;
+  transform: translateY(-3px) scale(1.04) !important;
+}
+
+.odo-tooth--selected.tooth-incisor  { color: #0e7490; }
+.odo-tooth--selected.tooth-canine   { color: #5b21b6; }
+.odo-tooth--selected.tooth-premolar { color: #075985; }
+.odo-tooth--selected.tooth-molar    { color: #1e40af; }
+
+.odo-tooth-icon {
+  width: 26px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.odo-tooth-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.odo-tooth-num {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6b7280;
+  line-height: 1;
+}
+.odo-tooth--selected .odo-tooth-num {
+  color: #0a9db2;
+}
+
+/* Dentes decíduos levemente menores */
+.odo-jaw--deciduous .odo-tooth {
+  min-width: 30px;
+}
+.odo-jaw--deciduous .odo-tooth-icon {
+  width: 22px;
+  height: 26px;
+}
+
+/* ===== LEGENDA ===== */
+.odo-legend {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.odo-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.odo-legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.odo-legend-dot--incisor  { background: #0891b2; }
+.odo-legend-dot--canine   { background: #7c3aed; }
+.odo-legend-dot--premolar { background: #0369a1; }
+.odo-legend-dot--molar    { background: #1d4ed8; }
+
+/* ===== FOOTER ===== */
+.odo-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.odo-btn-cancel {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+.odo-btn-cancel:hover {
+  background: #f1f5f9;
+  color: #374151;
+}
+
+.odo-btn-confirm {
+  background: linear-gradient(135deg, #0cb0c7, #0ea5e9);
+  border: none;
+  border-radius: 10px;
+  padding: 9px 22px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 14px rgba(12, 176, 199, 0.35);
+  transition: all 0.15s ease;
+}
+.odo-btn-confirm:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0e7490, #0284c7);
+  box-shadow: 0 6px 20px rgba(12, 176, 199, 0.45);
+  transform: translateY(-1px);
+}
+.odo-btn-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 700px) {
+  .odo-modal {
+    padding: 16px 12px;
+    border-radius: 18px;
+    max-height: 95vh;
+  }
+  .odo-tooth {
+    min-width: 26px;
+    padding: 3px 2px;
+  }
+  .odo-tooth-icon {
+    width: 20px;
+    height: 24px;
+  }
+  .odo-tooth-num {
+    font-size: 8.5px;
+  }
+  .odo-jaw--deciduous .odo-tooth {
+    min-width: 22px;
+  }
+}

@@ -364,13 +364,16 @@ export default function Pacientes() {
         <div className="patient-list-panel">
           <div className="patient-search-row">
             <div className="search-wrap">
-              <span className="search-icon">🔍</span>
-              <input
-                className="search-input"
-                placeholder="Buscar por nome..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+              <span className="filter-label">Pacientes</span>
+              <div className="search-input-wrap">
+                <span className="search-icon">🔍</span>
+                <input
+                  className="search-input"
+                  placeholder="Buscar por nome..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
