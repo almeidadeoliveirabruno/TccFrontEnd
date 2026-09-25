@@ -55,6 +55,7 @@ export default function Agenda() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
+  const [confirmMsgLoading, setConfirmMsgLoading] = useState(false);
 
   const [toast, setToast] = useState({
     visible: false,
@@ -292,9 +293,28 @@ export default function Agenda() {
       await loadAppointments();
       await loadDetail(detail.id);
     } catch {
-      showToast("Não foi possível cancelar.", "error");
+      showToast("Nao foi possivel cancelar.", "error");
     } finally {
       setCancelLoading(false);
+    }
+  }
+
+  async function handleMarkMessageSent() {
+    if (!detail) return;
+    setConfirmMsgLoading(true);
+    try {
+      const r = await fetch(
+        `${API_URL}/appointments/${detail.id}/confirmation-message`,
+        { method: "PATCH", headers: authHeaders(token) },
+      );
+      if (!r.ok) throw new Error();
+      showToast("Mensagem de confirmacao registrada!");
+      await loadAppointments();
+      await loadDetail(detail.id);
+    } catch {
+      showToast("Nao foi possivel registrar o envio.", "error");
+    } finally {
+      setConfirmMsgLoading(false);
     }
   }
 
@@ -409,6 +429,8 @@ export default function Agenda() {
           onStatusChange={handleStatusChange}
           statusUpdateLoading={statusUpdateLoading}
           cancelLoading={cancelLoading}
+          onMarkMessageSent={handleMarkMessageSent}
+          confirmMsgLoading={confirmMsgLoading}
         />
       </div>
 

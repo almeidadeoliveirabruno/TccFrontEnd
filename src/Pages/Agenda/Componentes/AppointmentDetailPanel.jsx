@@ -1,6 +1,6 @@
 import {
   X,
-  MessageCircleOff,
+  MessageCircle,
   Pencil,
   Ban,
   CheckCircle2,
@@ -13,7 +13,7 @@ import {
 } from "../constants";
 import { formatLongDate, formatTimeShort } from "../utils";
 import { ConfirmationBadge } from "./AgendaBoard";
-import {formatPhone} from "../../../utils/masks";
+import { formatPhone } from "../../../utils/masks";
 
 // Para cada status atual, quais transições fazem sentido oferecer e com
 // qual rótulo/ícone. O primeiro item de cada lista vira o chip "primary".
@@ -50,6 +50,8 @@ export default function AppointmentDetailPanel({
   onStatusChange,
   statusUpdateLoading,
   cancelLoading,
+  onMarkMessageSent,
+  confirmMsgLoading,
 }) {
   const statusStyle =
     APPOINTMENT_STATUS[detail?.status] ?? APPOINTMENT_STATUS.agendado;
@@ -153,25 +155,62 @@ export default function AppointmentDetailPanel({
 
           <div className="agenda-detail-whatsapp">
             <div className="agenda-detail-whatsapp-head">
-              <MessageCircleOff size={18} />
+              <MessageCircle size={18} />
               <div>
                 <strong>Confirmação com o paciente</strong>
-                <p>{confirmation.label}</p>
+                <p>Envie uma mensagem de confirmação via WhatsApp</p>
               </div>
-              <button
-                type="button"
-                className="agenda-whatsapp-resend-btn"
-                disabled
-                title="Integração WhatsApp em desenvolvimento"
-              >
-                Reenviar
-              </button>
             </div>
             <ConfirmationBadge appointment={detail} />
-            <p className="agenda-detail-whatsapp-note">
-              O envio automático via WhatsApp será integrado em breve. Por enquanto,
-              use o status da consulta para registrar a resposta do paciente.
-            </p>
+            <button
+              type="button"
+              className="agenda-whatsapp-send-btn"
+              disabled={!patient?.phone}
+              title={patient?.phone ? "Abrir WhatsApp Web com mensagem pronta" : "Paciente sem telefone cadastrado"}
+              onClick={() => {
+                const rawPhone = (patient.phone ?? "").replace(/\D/g, "");
+                const phone = rawPhone.startsWith("55") ? rawPhone : `55${rawPhone}`;
+                const date = formatLongDate(detail.appointment_date);
+                const time = formatTimeShort(detail.time_begin);
+
+                const lines = [
+                  "Ola, " + patient.name + "!",
+                  "Passando para confirmar sua consulta na nossa clinica.",
+                  "",
+                  "Data: " + date,
+                  "Horario: " + time,
+                  "Dentista: " + (dentist?.name ?? "-"),
+                  "Contato: " + formatPhone(patient.phone),
+                  "",
+                  "Por favor, confirme sua presenca respondendo esta mensagem.",
+                ];
+                const msg = lines.join("\n");
+
+                window.open(
+                  `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,
+                  "_blank",
+                );
+              }}
+
+
+            >
+              <MessageCircle size={15} />
+              Enviar mensagem de confirmacao
+            </button>
+            <button
+              type="button"
+              className="agenda-action-btn primary"
+              style={{ marginTop: 8 }}
+              onClick={onMarkMessageSent}
+              disabled={confirmMsgLoading || detail.confirmation_message_sent}
+            >
+              <CheckCircle2 size={16} />
+              {confirmMsgLoading
+                ? "Registrando..."
+                : detail.confirmation_message_sent
+                ? "Mensagem ja confirmada"
+                : "Confirmar envio da mensagem"}
+            </button>
           </div>
 
           <div className="agenda-detail-actions">

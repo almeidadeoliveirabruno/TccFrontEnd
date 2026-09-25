@@ -306,9 +306,7 @@ export default function Atendimentos() {
                       {a.procedures?.length > 0 && (
                         <div className="proc-desc">{a.procedures.join(", ")}</div>
                       )}
-                      {a.confirmation_message_sent && (
-                        <div className="proc-desc">Confirmação enviada</div>
-                      )}
+
                     </td>
                     <td>{a.dentist_name}</td>
                     <td>{a.time_day}</td>
