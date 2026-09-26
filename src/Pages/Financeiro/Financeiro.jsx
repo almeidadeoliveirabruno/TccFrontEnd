@@ -10,10 +10,10 @@ import {
   financeStatusLabel,
   STATUS_COLORS,
 } from "./constants";
-import Toast from "../../components/Toast/Toast";
-import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import Toast from "../../Components/Toast/Toast";
+import ConfirmModal from "../../Components/ConfirmModal/ConfirmModal";
 import ExpenseModal from "./Componentes/ExpenseModal";
-import AppointmentQuickDetailModal from "./Componentes/AppointmentQuickDetailModal";
+import AppointmentQuickDetailModal from "./Componentes/Appointmentquickdetailmodal";
 import ReceivableModal from "../Atendimentos/Componentes/ReceivableModal";
 
 const DESPESA_STATUS_OPTIONS = [

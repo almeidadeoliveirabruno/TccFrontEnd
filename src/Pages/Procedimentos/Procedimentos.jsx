@@ -3,8 +3,8 @@ import "./Procedimentos.css";
 import { CATEGORIES, CAT_COLORS } from "./constants";
 import { API_URL, authHeaders } from "../../utils/api";
 import { useAuth } from "../../hooks/useAuth";
-import Toast from "../../components/Toast/Toast";
-import ProcedureModal from "./Componentes/proceduremodal";
+import Toast from "../../Components/Toast/Toast";
+import ProcedureModal from "./Componentes/Proceduremodal";
 
 export default function Procedimentos() {
   const { token } = useAuth();

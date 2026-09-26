@@ -10,7 +10,7 @@ import {
 } from "./constants";
 import { API_URL, authHeaders } from "../../utils/api";
 import { useAuth } from "../../hooks/useAuth";
-import Toast from "../../components/Toast/Toast";
+import Toast from "../../Components/Toast/Toast";
 import DentistModal from "./Componentes/DentistModal";
 import DentistDetailsModal from "./Componentes/DentistDetailsModal";
 import {formatPhone} from "../../utils/masks";

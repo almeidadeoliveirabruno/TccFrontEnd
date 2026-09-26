@@ -6,7 +6,7 @@ import Procedimentos from "../Pages/Procedimentos/Procedimentos";
 import Dentistas from "../Pages/Dentistas/Dentistas";
 import Agenda from "../Pages/Agenda/Agenda";
 import PrivateRoute from "./PrivateRoute";
-import Pacientes from "../Pages/Pacientes/pacientes";
+import Pacientes from "../Pages/Pacientes/Pacientes";
 import Financeiro from "../Pages/Financeiro/Financeiro";
 import Dashboard from "../Pages/Dashboard/Dashboard"
 import Home from "../Pages/Home/Home";

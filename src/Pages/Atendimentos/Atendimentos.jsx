@@ -3,8 +3,8 @@ import "./Atendimentos.css";
 import { STATUS_OPTIONS, STATUS_VALUE, STATUS_LABEL, STATUS_COLORS } from "./constants";
 import { API_URL, authHeaders } from "../../utils/api";
 import { useAuth } from "../../hooks/useAuth";
-import Toast from "../../components/Toast/Toast";
-import AppointmentDetailModal from "./Componentes/AppointmentDetailModal";
+import Toast from "../../Components/Toast/Toast";
+import AppointmentDetailModal from "./Componentes/appointmentdetailmodal";
 import ReceivableModal from "./Componentes/ReceivableModal";
 
 // cor do ícone de cifrão de acordo com o status do receivable daquela consulta

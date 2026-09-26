@@ -8,13 +8,13 @@ import {
 } from "lucide-react";
 import { API_URL, authHeaders } from "../../utils/api";
 import { useAuth } from "../../hooks/useAuth";
-import Toast from "../../components/Toast/Toast";
-import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import Toast from "../../Components/Toast/Toast";
+import ConfirmModal from "../../Components/ConfirmModal/ConfirmModal";
 import WeekDatePicker from "./Componentes/WeekDatePicker";
 import AgendaBoard from "./Componentes/AgendaBoard";
 import AppointmentDetailPanel from "./Componentes/AppointmentDetailPanel";
 import AppointmentModal from "./Componentes/AppointmentModal";
-import AgendaSettingsModal from "./Componentes/AgendaSettingsModal";
+import AgendaSettingsModal from "./Componentes/Agendasettingsmodal";
 import {
   AGENDA_SELECTED_DENTIST_STORAGE_KEY,
   getConfirmationUi,

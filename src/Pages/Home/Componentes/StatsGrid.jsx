@@ -1,6 +1,19 @@
 import { useState, useEffect } from "react";
 import { API_URL, authHeaders } from "../../../utils/api";
-import StatCard from "./StatCard";
+function StatCard({ icon, iconBg, iconColor, label, value, sub }) {
+  return (
+    <div className="stat-card">
+      <div className="stat-header">
+        <div className="stat-icon" style={{ backgroundColor: iconBg, color: iconColor }}>
+          <i className={`ti ${icon}`} />
+        </div>
+        <span className="stat-label">{label}</span>
+      </div>
+      <div className="stat-value">{value}</div>
+      {sub && <div className="stat-sub">{sub}</div>}
+    </div>
+  );
+}
 
 export default function StatsGrid({ token }) {
   const [data, setData] = useState({
