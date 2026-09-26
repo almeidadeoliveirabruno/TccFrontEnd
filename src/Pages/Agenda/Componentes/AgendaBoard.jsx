@@ -40,13 +40,17 @@ function AppointmentBlock({
   selected,
   onSelect,
   dayStart,
+  dayEnd,
 }) {
   const startMin = timeToMinutes(appointment.time_begin);
   const endMin = timeToMinutes(appointment.time_end);
   const gridStart = dayStart * 60;
-  const top = ((startMin - gridStart) / SLOT_MINUTES) * SLOT_HEIGHT_PX;
+  const gridEnd = (dayEnd ?? 24) * 60;
+  const clampedStart = Math.max(startMin, gridStart);
+  const clampedEnd = Math.min(endMin, gridEnd);
+  const top = Math.max(0, ((clampedStart - gridStart) / SLOT_MINUTES) * SLOT_HEIGHT_PX);
   const height = Math.max(
-    ((endMin - startMin) / SLOT_MINUTES) * SLOT_HEIGHT_PX - 4,
+    ((clampedEnd - clampedStart) / SLOT_MINUTES) * SLOT_HEIGHT_PX - 4,
     SLOT_HEIGHT_PX * 0.75,
   );
   const statusStyle = APPOINTMENT_STATUS[appointment.status] ?? APPOINTMENT_STATUS.agendado;
@@ -197,7 +201,10 @@ export default function AgendaBoard({
               }}
             >
               {Array.from({ length: totalSlots }).map((_, i) => (
-                <div key={i} className="agenda-grid-line" />
+                <div
+                  key={i}
+                  className={`agenda-grid-line ${i % 2 === 1 ? "agenda-grid-line-hour" : "agenda-grid-line-half"}`}
+                />
               ))}
 
               {unavailableRanges.map((r, i) => {
@@ -225,6 +232,7 @@ export default function AgendaBoard({
                   selected={selectedAppointmentId === apt.id}
                   onSelect={onSelectAppointment}
                   dayStart={dayStart}
+                  dayEnd={dayEnd}
                 />
               ))}
             </div>

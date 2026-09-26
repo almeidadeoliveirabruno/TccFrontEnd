@@ -296,8 +296,8 @@
   position: absolute;
   left: 0;
   font-size: 11px;
-  font-weight: 600;
-  color: #94a3b8;
+  font-weight: 700;
+  color: #475569;
   transform: translateY(-6px);
 }
 
@@ -351,12 +351,32 @@
   position: relative;
   cursor: pointer;
   border-radius: 14px;
-  background: linear-gradient(180deg, #fafafa 0%, #fff 100%);
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
 }
 
 .agenda-grid-line {
   height: 52px;
-  border-bottom: 1px dashed #eef2f7;
+  box-sizing: border-box;
+  transition: background-color 0.15s ease;
+}
+
+.agenda-grid-line-half {
+  border-bottom: 1px dashed #cbd5e1;
+}
+
+.agenda-grid-line-hour {
+  border-bottom: 1.5px solid #94a3b8;
+}
+
+.agenda-grid-line:last-child {
+  border-bottom: none;
+}
+
+.agenda-grid-line:hover {
+  background-color: rgba(12, 176, 199, 0.06);
 }
 
 .agenda-unavailable-block {
@@ -791,6 +811,186 @@
 
 .agenda-form-error {
   margin-bottom: 12px;
+}
+
+/* ===== Patient Combobox in AppointmentModal ===== */
+.agenda-patient-picker {
+  position: relative;
+  width: 100%;
+}
+
+.agenda-patient-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.agenda-patient-search-icon {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.agenda-patient-search-input {
+  width: 100%;
+  padding: 10px 36px 10px 38px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  font-size: 13.5px;
+  background: #fff;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  color: #1e293b;
+  box-sizing: border-box;
+}
+
+.agenda-patient-search-input:focus {
+  outline: none;
+  border-color: #0cb0c7;
+  box-shadow: 0 0 0 3px rgba(12, 176, 199, 0.15);
+}
+
+.agenda-patient-clear-search-btn {
+  position: absolute;
+  right: 10px;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.agenda-patient-clear-search-btn:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.agenda-patient-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 100;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.agenda-patient-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  text-align: left;
+  width: 100%;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.agenda-patient-item:hover {
+  background: #f1f5f9;
+}
+
+.agenda-patient-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #0cb0c7, #0284c7);
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.agenda-patient-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
+.agenda-patient-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agenda-patient-meta {
+  font-size: 11px;
+  color: #64748b;
+  display: flex;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.agenda-patient-empty {
+  padding: 14px;
+  text-align: center;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.agenda-patient-selected-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #f0fdfa;
+  border: 1.5px solid #0cb0c7;
+  border-radius: 14px;
+  gap: 12px;
+}
+
+.agenda-patient-selected-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.agenda-patient-change-btn {
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.agenda-patient-change-btn:hover {
+  border-color: #0cb0c7;
+  color: #0cb0c7;
+  background: #f8fafc;
 }
 
 /* ===== Agenda settings modal ===== */

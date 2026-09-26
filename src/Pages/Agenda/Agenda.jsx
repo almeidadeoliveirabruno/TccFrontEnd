@@ -272,10 +272,18 @@ export default function Agenda() {
     if (!detail) return;
     setStatusUpdateLoading(true);
     try {
-      await updateAppointmentStatusRequest(detail.id, newStatus);
+      const r = await fetch(`${API_URL}/appointments/${detail.id}/status`, {
+        method: "PATCH",
+        headers: authHeaders(token),
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!r.ok) throw new Error();
+      const updated = await r.json();
+      setDetail((prev) => (prev ? { ...prev, ...updated, status: newStatus } : updated));
+      setAppointments((prev) =>
+        prev.map((a) => (a.id === detail.id ? { ...a, status: newStatus } : a))
+      );
       showToast("Status do agendamento atualizado.");
-      await loadAppointments();
-      await loadDetail(detail.id);
     } catch {
       showToast("Não foi possível atualizar o status.", "error");
     } finally {
@@ -290,29 +298,32 @@ export default function Agenda() {
       await updateAppointmentStatusRequest(detail.id, "cancelado");
       showToast("Agendamento cancelado.");
       setCancelOpen(false);
-      await loadAppointments();
-      await loadDetail(detail.id);
+      setDetail((prev) => (prev ? { ...prev, status: "cancelado" } : null));
+      setAppointments((prev) => prev.filter((a) => a.id !== detail.id));
     } catch {
-      showToast("Nao foi possivel cancelar.", "error");
+      showToast("Não foi possível cancelar.", "error");
     } finally {
       setCancelLoading(false);
     }
   }
 
-  async function handleMarkMessageSent() {
+  async function handleMarkMessageSent(sentState = true) {
     if (!detail) return;
     setConfirmMsgLoading(true);
     try {
       const r = await fetch(
-        `${API_URL}/appointments/${detail.id}/confirmation-message`,
+        `${API_URL}/appointments/${detail.id}/confirmation-message?sent=${sentState}`,
         { method: "PATCH", headers: authHeaders(token) },
       );
       if (!r.ok) throw new Error();
-      showToast("Mensagem de confirmacao registrada!");
-      await loadAppointments();
-      await loadDetail(detail.id);
+      const updated = await r.json();
+      setDetail((prev) => (prev ? { ...prev, ...updated, confirmation_message_sent: sentState } : updated));
+      setAppointments((prev) =>
+        prev.map((a) => (a.id === detail.id ? { ...a, confirmation_message_sent: sentState } : a))
+      );
+      showToast(sentState ? "Mensagem de confirmação registrada!" : "Envio de mensagem desmarcado.");
     } catch {
-      showToast("Nao foi possivel registrar o envio.", "error");
+      showToast("Não foi possível atualizar o envio da mensagem.", "error");
     } finally {
       setConfirmMsgLoading(false);
     }

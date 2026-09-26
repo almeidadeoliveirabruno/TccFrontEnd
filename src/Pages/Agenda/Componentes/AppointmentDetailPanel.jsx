@@ -174,15 +174,15 @@ export default function AppointmentDetailPanel({
                 const time = formatTimeShort(detail.time_begin);
 
                 const lines = [
-                  "Ola, " + patient.name + "!",
-                  "Passando para confirmar sua consulta na nossa clinica.",
+                  "Olá, " + patient.name + "!",
+                  "Passando para confirmar sua consulta na nossa clínica.",
                   "",
                   "Data: " + date,
-                  "Horario: " + time,
+                  "Horário: " + time,
                   "Dentista: " + (dentist?.name ?? "-"),
                   "Contato: " + formatPhone(patient.phone),
                   "",
-                  "Por favor, confirme sua presenca respondendo esta mensagem.",
+                  "Por favor, confirme sua presença respondendo esta mensagem.",
                 ];
                 const msg = lines.join("\n");
 
@@ -190,27 +190,42 @@ export default function AppointmentDetailPanel({
                   `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,
                   "_blank",
                 );
+
+                if (!detail.confirmation_message_sent && onMarkMessageSent) {
+                  onMarkMessageSent(true);
+                }
               }}
-
-
             >
               <MessageCircle size={15} />
-              Enviar mensagem de confirmacao
+              {detail.confirmation_message_sent
+                ? "Reenviar mensagem no WhatsApp"
+                : "Enviar mensagem de confirmação"}
             </button>
-            <button
-              type="button"
-              className="agenda-action-btn primary"
-              style={{ marginTop: 8 }}
-              onClick={onMarkMessageSent}
-              disabled={confirmMsgLoading || detail.confirmation_message_sent}
-            >
-              <CheckCircle2 size={16} />
-              {confirmMsgLoading
-                ? "Registrando..."
-                : detail.confirmation_message_sent
-                ? "Mensagem ja confirmada"
-                : "Confirmar envio da mensagem"}
-            </button>
+
+            {detail.confirmation_message_sent ? (
+              <button
+                type="button"
+                className="agenda-action-btn"
+                style={{ marginTop: 8 }}
+                onClick={() => onMarkMessageSent(false)}
+                disabled={confirmMsgLoading}
+                title="Desmarcar envio caso tenha sido confirmado por engano"
+              >
+                <RotateCcw size={15} />
+                {confirmMsgLoading ? "Atualizando..." : "Desmarcar envio de mensagem"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="agenda-action-btn primary"
+                style={{ marginTop: 8 }}
+                onClick={() => onMarkMessageSent(true)}
+                disabled={confirmMsgLoading}
+              >
+                <CheckCircle2 size={16} />
+                {confirmMsgLoading ? "Registrando..." : "Confirmar envio da mensagem"}
+              </button>
+            )}
           </div>
 
           <div className="agenda-detail-actions">

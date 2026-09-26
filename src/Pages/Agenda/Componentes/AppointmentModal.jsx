@@ -1,13 +1,18 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Search, X } from "lucide-react";
 import { API_URL, authHeaders } from "../../../utils/api";
 import { toISODate } from "../utils";
-import {formatPhone} from "../../../utils/masks";
+import { formatPhone } from "../../../utils/masks";
 import OdontogramModal from "../../Pacientes/Componentes/OdontogramModal";
 
-
 const EMPTY_PROCEDURE = { procedure_id: "", tooth: "" };
+
+function getPatientInitials(name) {
+  if (!name) return "P";
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase();
+}
 
 export default function AppointmentModal({
   open,
@@ -31,9 +36,12 @@ export default function AppointmentModal({
   const [loading, setLoading] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
+  const [selectedPatient, setSelectedPatient] = useState(null);
   const [patients, setPatients] = useState([]);
   const [patientSearch, setPatientSearch] = useState("");
   const [patientsLoading, setPatientsLoading] = useState(false);
+  const [patientDropdownOpen, setPatientDropdownOpen] = useState(false);
+  const patientDropdownRef = useRef(null);
 
   const [procedureOptions, setProcedureOptions] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
@@ -50,6 +58,22 @@ export default function AppointmentModal({
     );
     return sum + (proc?.duration ?? 0);
   }, 0);
+
+  const effectiveDuration = totalDuration > 0 ? totalDuration : 30;
+
+  // Fechar dropdown de pacientes ao clicar fora
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (
+        patientDropdownRef.current &&
+        !patientDropdownRef.current.contains(e.target)
+      ) {
+        setPatientDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const loadPatients = useCallback(async () => {
     setPatientsLoading(true);
@@ -87,7 +111,7 @@ export default function AppointmentModal({
   }, [token]);
 
   const loadAvailableTimes = useCallback(async () => {
-    if (!form.dentist_id || !form.appointment_date || totalDuration <= 0) {
+    if (!form.dentist_id || !form.appointment_date) {
       setAvailableTimes([]);
       return;
     }
@@ -96,7 +120,8 @@ export default function AppointmentModal({
       const params = new URLSearchParams({
         dentist_id: String(form.dentist_id),
         appointment_date: form.appointment_date,
-        duration_minutes: String(totalDuration),
+        duration_minutes: String(effectiveDuration),
+        ...(editAppointmentId && { exclude_appointment_id: String(editAppointmentId) }),
       });
       const r = await fetch(`${API_URL}/appointments/available-times?${params}`, {
         headers: authHeaders(token),
@@ -109,10 +134,13 @@ export default function AppointmentModal({
     } finally {
       setTimesLoading(false);
     }
-  }, [token, form.dentist_id, form.appointment_date, totalDuration]);
+  }, [token, form.dentist_id, form.appointment_date, effectiveDuration, editAppointmentId]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setAvailableTimes([]);
+      return;
+    }
     loadProcedures();
   }, [open, loadProcedures]);
 
@@ -154,6 +182,17 @@ export default function AppointmentModal({
                 }))
               : [{ ...EMPTY_PROCEDURE }],
           });
+
+          if (data.patient_id) {
+            fetch(`${API_URL}/patients/${data.patient_id}`, {
+              headers: authHeaders(token),
+            })
+              .then((pr) => (pr.ok ? pr.json() : null))
+              .then((patientData) => {
+                if (patientData) setSelectedPatient(patientData);
+              })
+              .catch(() => {});
+          }
         })
         .catch(() => {
           setForm({
@@ -164,6 +203,7 @@ export default function AppointmentModal({
             notes: "",
             procedures: [{ ...EMPTY_PROCEDURE }],
           });
+          setSelectedPatient(null);
         })
         .finally(() => setLoadingDetail(false));
     } else {
@@ -175,6 +215,7 @@ export default function AppointmentModal({
         notes: "",
         procedures: [{ ...EMPTY_PROCEDURE }],
       });
+      setSelectedPatient(null);
       setPatientSearch("");
     }
   }, [open, editAppointmentId, token, selectedDate, preset]);
@@ -206,7 +247,16 @@ export default function AppointmentModal({
     if (!form.dentist_id) e.dentist_id = "Selecione o dentista";
     if (!form.patient_id) e.patient_id = "Selecione o paciente";
     if (!form.appointment_date) e.appointment_date = "Informe a data";
-    if (!form.time_begin) e.time_begin = "Selecione o horário";
+    if (!form.time_begin) {
+      e.time_begin = "Selecione o horário";
+    } else if (
+      !isEdit &&
+      availableTimes.length > 0 &&
+      !timesLoading &&
+      !availableTimes.includes(form.time_begin)
+    ) {
+      e.time_begin = "Horário indisponível (conflito com outra consulta ou fora do expediente)";
+    }
     const validProcedures = form.procedures.filter((p) => p.procedure_id);
     if (!validProcedures.length) {
       e.procedures = "Informe ao menos um procedimento";
@@ -327,7 +377,7 @@ export default function AppointmentModal({
                   type="date"
                   className={`form-input ${errors.appointment_date ? "input-error" : ""}`}
                   value={form.appointment_date}
-                  min={toISODate(new Date())}
+                  min={isEdit ? undefined : toISODate(new Date())}
                   onChange={(ev) =>
                     setForm((f) => ({
                       ...f,
@@ -342,34 +392,114 @@ export default function AppointmentModal({
               </div>
             </div>
 
-            <div className="form-group">
+            <div className="form-group" ref={patientDropdownRef}>
               <label className="form-label">
                 Paciente<span className="req">*</span>
               </label>
-              <input
-                type="search"
-                className="form-input"
-                placeholder="Buscar por nome..."
-                value={patientSearch}
-                onChange={(ev) => setPatientSearch(ev.target.value)}
-              />
-              <select
-                className={`form-select ${errors.patient_id ? "input-error" : ""}`}
-                style={{ marginTop: 8 }}
-                value={form.patient_id}
-                onChange={(ev) =>
-                  setForm((f) => ({ ...f, patient_id: ev.target.value }))
-                }
-              >
-                <option value="">
-                  {patientsLoading ? "Buscando..." : "Selecione o paciente"}
-                </option>
-                {patients.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} · {formatPhone(p.phone)}
-                  </option>
-                ))}
-              </select>
+
+              {selectedPatient ? (
+                <div className="agenda-patient-selected-card">
+                  <div className="agenda-patient-selected-left">
+                    <div className="agenda-patient-avatar">
+                      {getPatientInitials(selectedPatient.name)}
+                    </div>
+                    <div className="agenda-patient-info">
+                      <strong className="agenda-patient-name">{selectedPatient.name}</strong>
+                      <div className="agenda-patient-meta">
+                        {selectedPatient.phone ? (
+                          <span>📞 {formatPhone(selectedPatient.phone)}</span>
+                        ) : (
+                          <span>Sem telefone cadastrado</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="agenda-patient-change-btn"
+                    onClick={() => {
+                      setSelectedPatient(null);
+                      setForm((f) => ({ ...f, patient_id: "" }));
+                      setPatientSearch("");
+                      setPatientDropdownOpen(true);
+                    }}
+                  >
+                    Alterar
+                  </button>
+                </div>
+              ) : (
+                <div className="agenda-patient-picker">
+                  <div className="agenda-patient-search-box">
+                    <Search size={16} className="agenda-patient-search-icon" />
+                    <input
+                      type="text"
+                      className={`agenda-patient-search-input ${errors.patient_id ? "input-error" : ""}`}
+                      placeholder="Buscar paciente por nome..."
+                      value={patientSearch}
+                      onChange={(ev) => {
+                        setPatientSearch(ev.target.value);
+                        setPatientDropdownOpen(true);
+                      }}
+                      onFocus={() => setPatientDropdownOpen(true)}
+                    />
+                    {patientSearch && (
+                      <button
+                        type="button"
+                        className="agenda-patient-clear-search-btn"
+                        onClick={() => setPatientSearch("")}
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  {patientDropdownOpen && (
+                    <div className="agenda-patient-dropdown">
+                      {patientsLoading ? (
+                        <div className="agenda-patient-empty">Buscando pacientes...</div>
+                      ) : patients.length === 0 ? (
+                        <div className="agenda-patient-empty">
+                          Nenhum paciente encontrado {patientSearch ? `para "${patientSearch}"` : ""}.
+                        </div>
+                      ) : (
+                        patients.map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            className="agenda-patient-item"
+                            onClick={() => {
+                              setSelectedPatient(p);
+                              setForm((f) => ({ ...f, patient_id: String(p.id) }));
+                              setPatientDropdownOpen(false);
+                              setPatientSearch("");
+                              setErrors((err) => {
+                                const next = { ...err };
+                                delete next.patient_id;
+                                return next;
+                              });
+                            }}
+                          >
+                            <div className="agenda-patient-avatar">
+                              {getPatientInitials(p.name)}
+                            </div>
+                            <div className="agenda-patient-info">
+                              <span className="agenda-patient-name">{p.name}</span>
+                              <div className="agenda-patient-meta">
+                                {p.phone ? (
+                                  <span>{formatPhone(p.phone)}</span>
+                                ) : (
+                                  <span>Sem telefone</span>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {errors.patient_id ? (
                 <span className="form-error">{errors.patient_id}</span>
               ) : null}
@@ -470,15 +600,20 @@ export default function AppointmentModal({
                 onChange={(ev) =>
                   setForm((f) => ({ ...f, time_begin: ev.target.value }))
                 }
-                disabled={!form.dentist_id || totalDuration <= 0}
+                disabled={!form.dentist_id || !form.appointment_date}
               >
                 <option value="">
                   {timesLoading
                     ? "Carregando horários..."
-                    : availableTimes.length
+                    : availableTimes.length || form.time_begin
                       ? "Selecione um horário disponível"
                       : "Nenhum horário livre (ajuste dentista, data ou procedimentos)"}
                 </option>
+                {form.time_begin && !availableTimes.includes(form.time_begin) ? (
+                  <option value={form.time_begin} disabled={!timesLoading && availableTimes.length > 0}>
+                    {form.time_begin} {timesLoading || !availableTimes.length ? "" : "(Indisponível / Conflito)"}
+                  </option>
+                ) : null}
                 {availableTimes.map((t) => (
                   <option key={t} value={t}>
                     {t}
