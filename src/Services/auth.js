@@ -1,5 +1,7 @@
+import { API_URL } from "../utils/api";
+
 export async function login(email, password) {
-    return fetch("http://localhost:8000/auth/login", {
+    return fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -25,7 +27,7 @@ export async function signup(
         }
     };
 
-    return fetch("http://localhost:8000/auth/register", {
+    return fetch(`${API_URL}/auth/register`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
