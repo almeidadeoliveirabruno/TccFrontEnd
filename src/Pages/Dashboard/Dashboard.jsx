@@ -1,13 +1,13 @@
 import { useState } from "react";
 import "./Dashboard.css";
 
-import StatCards from "./Componentes/StatCards";
-import DateRangePicker from "./Componentes/DateRangePicker";
-import RevenueExpenseChart from "./Componentes/RevenueExpenseChart";
-import AppointmentsStatusDonut from "./Componentes/AppointmentsStatusDonut";
-import AttendanceByMonthChart from "./Componentes/AttendanceByMonthChart";
-import ProceduresChart from "./Componentes/ProceduresChart";
-import DentistsChart from "./Componentes/DentistsChart";
+import StatCards from "../../Components/dashboard/StatCards";
+import DateRangePicker from "../../Components/dashboard/DateRangePicker";
+import RevenueExpenseChart from "../../Components/dashboard/RevenueExpenseChart";
+import AppointmentsStatusDonut from "../../Components/dashboard/AppointmentsStatusDonut";
+import AttendanceByMonthChart from "../../Components/dashboard/AttendanceByMonthChart";
+import ProceduresChart from "../../Components/dashboard/ProceduresChart";
+import DentistsChart from "../../Components/dashboard/DentistsChart";
 
 function defaultRange() {
   const end = new Date();

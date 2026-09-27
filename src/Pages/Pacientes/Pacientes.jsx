@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import "./Pacientes.css";
 import { avatarColor, initials } from "./constants";
-import { API_URL, authHeaders } from "../../utils/api";
+import { API_URL, authHeaders } from "../../Services/api";
 import { useAuth } from "../../hooks/useAuth";
-import Toast from "../../Components/Toast/Toast";
-import ConfirmModal from "../../Components/ConfirmModal/ConfirmModal";
-import PatientModal from "./Componentes/PatientModal";
-import PatientDetailsPanel from "./Componentes/PatientDetailsPanel";
-import {formatPhone } from "../../utils/masks";
+import Toast from "../../Components/common/Toast/Toast";
+import ConfirmModal from "../../Components/common/ConfirmModal/ConfirmModal";
+import PatientModal from "../../Components/patients/PatientModal";
+import PatientDetailsPanel from "../../Components/patients/PatientDetailsPanel";
+import { formatPhone } from "../../utils/masks";
 
 const PAGE_SIZE = 6;
 

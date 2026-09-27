@@ -1,11 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
 import "./Atendimentos.css";
-import { STATUS_OPTIONS, STATUS_VALUE, STATUS_LABEL, STATUS_COLORS } from "./constants";
-import { API_URL, authHeaders } from "../../utils/api";
+import {
+  STATUS_OPTIONS,
+  STATUS_VALUE,
+  STATUS_LABEL,
+  STATUS_COLORS,
+  APPOINTMENT_STATUS,
+} from "./constants";
+import { API_URL, authHeaders } from "../../Services/api";
 import { useAuth } from "../../hooks/useAuth";
-import Toast from "../../Components/Toast/Toast";
-import AppointmentDetailModal from "./Componentes/appointmentdetailmodal";
-import ReceivableModal from "./Componentes/ReceivableModal";
+import Toast from "../../Components/common/Toast/Toast";
+import AppointmentDetailModal from "../../Components/atendimentos/AppointmentDetailModal";
+import ReceivableModal from "../../Components/financial/ReceivableModal";
 
 // cor do ícone de cifrão de acordo com o status do receivable daquela consulta
 const RECEIVABLE_ICON_COLOR = {
@@ -119,13 +125,17 @@ export default function Atendimentos() {
   }
 
   function openPay(appointment) {
+    if (appointment?.status === "cancelado") {
+      showToast("Não é possível registrar pagamento para uma consulta cancelada.", "error");
+      return;
+    }
     setPayAppointment(appointment);
     setPayOpen(true);
   }
 
-  async function handleSaved(message) {
+  async function handleSaved(message, errorMessage) {
     if (!message) {
-      showToast("Erro ao salvar atendimento.", "error");
+      showToast(errorMessage || "Erro ao salvar atendimento.", "error");
       return;
     }
     showToast(message);
@@ -288,11 +298,18 @@ export default function Atendimentos() {
             </thead>
             <tbody>
               {appointments.map((a) => {
-                const style = STATUS_COLORS[a.status] ?? STATUS_COLORS.agendado;
-                const recStatus = receivableStatus[a.id];
-                const moneyColor = RECEIVABLE_ICON_COLOR[recStatus] ?? "#9CA3AF";
+                const style = APPOINTMENT_STATUS[a.status] ?? STATUS_COLORS[a.status] ?? APPOINTMENT_STATUS.agendado;
+                const recStatus = receivableStatus[a.id] ?? a.receivable_status ?? (a.has_receivable ? "pendente" : null);
+                const hasReceivable = a.has_receivable || (recStatus !== null && recStatus !== undefined);
+                const isCanceled = a.status === "cancelado" || recStatus === "cancelado";
+                const isNoBilling = !hasReceivable;
+                const moneyColor = !hasReceivable ? "#CBD5E1" : (RECEIVABLE_ICON_COLOR[recStatus] ?? "#9CA3AF");
                 const moneyTitle =
-                  recStatus === "pago"
+                  a.status === "cancelado"
+                    ? "Consulta cancelada (sem cobrança)"
+                    : isNoBilling
+                    ? "Consulta sem cobrança associada (Retorno / Continuação)"
+                    : recStatus === "pago"
                     ? "Pago"
                     : recStatus === "cancelado"
                     ? "Cobrança cancelada"
@@ -316,9 +333,12 @@ export default function Atendimentos() {
                     <td>
                       <span
                         className="badge"
-                        style={{ background: style.bg, color: style.color }}
+                        style={{
+                          background: style.badgeBg ?? style.bg,
+                          color: style.badgeColor ?? style.color,
+                        }}
                       >
-                        {STATUS_LABEL[a.status] ?? a.status}
+                        {style.label ?? STATUS_LABEL[a.status] ?? a.status}
                       </span>
                     </td>
                     <td>
@@ -326,9 +346,11 @@ export default function Atendimentos() {
                         <button
                           className="btn-icon"
                           onClick={() => openPay(a)}
+                          disabled={isCanceled || isNoBilling}
                           title={moneyTitle}
+                          style={isCanceled || isNoBilling ? { opacity: 0.35, cursor: "not-allowed" } : undefined}
                         >
-                          <i className="ti ti-currency-dollar" style={{ color: moneyColor }} aria-hidden="true" />
+                          <i className="ti ti-currency-dollar" style={{ color: isCanceled || isNoBilling ? "#9CA3AF" : moneyColor }} aria-hidden="true" />
                         </button>
                         <button className="btn-icon" onClick={() => openDetail(a.id)} title="Ver detalhes">
                           ✏️
@@ -376,6 +398,7 @@ export default function Atendimentos() {
       <ReceivableModal
         open={payOpen}
         appointmentId={payAppointment?.id}
+        appointmentStatus={payAppointment?.status}
         patientName={payAppointment?.pacient_name}
         dentistName={payAppointment?.dentist_name}
         appointmentTime={payAppointment?.time_day}

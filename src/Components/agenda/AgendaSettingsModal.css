@@ -1,0 +1,116 @@
+/* ===== Agenda settings modal ===== */
+.agenda-settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.agenda-settings-modal {
+  width: 380px;
+  max-width: 100%;
+  background: #fff;
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+}
+
+.agenda-settings-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.agenda-settings-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1e293b;
+}
+
+.agenda-settings-header-title h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.agenda-settings-close {
+  border: none;
+  background: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+}
+
+.agenda-settings-desc {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.agenda-settings-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.agenda-settings-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.agenda-settings-field span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.agenda-settings-field select {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1e293b;
+  background: #fff;
+}
+
+.agenda-settings-error {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #dc2626;
+}
+
+.agenda-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.agenda-btn-secondary {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #64748b;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.agenda-btn-secondary:hover {
+  border-color: #cbd5e1;
+  color: #334155;
+}

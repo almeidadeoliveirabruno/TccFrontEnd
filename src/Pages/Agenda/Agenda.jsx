@@ -6,15 +6,15 @@ import {
   MessageCircle,
   Users,
 } from "lucide-react";
-import { API_URL, authHeaders } from "../../utils/api";
+import { API_URL, authHeaders } from "../../Services/api";
 import { useAuth } from "../../hooks/useAuth";
-import Toast from "../../Components/Toast/Toast";
-import ConfirmModal from "../../Components/ConfirmModal/ConfirmModal";
-import WeekDatePicker from "./Componentes/WeekDatePicker";
-import AgendaBoard from "./Componentes/AgendaBoard";
-import AppointmentDetailPanel from "./Componentes/AppointmentDetailPanel";
-import AppointmentModal from "./Componentes/AppointmentModal";
-import AgendaSettingsModal from "./Componentes/Agendasettingsmodal";
+import Toast from "../../Components/common/Toast/Toast";
+import ConfirmModal from "../../Components/common/ConfirmModal/ConfirmModal";
+import WeekDatePicker from "../../Components/agenda/WeekDatePicker";
+import AgendaBoard from "../../Components/agenda/AgendaBoard";
+import AppointmentDetailPanel from "../../Components/agenda/AppointmentDetailPanel";
+import AppointmentModal from "../../Components/agenda/AppointmentModal";
+import AgendaSettingsModal from "../../Components/agenda/AgendaSettingsModal";
 import {
   AGENDA_SELECTED_DENTIST_STORAGE_KEY,
   getConfirmationUi,
@@ -131,11 +131,7 @@ export default function Agenda() {
       const r = await fetch(`${API_URL}/appointments?${params}`, {
         headers: authHeaders(token),
       });
-      // if (!r.ok) throw new Error();
-      // const data = await r.json();
-      // setAppointments(Array.isArray(data) ? data : []);
-      // const ids = [...new Set(data.map((a) => a.patient_id))];
-      // await loadPatientsIndex(ids);
+
       const data = await r.json();
 
       const activeAppointments = Array.isArray(data)

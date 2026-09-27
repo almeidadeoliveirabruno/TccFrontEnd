@@ -1,3 +1,7 @@
+import { APPOINTMENT_STATUS } from "../Agenda/constants";
+
+export { APPOINTMENT_STATUS };
+
 export const STATUS_OPTIONS = [
   "Agendado",
   "Confirmado",
@@ -19,13 +23,21 @@ export const STATUS_LABEL = Object.fromEntries(
   Object.entries(STATUS_VALUE).map(([label, value]) => [value, label]),
 );
 
-export const STATUS_COLORS = {
-  agendado: { bg: "#E4F6F8", color: "#0a9db2" },
-  confirmado: { bg: "#EAF3DE", color: "#3B6D11" },
-  realizado: { bg: "#EEEDFE", color: "#534AB7" },
-  cancelado: { bg: "#FEE2E2", color: "#B91C1C" },
-  faltou: { bg: "#FAEEDA", color: "#854F0B" },
-};
+// Derivado diretamente de APPOINTMENT_STATUS para manter as mesmas cores da agenda
+export const STATUS_COLORS = Object.fromEntries(
+  Object.entries(APPOINTMENT_STATUS).map(([status, config]) => [
+    status,
+    {
+      bg: config.badgeBg,
+      color: config.badgeColor,
+      badgeBg: config.badgeBg,
+      badgeColor: config.badgeColor,
+      accent: config.accent,
+      cardBg: config.cardBg,
+      cardBorder: config.cardBorder,
+    },
+  ]),
+);
 
 // Formulário do modal de criação/edição.
 // procedures: [{ procedure_id, tooth, _name, _price }]  (_name/_price só pra exibição local)

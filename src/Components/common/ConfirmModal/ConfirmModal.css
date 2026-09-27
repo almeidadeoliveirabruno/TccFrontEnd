@@ -1,0 +1,24 @@
+/* ===== CONFIRM MODAL ===== */
+.confirm-box {
+  background: #fff;
+  border-radius: 14px;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  padding: 24px 28px;
+}
+.confirm-box h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px;
+}
+.confirm-box p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 22px;
+}
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

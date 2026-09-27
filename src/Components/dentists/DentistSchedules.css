@@ -1,0 +1,101 @@
+/* ===== SCHEDULE MANAGER ===== */
+.dentist-schedule-panel {
+  background: #f8fafc;
+  border: 1px solid #ECEEF1;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 6px 0 10px;
+}
+
+.dentist-schedule-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.schedule-manager {
+  border: 1px solid #ECEEF1;
+  border-radius: 12px;
+  padding: 14px;
+  background: #F9FAFB;
+}
+
+.schedule-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.schedule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border: 1px solid #ECEEF1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #374151;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+}
+
+.schedule-row-grouped {
+  align-items: flex-start;
+}
+
+.schedule-day-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.schedule-day-name {
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: 0.01em;
+}
+
+.schedule-time-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.schedule-time-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #E4F6F8;
+  color: #0a9db2;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(15, 23, 42, 0.04);
+}
+
+.schedule-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.schedule-add-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.schedule-add-row .filter-select {
+  min-width: 130px;
+}
+
+.schedule-add-row .form-input {
+  width: auto;
+}

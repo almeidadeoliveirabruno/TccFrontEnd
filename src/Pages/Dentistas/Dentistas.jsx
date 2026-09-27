@@ -8,12 +8,12 @@ import {
   statusLabel,
   AVATAR_PALETTE
 } from "./constants";
-import { API_URL, authHeaders } from "../../utils/api";
+import { API_URL, authHeaders } from "../../Services/api";
 import { useAuth } from "../../hooks/useAuth";
-import Toast from "../../Components/Toast/Toast";
-import DentistModal from "./Componentes/DentistModal";
-import DentistDetailsModal from "./Componentes/DentistDetailsModal";
-import {formatPhone} from "../../utils/masks";
+import Toast from "../../Components/common/Toast/Toast";
+import DentistModal from "../../Components/dentists/DentistModal";
+import DentistDetailsModal from "../../Components/dentists/DentistDetailsModal";
+import { formatPhone } from "../../utils/masks";
 
 
 function avatarColor(name) {

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import "../Atendimentos/Atendimentos.css";
 import "./Financeiro.css";
-import { API_URL, authHeaders } from "../../utils/api";
+import { API_URL, authHeaders } from "../../Services/api";
 import { useAuth } from "../../hooks/useAuth";
 import { formatCurrency } from "../../utils/masks";
 import {
@@ -10,11 +10,11 @@ import {
   financeStatusLabel,
   STATUS_COLORS,
 } from "./constants";
-import Toast from "../../Components/Toast/Toast";
-import ConfirmModal from "../../Components/ConfirmModal/ConfirmModal";
-import ExpenseModal from "./Componentes/ExpenseModal";
-import AppointmentQuickDetailModal from "./Componentes/Appointmentquickdetailmodal";
-import ReceivableModal from "../Atendimentos/Componentes/ReceivableModal";
+import Toast from "../../Components/common/Toast/Toast";
+import ConfirmModal from "../../Components/common/ConfirmModal/ConfirmModal";
+import ExpenseModal from "../../Components/financial/ExpenseModal";
+import AppointmentQuickDetailModal from "../../Components/financial/AppointmentQuickDetailModal";
+import ReceivableModal from "../../Components/financial/ReceivableModal";
 
 const DESPESA_STATUS_OPTIONS = [
   { value: "pendente", label: "Pendente" },
@@ -237,6 +237,10 @@ export default function Financeiro() {
   }
 
   function openReceivablePay(item) {
+    if (item.status === "cancelado" || item.appointment_status === "cancelado") {
+      showToast("Não é possível registrar pagamento para uma cobrança ou consulta cancelada.", "error");
+      return;
+    }
     setPayReceivable(item);
     setPayOpen(true);
   }
@@ -634,25 +638,35 @@ export default function Financeiro() {
                         </td>
                         <td>
                           <div className="row-actions">
-                            <button
-                              className="btn-icon"
-                              title={
-                                item.status === "pago"
+                            {(() => {
+                              const isRecCanceled = item.status === "cancelado" || item.appointment_status === "cancelado";
+                              const recTitle =
+                                item.appointment_status === "cancelado"
+                                  ? "Consulta cancelada (sem cobrança)"
+                                  : item.status === "pago"
                                   ? "Pago"
                                   : item.status === "cancelado"
                                   ? "Cobrança cancelada"
                                   : item.status === "parcial"
                                   ? "Pagamento parcial"
-                                  : "Registrar pagamento"
-                              }
-                              onClick={() => openReceivablePay(item)}
-                            >
-                              <i
-                                className="ti ti-currency-dollar"
-                                style={{ color: RECEIVABLE_ICON_COLOR[item.status] ?? "#9CA3AF" }}
-                                aria-hidden="true"
-                              />
-                            </button>
+                                  : "Registrar pagamento";
+
+                              return (
+                                <button
+                                  className="btn-icon"
+                                  title={recTitle}
+                                  disabled={isRecCanceled}
+                                  style={isRecCanceled ? { opacity: 0.35, cursor: "not-allowed" } : undefined}
+                                  onClick={() => openReceivablePay(item)}
+                                >
+                                  <i
+                                    className="ti ti-currency-dollar"
+                                    style={{ color: isRecCanceled ? "#9CA3AF" : (RECEIVABLE_ICON_COLOR[item.status] ?? "#9CA3AF") }}
+                                    aria-hidden="true"
+                                  />
+                                </button>
+                              );
+                            })()}
                             <button
                               className="btn-icon"
                               title="Ver detalhes da consulta"
@@ -730,6 +744,7 @@ export default function Financeiro() {
       <ReceivableModal
         open={payOpen}
         appointmentId={payReceivable?.appointment_id}
+        appointmentStatus={payReceivable?.appointment_status}
         patientName={payReceivable?.patient_name}
         dentistName={payReceivable?.dentist_name}
         appointmentTime={

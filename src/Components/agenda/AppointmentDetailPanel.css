@@ -1,0 +1,243 @@
+/* ===== Detail panel ===== */
+.agenda-detail-panel {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+  padding: 20px;
+  position: sticky;
+  top: 24px;
+}
+
+.agenda-detail-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.agenda-detail-header h3 {
+  margin: 0;
+  font-size: 17px;
+  color: #1e293b;
+}
+
+.agenda-detail-header p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.agenda-detail-loading {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.agenda-detail-list {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.agenda-detail-list div {
+  display: grid;
+  gap: 2px;
+}
+
+.agenda-detail-list div.full {
+  grid-column: 1 / -1;
+}
+
+.agenda-detail-list dt {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.agenda-detail-list dd {
+  margin: 0;
+  font-size: 14px;
+  color: #334155;
+}
+
+.agenda-status-pill {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.agenda-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.agenda-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.agenda-status-chip:hover:not(:disabled) {
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+
+.agenda-status-chip.primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, #34d399, #10b981);
+  color: #fff;
+}
+
+.agenda-status-chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.agenda-detail-whatsapp {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #eef2f7;
+}
+
+.agenda-detail-whatsapp-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: #475569;
+}
+
+.agenda-detail-whatsapp-head > div {
+  flex: 1;
+}
+
+.agenda-whatsapp-resend-btn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.agenda-detail-whatsapp-head strong {
+  display: block;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.agenda-detail-whatsapp-head p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.agenda-whatsapp-send-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 211, 102, 0.35);
+  background: rgba(37, 211, 102, 0.12);
+  color: #15803d;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.agenda-whatsapp-send-btn:not(:disabled):hover {
+  background: rgba(37, 211, 102, 0.20);
+  border-color: rgba(37, 211, 102, 0.50);
+  transform: translateY(-1px);
+}
+
+.agenda-whatsapp-send-btn:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.agenda-detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.agenda-action-btn {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.agenda-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.agenda-action-btn.primary {
+  border: 1px solid rgba(16, 185, 129, 0.30);
+  background: rgba(16, 185, 129, 0.10);
+  color: #047857;
+}
+
+.agenda-action-btn.primary:not(:disabled):hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.45);
+  transform: translateY(-1px);
+}
+
+.agenda-action-btn.danger {
+  border-color: #fecaca;
+  color: #dc2626;
+  background: #fff;
+}
+
+.agenda-action-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}

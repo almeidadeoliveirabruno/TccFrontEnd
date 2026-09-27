@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import "./Procedimentos.css";
 import { CATEGORIES, CAT_COLORS } from "./constants";
-import { API_URL, authHeaders } from "../../utils/api";
+import { API_URL, authHeaders } from "../../Services/api";
 import { useAuth } from "../../hooks/useAuth";
-import Toast from "../../Components/Toast/Toast";
-import ProcedureModal from "./Componentes/Proceduremodal";
+import Toast from "../../Components/common/Toast/Toast";
+import ProcedureModal from "../../Components/procedures/ProcedureModal";
 
 export default function Procedimentos() {
   const { token } = useAuth();

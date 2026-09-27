@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import "./Home.css";
 import { useAuth } from "../../hooks/useAuth";
-import { API_URL, authHeaders } from "../../utils/api";
-import UpcomingAppointments from "./Componentes/UpcomingAppointments";
-import RevenueExpenseChart from "../Dashboard/Componentes/RevenueExpenseChart";
-import ProceduresDistribution from "./Componentes/ProceduresDistribution";
-import NewPatients from "./Componentes/NewPatients";
+import { API_URL, authHeaders } from "../../Services/api";
+import UpcomingAppointments from "../../Components/home/UpcomingAppointments";
+import RevenueExpenseChart from "../../Components/dashboard/RevenueExpenseChart";
+import ProceduresDistribution from "../../Components/home/ProceduresDistribution";
+import NewPatients from "../../Components/home/NewPatients";
 import { jwtDecode } from "jwt-decode";
 
 function todayLabel() {
@@ -80,7 +80,7 @@ export default function Home() {
     <div className="home-page">
       <div className="home-header">
         <div>
-          <h1 className="home-title">Olá, {payload?.nome.split(' ')[0] ?? "Doutor(a)"}! 👋</h1>
+          <h1 className="home-title">Olá, {payload?.nome ? payload.nome.split(' ')[0] : "Doutor(a)"}! 👋</h1>
           <p className="home-subtitle">Aqui está o resumo da sua clínica hoje.</p>
         </div>
         <div className="home-date">

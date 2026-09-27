@@ -5,12 +5,12 @@ import Signup from "../Pages/Signup/Signup";
 import Procedimentos from "../Pages/Procedimentos/Procedimentos";
 import Dentistas from "../Pages/Dentistas/Dentistas";
 import Agenda from "../Pages/Agenda/Agenda";
-import PrivateRoute from "./PrivateRoute";
+import ProtectedRoute from "../Components/layout/ProtectedRoute/ProtectedRoute";
 import Pacientes from "../Pages/Pacientes/Pacientes";
 import Financeiro from "../Pages/Financeiro/Financeiro";
-import Dashboard from "../Pages/Dashboard/Dashboard"
+import Dashboard from "../Pages/Dashboard/Dashboard";
 import Home from "../Pages/Home/Home";
-import AppLayout from "../layouts/AppLayout";
+import AppLayout from "../Components/layout/AppLayout/AppLayout";
 import Atendimentos from "../Pages/Atendimentos/Atendimentos";
 
 function AppRoutes() {
@@ -23,7 +23,7 @@ function AppRoutes() {
         <Route path="/signup" element={<Signup />} />
 
         {/* Rotas protegidas */}
-        <Route element={<PrivateRoute />}>
+        <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/home" element={<Home />} />
             <Route path="/procedimentos" element={<Procedimentos />} />
