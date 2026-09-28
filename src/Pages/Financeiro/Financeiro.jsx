@@ -14,30 +14,24 @@ import Toast from "../../Components/common/Toast/Toast";
 import ConfirmModal from "../../Components/common/ConfirmModal/ConfirmModal";
 import ExpenseModal from "../../Components/financial/ExpenseModal";
 import AppointmentQuickDetailModal from "../../Components/financial/AppointmentQuickDetailModal";
-import ReceivableModal from "../../Components/financial/ReceivableModal";
 
 const DESPESA_STATUS_OPTIONS = [
   { value: "pendente", label: "Pendente" },
   { value: "pago", label: "Pago" },
-  { value: "cancelado", label: "Cancelado" },
-];
-
-const RECEITA_STATUS_OPTIONS = [
-  { value: "pendente", label: "Pendente" },
-  { value: "parcial", label: "Parcial" },
-  { value: "pago", label: "Pago" },
-  { value: "cancelado", label: "Cancelado" },
 ];
 
 const TABLE_PAGE_SIZE = 6;
 
-// cor do ícone de cifrão de acordo com o status da cobrança
-const RECEIVABLE_ICON_COLOR = {
-  pago: "#16a34a",
-  pendente: "#f59e0b",
-  parcial: "#f59e0b",
-  cancelado: "#dc2626",
-};
+function formatDateDisplay(val) {
+  if (!val) return "—";
+  const str = String(val).split("T")[0];
+  const parts = str.split("-");
+  if (parts.length === 3) {
+    const [year, month, day] = parts;
+    return `${day}/${month}/${year}`;
+  }
+  return str;
+}
 
 export default function Financeiro() {
   const { token } = useAuth();
@@ -62,20 +56,23 @@ export default function Financeiro() {
   const [receitasLoading, setReceitasLoading] = useState(true);
   const [receitasPage, setReceitasPage] = useState(1);
   const [receitasTotalPages, setReceitasTotalPages] = useState(1);
-  const [receitaStatus, setReceitaStatus] = useState("");
   const [receivableStats, setReceivableStats] = useState(null);
+  const [patientFilter, setPatientFilter] = useState("");
+  const [debouncedPatient, setDebouncedPatient] = useState("");
+  const [dentistFilter, setDentistFilter] = useState("");
+  const [debouncedDentist, setDebouncedDentist] = useState("");
 
   // ---- modais ----
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [editExpense, setEditExpense] = useState(null);
   const [payTarget, setPayTarget] = useState(null); // expense id
   const [payLoading, setPayLoading] = useState(false);
-  const [cancelTarget, setCancelTarget] = useState(null); // expense id
-  const [cancelLoading, setCancelLoading] = useState(false);
+  const [unpayTarget, setUnpayTarget] = useState(null); // expense id
+  const [unpayLoading, setUnpayLoading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // expense id
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailAppointmentId, setDetailAppointmentId] = useState(null);
-  const [payOpen, setPayOpen] = useState(false);
-  const [payReceivable, setPayReceivable] = useState(null);
 
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
 
@@ -117,13 +114,25 @@ export default function Financeiro() {
     }
   }, [token, despesasPage, despesaStatus, despesaCategory, dateFrom, dateTo]);
 
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedPatient(patientFilter.trim()), 300);
+    return () => clearTimeout(t);
+  }, [patientFilter]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedDentist(dentistFilter.trim()), 300);
+    return () => clearTimeout(t);
+  }, [dentistFilter]);
+
   const loadReceitas = useCallback(async () => {
     setReceitasLoading(true);
     try {
       const params = new URLSearchParams({
         page: receitasPage,
         page_size: TABLE_PAGE_SIZE,
-        ...(receitaStatus && { status: receitaStatus }),
+        status: "pago",
+        ...(debouncedPatient && { patient_name: debouncedPatient }),
+        ...(debouncedDentist && { dentist_name: debouncedDentist }),
         ...(dateFrom && { date_from: dateFrom }),
         ...(dateTo && { date_to: dateTo }),
       });
@@ -140,7 +149,7 @@ export default function Financeiro() {
     } finally {
       setReceitasLoading(false);
     }
-  }, [token, receitasPage, receitaStatus, dateFrom, dateTo]);
+  }, [token, receitasPage, debouncedPatient, debouncedDentist, dateFrom, dateTo]);
 
   useEffect(() => {
     loadDespesas();
@@ -161,7 +170,7 @@ export default function Financeiro() {
 
   useEffect(() => {
     setReceitasPage(1);
-  }, [receitaStatus]);
+  }, [debouncedPatient, debouncedDentist]);
 
   function openCreateExpense() {
     setEditExpense(null);
@@ -207,53 +216,57 @@ export default function Financeiro() {
     }
   }
 
-  async function handleCancel() {
-    if (!cancelTarget) return;
-    setCancelLoading(true);
+  async function handleUnpay() {
+    if (!unpayTarget) return;
+    setUnpayLoading(true);
     try {
-      const r = await fetch(`${API_URL}/expenses/${cancelTarget}/cancel`, {
+      const r = await fetch(`${API_URL}/expenses/${unpayTarget}/unpay`, {
         method: "POST",
         headers: authHeaders(token),
       });
       if (!r.ok) {
         const errorBody = await r.json().catch(() => null);
         throw new Error(
-          typeof errorBody?.detail === "string" ? errorBody.detail : "Erro ao cancelar."
+          typeof errorBody?.detail === "string" ? errorBody.detail : "Erro ao reverter status."
         );
       }
-      showToast("Despesa cancelada.");
-      setCancelTarget(null);
+      showToast("Despesa revertida para pendente.");
+      setUnpayTarget(null);
       await loadDespesas();
     } catch (err) {
       showToast(err.message, "error");
     } finally {
-      setCancelLoading(false);
+      setUnpayLoading(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    try {
+      const r = await fetch(`${API_URL}/expenses/${deleteTarget}`, {
+        method: "DELETE",
+        headers: authHeaders(token),
+      });
+      if (!r.ok) {
+        const errorBody = await r.json().catch(() => null);
+        throw new Error(
+          typeof errorBody?.detail === "string" ? errorBody.detail : "Erro ao excluir despesa."
+        );
+      }
+      showToast("Despesa excluída com sucesso!");
+      setDeleteTarget(null);
+      await loadDespesas();
+    } catch (err) {
+      showToast(err.message, "error");
+    } finally {
+      setDeleteLoading(false);
     }
   }
 
   function openDetail(appointmentId) {
     setDetailAppointmentId(appointmentId);
     setDetailOpen(true);
-  }
-
-  function openReceivablePay(item) {
-    if (item.status === "cancelado" || item.appointment_status === "cancelado") {
-      showToast("Não é possível registrar pagamento para uma cobrança ou consulta cancelada.", "error");
-      return;
-    }
-    setPayReceivable(item);
-    setPayOpen(true);
-  }
-
-  async function handleReceivableSaved(message) {
-    if (!message) {
-      showToast("Erro ao salvar pagamento.", "error");
-      return;
-    }
-    showToast(message);
-    setPayOpen(false);
-    // recarrega a tabela e os cards (receitas, saldo, a receber, donut)
-    await loadReceitas();
   }
 
   const totalReceitas = Number(receivableStats?.total_pago ?? 0);
@@ -496,11 +509,7 @@ export default function Financeiro() {
                     const isCancelable = item.status !== "pago" && item.status !== "cancelado";
                     return (
                       <tr key={item.id}>
-                        <td>
-                          {item.due_date
-                            ? new Date(item.due_date).toLocaleDateString("pt-BR")
-                            : "—"}
-                        </td>
+                        <td>{formatDateDisplay(item.due_date)}</td>
                         <td>
                           <div className="proc-name">{item.description}</div>
                           <div className="proc-desc">{expenseCategoryLabel(item.category)}</div>
@@ -516,33 +525,37 @@ export default function Financeiro() {
                         </td>
                         <td>
                           <div className="row-actions">
-                            {isPending && (
+                            {isPending ? (
                               <button
                                 className="btn-icon"
-                                title="Marcar como pago"
+                                title="Marcar como paga"
                                 onClick={() => setPayTarget(item.id)}
                               >
                                 ✅
                               </button>
-                            )}
-                            {item.status !== "cancelado" && (
+                            ) : (
                               <button
                                 className="btn-icon"
-                                title="Editar"
-                                onClick={() => openEditExpense(item)}
+                                title="Reverter para pendente"
+                                onClick={() => setUnpayTarget(item.id)}
                               >
-                                ✏️
+                                ↩️
                               </button>
                             )}
-                            {isCancelable && (
-                              <button
-                                className="btn-icon"
-                                title="Cancelar"
-                                onClick={() => setCancelTarget(item.id)}
-                              >
-                                🗑️
-                              </button>
-                            )}
+                            <button
+                              className="btn-icon"
+                              title="Editar"
+                              onClick={() => openEditExpense(item)}
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              className="btn-icon"
+                              title="Excluir despesa"
+                              onClick={() => setDeleteTarget(item.id)}
+                            >
+                              🗑️
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -576,24 +589,34 @@ export default function Financeiro() {
       ) : (
         <div className="finance-panel">
           <div className="finance-panel-header">
-            <h2>Entradas</h2>
+            <h2>Entradas (Consultas Pagas)</h2>
           </div>
 
-          <div className="finance-table-toolbar">
-            <div className="filter-group">
-              <span className="filter-label">Status</span>
-              <select
-                className="filter-select"
-                value={receitaStatus}
-                onChange={(e) => setReceitaStatus(e.target.value)}
-              >
-                <option value="">Todos</option>
-                {RECEITA_STATUS_OPTIONS.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
+          <div className="proc-toolbar" style={{ marginBottom: 16 }}>
+            <div className="search-wrap">
+              <span className="filter-label">Paciente</span>
+              <div className="search-input-wrap">
+                <span className="search-icon">🔍</span>
+                <input
+                  className="search-input"
+                  placeholder="Buscar por paciente..."
+                  value={patientFilter}
+                  onChange={(e) => setPatientFilter(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="search-wrap">
+              <span className="filter-label">Dentista</span>
+              <div className="search-input-wrap">
+                <span className="search-icon">🔍</span>
+                <input
+                  className="search-input"
+                  placeholder="Buscar por dentista..."
+                  value={dentistFilter}
+                  onChange={(e) => setDentistFilter(e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
@@ -610,6 +633,7 @@ export default function Financeiro() {
                 <thead>
                   <tr>
                     <th>Data</th>
+                    <th>Paciente</th>
                     <th>Dentista</th>
                     <th>Valor</th>
                     <th>Status</th>
@@ -621,11 +645,8 @@ export default function Financeiro() {
                     const statusStyle = STATUS_COLORS[item.status] ?? STATUS_COLORS.pendente;
                     return (
                       <tr key={item.id}>
-                        <td>
-                          {item.appointment_date
-                            ? new Date(item.appointment_date).toLocaleDateString("pt-BR")
-                            : "—"}
-                        </td>
+                        <td>{formatDateDisplay(item.appointment_date)}</td>
+                        <td>{item.patient_name ?? "—"}</td>
                         <td>{item.dentist_name ?? "—"}</td>
                         <td className="proc-price">{formatCurrency(item.total_amount)}</td>
                         <td>
@@ -638,35 +659,6 @@ export default function Financeiro() {
                         </td>
                         <td>
                           <div className="row-actions">
-                            {(() => {
-                              const isRecCanceled = item.status === "cancelado" || item.appointment_status === "cancelado";
-                              const recTitle =
-                                item.appointment_status === "cancelado"
-                                  ? "Consulta cancelada (sem cobrança)"
-                                  : item.status === "pago"
-                                  ? "Pago"
-                                  : item.status === "cancelado"
-                                  ? "Cobrança cancelada"
-                                  : item.status === "parcial"
-                                  ? "Pagamento parcial"
-                                  : "Registrar pagamento";
-
-                              return (
-                                <button
-                                  className="btn-icon"
-                                  title={recTitle}
-                                  disabled={isRecCanceled}
-                                  style={isRecCanceled ? { opacity: 0.35, cursor: "not-allowed" } : undefined}
-                                  onClick={() => openReceivablePay(item)}
-                                >
-                                  <i
-                                    className="ti ti-currency-dollar"
-                                    style={{ color: isRecCanceled ? "#9CA3AF" : (RECEIVABLE_ICON_COLOR[item.status] ?? "#9CA3AF") }}
-                                    aria-hidden="true"
-                                  />
-                                </button>
-                              );
-                            })()}
                             <button
                               className="btn-icon"
                               title="Ver detalhes da consulta"
@@ -717,44 +709,43 @@ export default function Financeiro() {
       <ConfirmModal
         open={!!payTarget}
         title="Marcar despesa como paga"
+        message="Deseja registrar esta despesa como paga?"
         loading={payLoading}
-        confirmLabel="Confirmar"
+        danger={false}
+        confirmLabel="Confirmar pagamento"
         loadingLabel="Salvando..."
         onConfirm={handlePay}
         onCancel={() => setPayTarget(null)}
       />
 
       <ConfirmModal
-        open={!!cancelTarget}
-        title="Cancelar despesa"
-        loading={cancelLoading}
-        confirmLabel="Cancelar despesa"
-        loadingLabel="Cancelando..."
-        onConfirm={handleCancel}
-        onCancel={() => setCancelTarget(null)}
+        open={!!unpayTarget}
+        title="Reverter para pendente"
+        message="Deseja marcar esta despesa como pendente novamente?"
+        loading={unpayLoading}
+        danger={false}
+        confirmLabel="Reverter"
+        loadingLabel="Salvando..."
+        onConfirm={handleUnpay}
+        onCancel={() => setUnpayTarget(null)}
+      />
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Excluir despesa"
+        message="Tem certeza que deseja excluir esta despesa permanentemente? Esta ação não pode ser desfeita."
+        loading={deleteLoading}
+        danger={true}
+        confirmLabel="Excluir"
+        loadingLabel="Excluindo..."
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
 
       <AppointmentQuickDetailModal
         open={detailOpen}
         appointmentId={detailAppointmentId}
         onClose={() => setDetailOpen(false)}
-        token={token}
-      />
-
-      <ReceivableModal
-        open={payOpen}
-        appointmentId={payReceivable?.appointment_id}
-        appointmentStatus={payReceivable?.appointment_status}
-        patientName={payReceivable?.patient_name}
-        dentistName={payReceivable?.dentist_name}
-        appointmentTime={
-          payReceivable?.appointment_date
-            ? new Date(payReceivable.appointment_date).toLocaleDateString("pt-BR")
-            : undefined
-        }
-        totalPrice={payReceivable?.total_amount}
-        onClose={() => setPayOpen(false)}
-        onSaved={handleReceivableSaved}
         token={token}
       />
 

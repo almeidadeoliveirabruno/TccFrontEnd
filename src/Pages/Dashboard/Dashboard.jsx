@@ -6,6 +6,7 @@ import DateRangePicker from "../../Components/dashboard/DateRangePicker";
 import RevenueExpenseChart from "../../Components/dashboard/RevenueExpenseChart";
 import AppointmentsStatusDonut from "../../Components/dashboard/AppointmentsStatusDonut";
 import AttendanceByMonthChart from "../../Components/dashboard/AttendanceByMonthChart";
+import ProceduresDistributionDonut from "../../Components/dashboard/ProceduresDistributionDonut";
 import ProceduresChart from "../../Components/dashboard/ProceduresChart";
 import DentistsChart from "../../Components/dashboard/DentistsChart";
 
@@ -38,12 +39,15 @@ export default function Dashboard() {
       <StatCards startDate={startDate} endDate={endDate} />
 
       <div className="dash-row">
-        <RevenueExpenseChart startDate={startDate} endDate={endDate} />
-        <AppointmentsStatusDonut startDate={startDate} endDate={endDate} />
+        <AttendanceByMonthChart startDate={startDate} endDate={endDate} />
+        <div className="dash-donut-col">
+          <AppointmentsStatusDonut startDate={startDate} endDate={endDate} />
+          <ProceduresDistributionDonut startDate={startDate} endDate={endDate} />
+        </div>
       </div>
 
       <div className="dash-row">
-        <AttendanceByMonthChart startDate={startDate} endDate={endDate} />
+        <RevenueExpenseChart startDate={startDate} endDate={endDate} />
       </div>
 
       <div className="dash-row">

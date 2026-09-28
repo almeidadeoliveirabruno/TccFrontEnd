@@ -9,9 +9,10 @@ const EMPTY_FORM = {
   amount: "",
   due_date: "",
   notes: "",
+  is_paid: false,
+  paid_at: "",
 };
 
-// Trocar
 function mapValidationErrors(detail) {
   const fieldErrors = {};
   if (!Array.isArray(detail)) return fieldErrors;
@@ -45,15 +46,21 @@ export default function ExpenseModal({
         amount: String(editExpense.amount ?? ""),
         due_date: editExpense.due_date ?? "",
         notes: editExpense.notes ?? "",
+        is_paid: editExpense.status === "pago",
+        paid_at: editExpense.paid_at ?? "",
       });
     } else {
-      setForm(EMPTY_FORM);
+      setForm({
+        ...EMPTY_FORM,
+        due_date: new Date().toISOString().split("T")[0],
+      });
     }
   }, [open, editExpense]);
 
   function set(field) {
     return (e) => {
-      setForm((f) => ({ ...f, [field]: e.target.value }));
+      const val = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+      setForm((f) => ({ ...f, [field]: val }));
       setErrors((err) => ({ ...err, [field]: undefined }));
     };
   }
@@ -84,12 +91,15 @@ export default function ExpenseModal({
     if (!validate()) return;
     setLoading(true);
 
+    const todayStr = new Date().toISOString().split("T")[0];
     const body = {
       description: form.description.trim(),
       category: form.category,
       amount: Number(form.amount),
       due_date: form.due_date,
       notes: form.notes.trim() || null,
+      status: form.is_paid ? "pago" : "pendente",
+      paid_at: form.is_paid ? (form.paid_at || todayStr) : null,
     };
 
     try {
@@ -202,20 +212,46 @@ export default function ExpenseModal({
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">
-            Vencimento <span className="req">*</span>
-          </label>
-          <input
-            className={`form-input ${errors.due_date ? "input-error" : ""}`}
-            type="date"
-            value={form.due_date}
-            onChange={set("due_date")}
-          />
-          {errors.due_date && (
-            <span className="form-error">{errors.due_date}</span>
-          )}
+        <div className="form-row">
+          <div className="form-group">
+            <label className="form-label">
+              Vencimento <span className="req">*</span>
+            </label>
+            <input
+              className={`form-input ${errors.due_date ? "input-error" : ""}`}
+              type="date"
+              value={form.due_date}
+              onChange={set("due_date")}
+            />
+            {errors.due_date && (
+              <span className="form-error">{errors.due_date}</span>
+            )}
+          </div>
+
+          <div className="form-group" style={{ display: "flex", flexDirection: "column", justifyContent: "center", paddingTop: 18 }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 14, fontWeight: 600, color: "#374151" }}>
+              <input
+                type="checkbox"
+                checked={form.is_paid}
+                onChange={set("is_paid")}
+                style={{ width: 18, height: 18, accentColor: "#10b981", cursor: "pointer" }}
+              />
+              Despesa já está paga
+            </label>
+          </div>
         </div>
+
+        {form.is_paid && (
+          <div className="form-group">
+            <label className="form-label">Data do pagamento</label>
+            <input
+              className="form-input"
+              type="date"
+              value={form.paid_at || new Date().toISOString().split("T")[0]}
+              onChange={set("paid_at")}
+            />
+          </div>
+        )}
 
         <div className="form-group">
           <label className="form-label">Observações</label>

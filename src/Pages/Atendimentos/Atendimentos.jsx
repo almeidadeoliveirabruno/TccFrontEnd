@@ -125,10 +125,6 @@ export default function Atendimentos() {
   }
 
   function openPay(appointment) {
-    if (appointment?.status === "cancelado") {
-      showToast("Não é possível registrar pagamento para uma consulta cancelada.", "error");
-      return;
-    }
     setPayAppointment(appointment);
     setPayOpen(true);
   }
@@ -150,11 +146,10 @@ export default function Atendimentos() {
     }
     showToast(message);
     setPayOpen(false);
-    // só atualiza o status daquela linha -- não precisa recarregar a tabela
-    // inteira, pagamento não muda status/valor do atendimento em si
     if (payAppointment) {
       loadReceivableStatus(payAppointment.id);
     }
+    await loadAppointments();
   }
 
   return (
@@ -299,23 +294,27 @@ export default function Atendimentos() {
             <tbody>
               {appointments.map((a) => {
                 const style = APPOINTMENT_STATUS[a.status] ?? STATUS_COLORS[a.status] ?? APPOINTMENT_STATUS.agendado;
-                const recStatus = receivableStatus[a.id] ?? a.receivable_status ?? (a.has_receivable ? "pendente" : null);
-                const hasReceivable = a.has_receivable || (recStatus !== null && recStatus !== undefined);
-                const isCanceled = a.status === "cancelado" || recStatus === "cancelado";
-                const isNoBilling = !hasReceivable;
-                const moneyColor = !hasReceivable ? "#CBD5E1" : (RECEIVABLE_ICON_COLOR[recStatus] ?? "#9CA3AF");
-                const moneyTitle =
-                  a.status === "cancelado"
-                    ? "Consulta cancelada (sem cobrança)"
-                    : isNoBilling
-                    ? "Consulta sem cobrança associada (Retorno / Continuação)"
-                    : recStatus === "pago"
-                    ? "Pago"
-                    : recStatus === "cancelado"
-                    ? "Cobrança cancelada"
-                    : recStatus === "parcial"
-                    ? "Pagamento parcial"
-                    : "Registrar pagamento";
+                const recStatus = receivableStatus[a.id] ?? a.receivable_status ?? "pendente";
+                const isPago = recStatus === "pago";
+                const isCancelado = a.status === "cancelado" || recStatus === "cancelado";
+
+                let moneyColor = "#f59e0b";
+                let moneyTitle = "Registrar pagamento";
+
+                if (isPago) {
+                  moneyColor = "#16a34a";
+                  moneyTitle = a.status === "cancelado" ? "Pago (Consulta cancelada)" : "Pago";
+                } else if (isCancelado) {
+                  moneyColor = "#dc2626";
+                  moneyTitle = "Cobrança cancelada";
+                } else if (recStatus === "parcial") {
+                  moneyColor = "#f59e0b";
+                  moneyTitle = "Pagamento parcial";
+                } else {
+                  moneyColor = "#f59e0b";
+                  moneyTitle = "Pendente de pagamento";
+                }
+
                 return (
                   <tr key={a.id} onClick={() => openDetail(a.id)} style={{ cursor: "pointer" }}>
                     <td>
@@ -346,11 +345,14 @@ export default function Atendimentos() {
                         <button
                           className="btn-icon"
                           onClick={() => openPay(a)}
-                          disabled={isCanceled || isNoBilling}
                           title={moneyTitle}
-                          style={isCanceled || isNoBilling ? { opacity: 0.35, cursor: "not-allowed" } : undefined}
+                          style={{ cursor: "pointer" }}
                         >
-                          <i className="ti ti-currency-dollar" style={{ color: isCanceled || isNoBilling ? "#9CA3AF" : moneyColor }} aria-hidden="true" />
+                          <i
+                            className="ti ti-currency-dollar"
+                            style={{ color: moneyColor, fontSize: 18, fontWeight: isPago ? 700 : 400 }}
+                            aria-hidden="true"
+                          />
                         </button>
                         <button className="btn-icon" onClick={() => openDetail(a.id)} title="Ver detalhes">
                           ✏️

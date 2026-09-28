@@ -61,7 +61,7 @@ export default function AppointmentsCountByMonthChart({ startDate, endDate }) {
   const totalAtendimentos = data.reduce((sum, d) => sum + d.count, 0);
 
   return (
-    <div className="chart-card chart-card-full">
+    <div className="chart-card chart-card-wide chart-card-attendance">
       <div className="chart-card-header">
         <h3 className="chart-card-title">Atendimentos por mês</h3>
         <div className="chart-legend-inline">
@@ -78,7 +78,7 @@ export default function AppointmentsCountByMonthChart({ startDate, endDate }) {
         ) : data.length === 0 ? (
           <div className="chart-empty">Sem dados no período selecionado</div>
         ) : (
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={360}>
             <AreaChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="atendimentosGradient" x1="0" y1="0" x2="0" y2="1">

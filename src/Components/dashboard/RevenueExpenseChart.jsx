@@ -107,7 +107,7 @@ export default function RevenueExpenseChart({ startDate, endDate, viewAllHref, v
   const lastExpense = data[data.length - 1]?.despesa ?? 0;
 
   return (
-    <div className="chart-card chart-card-wide">
+    <div className="chart-card chart-card-full">
       <div className="chart-card-header">
         <h3 className="chart-card-title">Receitas × Despesas</h3>
         <div className="chart-header-right">

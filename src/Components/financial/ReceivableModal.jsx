@@ -9,20 +9,17 @@ const PAYMENT_METHODS = [
   { value: "outro", label: "Outro" },
 ];
 
-
-function toDateInput(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+function toDateInput(val) {
+  if (!val) return "";
+  return String(val).split("T")[0];
 }
 
 function todayAsDateInput() {
-  return toDateInput(new Date().toISOString());
-}
-
-function dateInputToIso(dateStr) {
-  return `${dateStr}T12:00:00`;
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export default function ReceivableModal({
@@ -39,10 +36,11 @@ export default function ReceivableModal({
 }) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
   const [receivable, setReceivable] = useState(null);
   const [notFound, setNotFound] = useState(false);
 
+  // "pago" | "pendente"
+  const [statusSelection, setStatusSelection] = useState("pendente");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paidAt, setPaidAt] = useState("");
   const [error, setError] = useState("");
@@ -69,7 +67,9 @@ export default function ReceivableModal({
       .then((d) => {
         if (!d) return;
         setReceivable(d);
-        setPaymentMethod(d.payment_method ?? "");
+        const currentStatus = d.status === "pago" ? "pago" : "pendente";
+        setStatusSelection(currentStatus);
+        setPaymentMethod(d.payment_method ?? "pix");
         setPaidAt(d.paid_at ? toDateInput(d.paid_at) : todayAsDateInput());
       })
       .catch(() => setError("Erro ao carregar dados financeiros dessa consulta."))
@@ -81,33 +81,58 @@ export default function ReceivableModal({
     if (isCancelado) {
       setError(
         isConsultaCancelada
-          ? "Não é possível registrar pagamento para uma consulta cancelada."
-          : "Não é possível registrar pagamento para uma cobrança cancelada."
+          ? "Não é possível alterar pagamento de uma consulta cancelada."
+          : "Não é possível alterar uma cobrança cancelada."
       );
-      return;
-    }
-    if (!paymentMethod) {
-      setError("Selecione a forma de pagamento.");
-      return;
-    }
-    if (!paidAt) {
-      setError("Informe a data do pagamento.");
-      return;
-    }
-    if (paidAt > todayAsDateInput()) {
-      setError("Data de pagamento não pode ser no futuro.");
       return;
     }
 
     setSaving(true);
     setError("");
+
     try {
-      const isoDate = dateInputToIso(paidAt);
+      // Caso 1: Usuário selecionou status "pendente"
+      if (statusSelection === "pendente") {
+        if (receivable.status === "pago") {
+          const r = await fetch(`${API_URL}/receivables/${receivable.id}/unpay`, {
+            method: "POST",
+            headers: authHeaders(token),
+          });
+          if (!r.ok) {
+            const body = await r.json().catch(() => null);
+            throw new Error(body?.detail || "Erro ao reverter pagamento para pendente.");
+          }
+          onSaved("Status de pagamento alterado para Pendente.");
+          return;
+        } else {
+          // Já estava pendente
+          onSaved("Cobrança mantida como Pendente.");
+          return;
+        }
+      }
+
+      // Caso 2: Usuário selecionou status "pago"
+      if (!paymentMethod) {
+        setError("Selecione a forma de pagamento.");
+        setSaving(false);
+        return;
+      }
+      if (!paidAt) {
+        setError("Informe a data do pagamento.");
+        setSaving(false);
+        return;
+      }
+      if (paidAt > todayAsDateInput()) {
+        setError("Data de pagamento não pode ser no futuro.");
+        setSaving(false);
+        return;
+      }
+
       let r;
       if (receivable.status !== "pago") {
         const params = new URLSearchParams({
           payment_method: paymentMethod,
-          paid_at: isoDate,
+          paid_at: paidAt,
         });
         r = await fetch(`${API_URL}/receivables/${receivable.id}/pay?${params}`, {
           method: "POST",
@@ -119,10 +144,11 @@ export default function ReceivableModal({
           headers: authHeaders(token),
           body: JSON.stringify({
             payment_method: paymentMethod,
-            paid_at: isoDate,
+            paid_at: paidAt,
           }),
         });
       }
+
       if (!r.ok) {
         const body = await r.json().catch(() => null);
         throw new Error(body?.detail || "Erro ao salvar pagamento.");
@@ -135,29 +161,7 @@ export default function ReceivableModal({
     }
   }
 
-  async function handleCancel() {
-    if (!receivable) return;
-    if (!window.confirm("Cancelar a cobrança dessa consulta (paciente faltou)?")) return;
-    setCancelling(true);
-    setError("");
-    try {
-      const r = await fetch(`${API_URL}/receivables/${receivable.id}/cancel`, {
-        method: "POST",
-        headers: authHeaders(token),
-      });
-      if (!r.ok) {
-        const body = await r.json().catch(() => null);
-        throw new Error(body?.detail || "Erro ao cancelar cobrança.");
-      }
-      onSaved("Cobrança cancelada.");
-    } catch (e) {
-      setError(e.message || "Erro ao cancelar cobrança.");
-    } finally {
-      setCancelling(false);
-    }
-  }
-
-  const isPago = receivable?.status === "pago";
+  const isPagoOriginally = receivable?.status === "pago";
 
   return (
     <div className={`modal-overlay ${open ? "open" : ""}`}>
@@ -201,62 +205,134 @@ export default function ReceivableModal({
               </div>
               <div className="form-group">
                 <label className="form-label">Valor total</label>
-                <div className="form-input" style={{ background: "#F9FAFB" }}>
-                  R$ {Number(totalPrice).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                <div className="form-input" style={{ background: "#F9FAFB", fontWeight: 600, color: "#16a34a" }}>
+                  R$ {Number(totalPrice || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </div>
               </div>
             </div>
 
             {isCancelado ? (
-              <div className="form-group">
-                <label className="form-label">Status</label>
-                <div className="form-input" style={{ background: "#FEE2E2", color: "#B91C1C", fontWeight: 500 }}>
+              <div
+                style={{
+                  background: "#FEF2F2",
+                  border: "1px solid #FCA5A5",
+                  color: "#991B1B",
+                  padding: "10px 14px",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  margin: "8px 0",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <span>⚠️</span>
+                <span>
                   {isConsultaCancelada
-                    ? "Consulta cancelada — não é possível registrar pagamento."
-                    : "Cobrança cancelada — não é possível editar."}
-                </div>
+                    ? "Esta consulta está cancelada. Lançamento financeiro bloqueado."
+                    : "Esta cobrança está cancelada e bloqueada para alterações."}
+                </span>
               </div>
             ) : (
               <>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Forma de pagamento</label>
-                    <select
-                      className="form-input"
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
+                <div className="form-group">
+                  <label className="form-label">Status do Pagamento</label>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <button
+                      type="button"
+                      onClick={() => setStatusSelection("pago")}
+                      style={{
+                        flex: 1,
+                        padding: "8px 14px",
+                        borderRadius: 8,
+                        border: statusSelection === "pago" ? "2px solid #16a34a" : "1px solid #E5E7EB",
+                        background: statusSelection === "pago" ? "#DCFCE7" : "#F9FAFB",
+                        color: statusSelection === "pago" ? "#15803D" : "#4B5563",
+                        fontWeight: statusSelection === "pago" ? 600 : 400,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
+                        fontFamily: "inherit",
+                        transition: "all 0.15s ease",
+                      }}
                     >
-                      <option value="">Selecione...</option>
-                      {PAYMENT_METHODS.map((m) => (
-                        <option key={m.value} value={m.value}>
-                          {m.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Data do pagamento</label>
-                    <input
-                      type="date"
-                      className="form-input"
-                      value={paidAt}
-                      max={todayAsDateInput()}
-                      onChange={(e) => setPaidAt(e.target.value)}
-                    />
+                      <span>✓</span> Pago
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStatusSelection("pendente")}
+                      style={{
+                        flex: 1,
+                        padding: "8px 14px",
+                        borderRadius: 8,
+                        border: statusSelection === "pendente" ? "2px solid #f59e0b" : "1px solid #E5E7EB",
+                        background: statusSelection === "pendente" ? "#FEF3C7" : "#F9FAFB",
+                        color: statusSelection === "pendente" ? "#B45309" : "#4B5563",
+                        fontWeight: statusSelection === "pendente" ? 600 : 400,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
+                        fontFamily: "inherit",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      <span>⏳</span> Pendente
+                    </button>
                   </div>
                 </div>
 
-                {isPago && (
-                  <div className="proc-desc">
-                    Essa consulta já está marcada como paga. Alterar e salvar
-                    atualiza a forma de pagamento e a data.
+                {statusSelection === "pago" ? (
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Forma de pagamento</label>
+                      <select
+                        className="form-input"
+                        value={paymentMethod}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                      >
+                        <option value="">Selecione...</option>
+                        {PAYMENT_METHODS.map((m) => (
+                          <option key={m.value} value={m.value}>
+                            {m.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Data do pagamento</label>
+                      <input
+                        type="date"
+                        className="form-input"
+                        value={paidAt}
+                        max={todayAsDateInput()}
+                        onChange={(e) => setPaidAt(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className="proc-desc"
+                    style={{
+                      background: "#FEF3C7",
+                      color: "#92400E",
+                      padding: "8px 12px",
+                      borderRadius: 6,
+                      fontSize: 12.5,
+                      marginTop: 4,
+                    }}
+                  >
+                    A consulta ficará registrada como <strong>Pendente</strong> de pagamento.
                   </div>
                 )}
               </>
             )}
 
             {error && (
-              <div className="proc-desc" style={{ color: "#B91C1C" }}>
+              <div className="proc-desc" style={{ color: "#B91C1C", marginTop: 8 }}>
                 {error}
               </div>
             )}
@@ -264,23 +340,23 @@ export default function ReceivableModal({
         )}
 
         <div className="modal-footer">
-          {!loading && !notFound && !isCancelado && receivable?.status === "pendente" && (
-            <button
-              className="btn-cancel"
-              style={{ color: "#B91C1C", borderColor: "#FECACA" }}
-              onClick={handleCancel}
-              disabled={cancelling || saving}
-            >
-              {cancelling ? "Cancelando..." : "Paciente faltou (cancelar)"}
-            </button>
-          )}
+          <button className="btn-cancel" onClick={onClose} disabled={saving}>
+            {isCancelado ? "Fechar" : "Cancelar"}
+          </button>
+
           {!notFound && !isCancelado && (
             <button
               className="btn-primary"
               onClick={handleSave}
-              disabled={saving || loading || cancelling}
+              disabled={saving || loading}
             >
-              {saving ? "Salvando..." : "Confirmar pagamento"}
+              {saving
+                ? "Salvando..."
+                : statusSelection === "pago"
+                ? isPagoOriginally
+                  ? "Salvar alterações"
+                  : "Confirmar pagamento"
+                : "Salvar como Pendente"}
             </button>
           )}
         </div>

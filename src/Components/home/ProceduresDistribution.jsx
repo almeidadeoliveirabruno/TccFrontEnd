@@ -30,7 +30,7 @@ export default function ProceduresDistribution({ token }) {
     <div className="dash-card">
       <div className="dash-card-header">
         <span className="dash-card-title">Procedimentos </span>
-         <a className="dash-card-link" href="/procedimentos">
+        <a className="dash-card-link" href="/procedimentos">
           Ver procedimentos
         </a>
       </div>

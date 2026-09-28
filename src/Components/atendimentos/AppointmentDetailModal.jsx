@@ -159,8 +159,29 @@ export default function AppointmentDetailModal({
               </div>
             </div>
 
+            {status === "cancelado" && (
+              <div
+                style={{
+                  background: "#FEF2F2",
+                  border: "1px solid #FCA5A5",
+                  color: "#991B1B",
+                  padding: "10px 14px",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <span>⚠️</span>
+                <span>
+                  Esta consulta está <strong>Cancelada</strong>. A edição de dentes e observações fica bloqueada enquanto estiver cancelada.
+                </span>
+              </div>
+            )}
+
             <div className="form-group">
-              <label className="form-label">Status</label>
+              <label className="form-label">Status do Atendimento</label>
               <select
                 className="form-input"
                 value={status}
@@ -187,8 +208,13 @@ export default function AppointmentDetailModal({
                     </span>
                     <button
                       type="button"
-                      title="Selecionar dente no odontograma"
-                      onClick={() => setOdoProcId(p.id)}
+                      title={
+                        status === "cancelado"
+                          ? "Consulta cancelada — edição de dente bloqueada"
+                          : "Selecionar dente no odontograma"
+                      }
+                      onClick={() => status !== "cancelado" && setOdoProcId(p.id)}
+                      disabled={status === "cancelado"}
                       style={{
                         background: p.tooth ? "linear-gradient(135deg,#0cb0c7,#0ea5e9)" : "#f1f5f9",
                         border: "1.5px solid " + (p.tooth ? "#0cb0c7" : "#e2e8f0"),
@@ -198,7 +224,8 @@ export default function AppointmentDetailModal({
                         fontSize: p.tooth ? 14 : 16,
                         fontWeight: p.tooth ? 700 : 400,
                         color: p.tooth ? "#fff" : "#94a3b8",
-                        cursor: "pointer",
+                        cursor: status === "cancelado" ? "not-allowed" : "pointer",
+                        opacity: status === "cancelado" ? 0.6 : 1,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -241,6 +268,11 @@ export default function AppointmentDetailModal({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Observações opcionais"
+                disabled={status === "cancelado"}
+                style={{
+                  opacity: status === "cancelado" ? 0.7 : 1,
+                  cursor: status === "cancelado" ? "not-allowed" : "text",
+                }}
               />
             </div>
           </>

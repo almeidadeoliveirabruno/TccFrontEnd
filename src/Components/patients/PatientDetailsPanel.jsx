@@ -24,6 +24,25 @@ function isValidFdiTooth(value) {
   return /^[1-8][1-8]$/.test(value);
 }
 
+function ToothIconSvg({ size = 15, className = "" }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      style={{ display: "inline-block", verticalAlign: "middle" }}
+    >
+      <path d="M6.5 3c-1.5 0 -2.5 1.5 -2.5 3c0 3.5 1.5 7 2 10.5c.5 3.5 2 4.5 4 4.5c1.5 0 2 -.5 2 -2c0 1.5 .5 2 2 2c2 0 3.5 -1 4 -4.5c.5 -3.5 2 -7 2 -10.5c0 -1.5 -1 -3 -2.5 -3c-2 0 -3.5 1.5 -4 3c-.5 -1.5 -2 -3 -5 -3z" />
+    </svg>
+  );
+}
+
 export default function PatientDetailsPanel({
   patient,
   summary,
@@ -292,21 +311,22 @@ export default function PatientDetailsPanel({
                                 </span>
                               ) : (
                                 <span className="patient-procedure-display">
-                                  {proc.display}
+                                  <span>{proc.display}</span>
                                   <button
                                     type="button"
                                     className="btn-icon-sm patient-procedure-edit-btn"
-                                    title="Editar dente (FDI)"
-                                    onClick={() =>
+                                    title="Selecionar dente no odontograma"
+                                    onClick={() => {
                                       setEditingProc({
                                         key,
                                         value: proc.tooth ?? "",
                                         saving: false,
                                         error: null,
-                                      })
-                                    }
+                                      });
+                                      setOdontogramOpen(true);
+                                    }}
                                   >
-                                    <i className="ti ti-pencil" aria-hidden="true" />
+                                    <ToothIconSvg size={15} />
                                   </button>
                                 </span>
                               )}
