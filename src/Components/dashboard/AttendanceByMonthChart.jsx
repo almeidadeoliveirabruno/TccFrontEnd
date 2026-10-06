@@ -10,14 +10,18 @@ import {
 } from "recharts";
 import { API_URL, authHeaders } from "../../Services/api";
 import { useAuth } from "../../hooks/useAuth";
-import { formatMonthLabel, buildQueryParams } from "../../Pages/Dashboard/utils/dashboardUtils";
+import { periodLabels, buildQueryParams } from "../../Pages/Dashboard/utils/dashboardUtils";
+import GranularityToggle from "./GranularityToggle";
 
-function CustomTooltip({ active, payload, label }) {
+// Acima disso os pontos ficam amontoados, então só mostramos a linha
+const MAX_POINTS_WITH_DOTS = 31;
+
+function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
   const row = payload[0].payload;
   return (
     <div className="chart-tooltip">
-      <div className="chart-tooltip-label">{label}</div>
+      <div className="chart-tooltip-label">{row.tooltipLabel}</div>
       <div className="chart-tooltip-row">
         <span className="chart-tooltip-dot" style={{ background: "#3B82F6" }} />
         <span>Atendimentos</span>
@@ -31,11 +35,12 @@ export default function AppointmentsCountByMonthChart({ startDate, endDate }) {
   const { token } = useAuth();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [granularity, setGranularity] = useState("month");
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const qs = buildQueryParams(startDate, endDate);
+      const qs = buildQueryParams(startDate, endDate, granularity);
       const r = await fetch(`${API_URL}/dashboard/appointments-count-by-period${qs}`, {
         headers: authHeaders(token),
       });
@@ -43,7 +48,7 @@ export default function AppointmentsCountByMonthChart({ startDate, endDate }) {
       const raw = await r.json();
       setData(
         raw.map((item) => ({
-          label: formatMonthLabel(item.year, item.month),
+          ...periodLabels(item),
           count: item.count,
         })),
       );
@@ -52,23 +57,33 @@ export default function AppointmentsCountByMonthChart({ startDate, endDate }) {
     } finally {
       setLoading(false);
     }
-  }, [token, startDate, endDate]);
+  }, [token, startDate, endDate, granularity]);
 
   useEffect(() => {
     load();
   }, [load]);
 
   const totalAtendimentos = data.reduce((sum, d) => sum + d.count, 0);
+  const showDots = data.length <= MAX_POINTS_WITH_DOTS;
 
   return (
     <div className="chart-card chart-card-wide chart-card-attendance">
       <div className="chart-card-header">
-        <h3 className="chart-card-title">Atendimentos por mês</h3>
-        <div className="chart-legend-inline">
-          <span className="legend-item">
-            <span className="legend-dot" style={{ background: "#3B82F6" }} />
-            Total do período · {totalAtendimentos}
-          </span>
+        <h3 className="chart-card-title">
+          Atendimentos por {granularity === "day" ? "dia" : "mês"}
+        </h3>
+        <div className="chart-header-right">
+          <div className="chart-legend-inline">
+            <span className="legend-item">
+              <span className="legend-dot" style={{ background: "#3B82F6" }} />
+              Total do período · {totalAtendimentos}
+            </span>
+          </div>
+          <GranularityToggle
+            id="attendance-granularity"
+            value={granularity}
+            onChange={setGranularity}
+          />
         </div>
       </div>
 
@@ -92,12 +107,15 @@ export default function AppointmentsCountByMonthChart({ startDate, endDate }) {
                 tick={{ fontSize: 12, fill: "#94A3B8" }}
                 axisLine={{ stroke: "#E2E8F0" }}
                 tickLine={false}
+                interval="preserveStartEnd"
+                minTickGap={16}
               />
               <YAxis
                 tick={{ fontSize: 12, fill: "#94A3B8" }}
                 axisLine={false}
                 tickLine={false}
                 width={40}
+                allowDecimals={false}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
@@ -106,7 +124,7 @@ export default function AppointmentsCountByMonthChart({ startDate, endDate }) {
                 stroke="#3B82F6"
                 strokeWidth={2.5}
                 fill="url(#atendimentosGradient)"
-                dot={{ r: 4, fill: "#3B82F6" }}
+                dot={showDots ? { r: 4, fill: "#3B82F6" } : false}
                 activeDot={{ r: 6 }}
               />
             </AreaChart>

@@ -1,0 +1,40 @@
+/* Segue os tokens do .chart-select (borda #ECEEF1, raio 10px, 13px)
+   e a cor de destaque do projeto (#0CB0C7 / #0a9db2) */
+.granularity-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: #F1F5F9;
+  border: 1px solid #ECEEF1;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.granularity-toggle-btn {
+  border: none;
+  background: transparent;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #64748b;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s, color .15s, box-shadow .15s;
+}
+
+.granularity-toggle-btn:hover {
+  color: #0a9db2;
+}
+
+.granularity-toggle-btn.active {
+  background: #fff;
+  color: #0a9db2;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.granularity-toggle-btn:focus-visible {
+  outline: 2px solid #0CB0C7;
+  outline-offset: 1px;
+}

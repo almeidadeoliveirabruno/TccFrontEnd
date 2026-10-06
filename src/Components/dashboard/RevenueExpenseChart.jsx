@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -14,52 +14,50 @@ import { useAuth } from "../../hooks/useAuth";
 import {
   formatCurrency,
   formatCurrencyShort,
-  formatMonthLabel,
+  periodLabels,
   buildQueryParams,
 } from "../../Pages/Dashboard/utils/dashboardUtils";
+import GranularityToggle from "./GranularityToggle";
 
+function periodKey(item) {
+  return item.date ?? `${item.year}-${item.month}`;
+}
+
+// O backend já devolve os períodos em ordem e preenchidos com 0,
+// então basta juntar receita e despesa pela mesma chave
 function mergeRevenueExpense(revenue, expense) {
   const map = new Map();
 
   revenue.forEach((r) => {
-    const key = `${r.year}-${r.month}`;
-    map.set(key, {
-      key,
-      year: r.year,
-      month: r.month,
-      label: formatMonthLabel(r.year, r.month),
+    map.set(periodKey(r), {
+      ...periodLabels(r),
       receita: Number(r.total_revenue),
       despesa: 0,
     });
   });
 
   expense.forEach((e) => {
-    const key = `${e.year}-${e.month}`;
+    const key = periodKey(e);
     const existing = map.get(key);
     if (existing) {
       existing.despesa = Number(e.total_expense);
     } else {
       map.set(key, {
-        key,
-        year: e.year,
-        month: e.month,
-        label: formatMonthLabel(e.year, e.month),
+        ...periodLabels(e),
         receita: 0,
         despesa: Number(e.total_expense),
       });
     }
   });
 
-  return Array.from(map.values()).sort(
-    (a, b) => a.year - b.year || a.month - b.month,
-  );
+  return Array.from(map.values());
 }
 
-function CustomTooltip({ active, payload, label }) {
+function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="chart-tooltip">
-      <div className="chart-tooltip-label">{label}</div>
+      <div className="chart-tooltip-label">{payload[0].payload.tooltipLabel}</div>
       {payload.map((p) => (
         <div key={p.dataKey} className="chart-tooltip-row">
           <span className="chart-tooltip-dot" style={{ background: p.color }} />
@@ -75,11 +73,12 @@ export default function RevenueExpenseChart({ startDate, endDate, viewAllHref, v
   const { token } = useAuth();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [granularity, setGranularity] = useState("month");
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const qs = buildQueryParams(startDate, endDate);
+      const qs = buildQueryParams(startDate, endDate, granularity);
       const [revRes, expRes] = await Promise.all([
         fetch(`${API_URL}/dashboard/revenue-summary${qs}`, {
           headers: authHeaders(token),
@@ -97,7 +96,7 @@ export default function RevenueExpenseChart({ startDate, endDate, viewAllHref, v
     } finally {
       setLoading(false);
     }
-  }, [token, startDate, endDate]);
+  }, [token, startDate, endDate, granularity]);
 
   useEffect(() => {
     load();
@@ -113,7 +112,7 @@ export default function RevenueExpenseChart({ startDate, endDate, viewAllHref, v
         <div className="chart-header-right">
           <div className="chart-legend-inline">
             <span className="legend-item">
-              <span className="legend-dot" style={{ background: "#3B82F6" }} />
+              <span className="legend-dot" style={{ background: "#22C55E" }} />
               Receita · {formatCurrency(lastRevenue)}
             </span>
             <span className="legend-item">
@@ -121,6 +120,12 @@ export default function RevenueExpenseChart({ startDate, endDate, viewAllHref, v
               Despesa · {formatCurrency(lastExpense)}
             </span>
           </div>
+
+          <GranularityToggle
+            id="revenue-expense-granularity"
+            value={granularity}
+            onChange={setGranularity}
+          />
 
           {viewAllHref && (
             <a className="chart-card-link" href={viewAllHref}>
@@ -137,13 +142,15 @@ export default function RevenueExpenseChart({ startDate, endDate, viewAllHref, v
           <div className="chart-empty">Sem dados no período selecionado</div>
         ) : (
           <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+            <BarChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
               <XAxis
                 dataKey="label"
                 tick={{ fontSize: 12, fill: "#94A3B8" }}
                 axisLine={{ stroke: "#E2E8F0" }}
                 tickLine={false}
+                interval="preserveStartEnd"
+                minTickGap={16}
               />
               <YAxis
                 tick={{ fontSize: 12, fill: "#94A3B8" }}
@@ -152,25 +159,21 @@ export default function RevenueExpenseChart({ startDate, endDate, viewAllHref, v
                 tickFormatter={formatCurrencyShort}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Line
-                type="monotone"
+              <Bar
                 dataKey="receita"
                 name="Receita"
-                stroke="#3B82F6"
-                strokeWidth={2.5}
-                dot={{ r: 4, fill: "#3B82F6" }}
-                activeDot={{ r: 6 }}
+                fill="#22C55E"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={32}
               />
-              <Line
-                type="monotone"
+              <Bar
                 dataKey="despesa"
                 name="Despesa"
-                stroke="#EF4444"
-                strokeWidth={2.5}
-                dot={{ r: 4, fill: "#EF4444" }}
-                activeDot={{ r: 6 }}
+                fill="#EF4444"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={32}
               />
-            </LineChart>
+            </BarChart>
           </ResponsiveContainer>
         )}
       </div>
