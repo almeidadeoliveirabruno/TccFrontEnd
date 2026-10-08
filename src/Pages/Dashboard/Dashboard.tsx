@@ -2,7 +2,7 @@ import { useState } from "react";
 import "./Dashboard.css";
 
 import StatCards from "../../Components/dashboard/StatCards";
-import DateRangePicker from "../../Components/dashboard/DateRangePicker";
+import DateRangePicker, { getPresetRange } from "../../Components/dashboard/DateRangePicker";
 import RevenueExpenseChart from "../../Components/dashboard/RevenueExpenseChart";
 import AppointmentsStatusDonut from "../../Components/dashboard/AppointmentsStatusDonut";
 import AttendanceByMonthChart from "../../Components/dashboard/AttendanceByMonthChart";
@@ -10,17 +10,8 @@ import ProceduresDistributionDonut from "../../Components/dashboard/ProceduresDi
 import ProceduresChart from "../../Components/dashboard/ProceduresChart";
 import DentistsChart from "../../Components/dashboard/DentistsChart";
 
-function defaultRange() {
-  const end = new Date();
-  const start = new Date();
-  start.setMonth(start.getMonth() - 5);
-  start.setDate(1);
-  const toISO = (d) => d.toISOString().slice(0, 10);
-  return { startDate: toISO(start), endDate: toISO(end) };
-}
-
 export default function Dashboard() {
-  const [{ startDate, endDate }, setRange] = useState(defaultRange());
+  const [{ startDate, endDate }, setRange] = useState(() => getPresetRange(3));
 
   return (
     <div className="dash-page">

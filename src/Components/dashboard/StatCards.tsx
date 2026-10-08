@@ -3,7 +3,14 @@ import { API_URL, authHeaders } from "../../Services/api";
 import { useAuth } from "../../hooks/useAuth";
 import { formatCurrency, buildQueryParams } from "../../Pages/Dashboard/utils/dashboardUtils";
 
-export default function StatCards({ startDate, endDate }) {
+interface StatCardsProps {
+  startDate: string;
+  endDate: string;
+  viewAllHref?: string;
+  viewAllLabel?: string;
+}
+
+export default function StatCards({ startDate, endDate }: StatCardsProps) {
   const { token } = useAuth();
   const [profit, setProfit] = useState({
     total_revenue: 0,
