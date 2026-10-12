@@ -10,9 +10,9 @@ import {
   formatPhone,
 } from "../../utils/masks";
 
-export default function PatientModal({ open, editPatient, onClose, onSaved, token }) {
+export default function PatientModal({ open, editPatient, onClose, onSaved, token }: any) {
   const [form, setForm] = useState(EMPTY_PATIENT_FORM);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
@@ -59,7 +59,7 @@ export default function PatientModal({ open, editPatient, onClose, onSaved, toke
   }, [open, editPatient, token]);
 
   function validate() {
-    const e = {};
+    const e: Record<string, string> = {};
     const cleanPhone = cleanDigits(form.phone);
     const cleanCpf = cleanDigits(form.cpf);
 

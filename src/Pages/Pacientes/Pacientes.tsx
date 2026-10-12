@@ -67,9 +67,9 @@ export default function Pacientes() {
       setLoadingList(true);
       try  {
         const params = new URLSearchParams({
-          page: targetPage,
-          page_size: PAGE_SIZE,
-          ...(debouncedSearch && { search: debouncedSearch }),
+          page: String(targetPage),
+          page_size: String(PAGE_SIZE),
+          ...(debouncedSearch ? { search: debouncedSearch } : {}),
         });
         const r = await fetch(`${API_URL}/patients?${params}`, {
           headers: authHeaders(token),

@@ -37,10 +37,10 @@ export default function Procedimentos() {
   setLoading(true);
   try {
       const params = new URLSearchParams({
-        page,
-        page_size: pageSize,
-        ...(search && { search }),
-        ...(catFilter && { category: catFilter }),
+        page: String(page),
+        page_size: String(pageSize),
+        ...(search ? { search } : {}),
+        ...(catFilter ? { category: catFilter } : {}),
       });
       const r = await fetch(`${API_URL}/procedures?${params}`, {
         headers: authHeaders(token),

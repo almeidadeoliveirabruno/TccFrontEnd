@@ -7,24 +7,25 @@ import "./Login.css";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [remember, setRemember] = useState(false);
 
   const navigate = useNavigate();
 
-  function set(setter, field) {
-          return (e) => {
-              setter(e.target.value);
-              setErrors((err) => ({ ...err, [field]: undefined }));
-          };
-      }
-  
-
+  function set(setter: (val: string) => void, field: string) {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      setter(e.target.value);
+      setErrors((err) => {
+        const next = { ...err };
+        delete next[field];
+        return next;
+      });
+    };
+  }
 
   const validateForm = () => {
-
-    const e = {}
+    const e: Record<string, string> = {};
 
     if (!email) {
       e.email = "Email é obrigatório";

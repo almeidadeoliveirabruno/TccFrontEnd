@@ -31,9 +31,9 @@ export default function ExpenseModal({
   onSaved,
   token,
   editExpense = null,
-}) {
+}: any) {
   const [form, setForm] = useState(EMPTY_FORM);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function ExpenseModal({
   }
 
   function validate() {
-    const e = {};
+    const e: Record<string, string> = {};
     if (!form.description.trim()) e.description = "Campo obrigatório";
     if (!form.category) e.category = "Selecione uma categoria";
 

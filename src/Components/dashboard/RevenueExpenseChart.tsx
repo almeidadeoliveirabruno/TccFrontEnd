@@ -53,7 +53,7 @@ function mergeRevenueExpense(revenue, expense) {
   return Array.from(map.values());
 }
 
-function CustomTooltip({ active, payload }) {
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: any[] }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="chart-tooltip">
@@ -69,7 +69,19 @@ function CustomTooltip({ active, payload }) {
   );
 }
 
-export default function RevenueExpenseChart({ startDate, endDate, viewAllHref, viewAllLabel = "Ver dashboard" }) {
+interface RevenueExpenseChartProps {
+  startDate: string;
+  endDate: string;
+  viewAllHref?: string;
+  viewAllLabel?: string;
+}
+
+export default function RevenueExpenseChart({
+  startDate,
+  endDate,
+  viewAllHref,
+  viewAllLabel = "Ver dashboard",
+}: RevenueExpenseChartProps) {
   const { token } = useAuth();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);

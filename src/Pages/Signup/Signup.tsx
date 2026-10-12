@@ -5,7 +5,7 @@ import { signup } from "../../Services/auth";
 import logo from "../../assets/Logo_Alternativa.png";
 import "./Signup.css";
 
-function validarCNPJ(cnpj) {
+function validarCNPJ(cnpj: string): boolean {
 
     cnpj = cnpj.replace(/[^\d]+/g, "");
 
@@ -24,7 +24,7 @@ function validarCNPJ(cnpj) {
 
     for (let i = tamanho; i >= 1; i--) {
 
-        soma += numeros[tamanho - i] * pos--;
+        soma += Number(numeros[tamanho - i]) * pos--;
 
         if (pos < 2)
             pos = 9;
@@ -44,7 +44,7 @@ function validarCNPJ(cnpj) {
 
     for (let i = tamanho; i >= 1; i--) {
 
-        soma += numeros[tamanho - i] * pos--;
+        soma += Number(numeros[tamanho - i]) * pos--;
 
         if (pos < 2)
             pos = 9;
@@ -70,21 +70,25 @@ function Signup() {
     const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
 
    
-    const [errors, setErrors] = useState({});
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
 
-    function set(setter, field) {
-        return (e) => {
+    function set(setter: (val: string) => void, field: string) {
+        return (e: React.ChangeEvent<HTMLInputElement>) => {
             setter(e.target.value);
-            setErrors((err) => ({ ...err, [field]: undefined }));
+            setErrors((err) => {
+                const next = { ...err };
+                delete next[field];
+                return next;
+            });
         };
     }
 
     const validateForm = () => {
 
-        const e = {};
+        const e: Record<string, string> = {};
 
         if (!nome.trim()) e.nome = "Campo obrigatório";
         if (!email.trim()) e.email = "Campo obrigatório";

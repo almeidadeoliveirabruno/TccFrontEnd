@@ -18,7 +18,7 @@ function todayLabel() {
 
 export default function Home() {
   const { token} = useAuth();
-  const payload = token ? jwtDecode(token) : null;
+  const payload = token ? jwtDecode<{ nome?: string }>(token) : null;
   const [loadingStats, setLoadingStats] = useState(true);
   const [stats, setStats] = useState({
     patients: 0,

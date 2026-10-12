@@ -70,7 +70,7 @@ export function statusMeta(status) {
   );
 }
 
-export function buildQueryParams(startDate, endDate, granularity) {
+export function buildQueryParams(startDate?: string, endDate?: string, granularity?: string) {
   const params = new URLSearchParams();
   if (startDate) params.set("start_date", startDate);
   if (endDate) params.set("end_date", endDate);

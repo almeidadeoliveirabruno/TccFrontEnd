@@ -45,16 +45,21 @@ export default function Atendimentos() {
   const pageSize = 5;
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [statistics, setStatistics] = useState({});
+  const [statistics, setStatistics] = useState<{
+    total_de_agendamentos?: number;
+    quantidade_de_faltas?: number;
+    pacientes_atendidos?: number;
+    receita?: number;
+  }>({});
 
   const [detailOpen, setDetailOpen] = useState(false);
-  const [detailId, setDetailId] = useState(null);
+  const [detailId, setDetailId] = useState<any>(null);
 
   const [payOpen, setPayOpen] = useState(false);
-  const [payAppointment, setPayAppointment] = useState(null);
+  const [payAppointment, setPayAppointment] = useState<any>(null);
   // status do receivable de cada consulta, indexado por appointment id
   // -- alimenta a cor do ícone de cifrão na tabela
-  const [receivableStatus, setReceivableStatus] = useState({});
+  const [receivableStatus, setReceivableStatus] = useState<Record<string, string>>({});
 
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
 
@@ -83,13 +88,13 @@ export default function Atendimentos() {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        page,
-        page_size: pageSize,
-        ...(patientSearch && { patient: patientSearch }),
-        ...(dentistSearch && { dentist: dentistSearch }),
-        ...(statusFilter && { status: statusFilter }),
-        ...(startDate && { start_date: startDate }),
-        ...(endDate && { end_date: endDate }),
+        page: String(page),
+        page_size: String(pageSize),
+        ...(patientSearch ? { patient: patientSearch } : {}),
+        ...(dentistSearch ? { dentist: dentistSearch } : {}),
+        ...(statusFilter ? { status: statusFilter } : {}),
+        ...(startDate ? { start_date: startDate } : {}),
+        ...(endDate ? { end_date: endDate } : {}),
       });
       const r = await fetch(`${API_URL}/appointments/table?${params}`, {
         headers: authHeaders(token),

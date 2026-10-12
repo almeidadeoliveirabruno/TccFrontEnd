@@ -156,9 +156,10 @@ export default function UpcomingAppointments({ token }) {
       ) : (
         <ul className="agenda-list">
           {appointments.map((a, i) => {
+            const statusKey = String(a.appointment_status || "").toLowerCase();
             const style =
-              STATUS_STYLE[a.appointment_status] ??
-              STATUS_STYLE.AGENDADO;
+              (STATUS_STYLE as Record<string, any>)[statusKey] ??
+              STATUS_STYLE.agendado;
 
             return (
               <li key={i} className="agenda-row">

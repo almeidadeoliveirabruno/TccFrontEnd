@@ -81,10 +81,10 @@ export default function DentistDetailsModal({ open, dentist, onClose, token }) {
                 className="badge"
                 style={{
                   background:
-                    STATUS_COLORS[detail.status]?.bg ?? STATUS_COLORS.ativo.bg,
+                    STATUS_COLORS[detail.status]?.bg ?? STATUS_COLORS.Ativo.bg,
                   color:
                     STATUS_COLORS[detail.status]?.color ??
-                    STATUS_COLORS.ativo.color,
+                    STATUS_COLORS.Ativo.color,
                 }}
               >
                 {statusLabel(detail.status)}

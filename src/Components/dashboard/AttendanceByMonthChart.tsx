@@ -16,7 +16,7 @@ import GranularityToggle from "./GranularityToggle";
 // Acima disso os pontos ficam amontoados, então só mostramos a linha
 const MAX_POINTS_WITH_DOTS = 31;
 
-function CustomTooltip({ active, payload }) {
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: any[] }) {
   if (!active || !payload?.length) return null;
   const row = payload[0].payload;
   return (

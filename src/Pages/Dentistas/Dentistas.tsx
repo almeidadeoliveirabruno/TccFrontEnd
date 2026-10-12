@@ -66,11 +66,11 @@ export default function Dentistas() {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        page,
-        page_size: pageSize,
-        ...(search && { search }),
-        ...(specFilter && { specialty: specFilter }),
-        ...(statusFilter && { status: statusFilter }),
+        page: String(page),
+        page_size: String(pageSize),
+        ...(search ? { search } : {}),
+        ...(specFilter ? { specialty: specFilter } : {}),
+        ...(statusFilter ? { status: statusFilter } : {}),
       });
       const r = await fetch(`${API_URL}/dentists?${params}`, {
         headers: authHeaders(token),
@@ -269,7 +269,7 @@ export default function Dentistas() {
             </thead>
             <tbody>
               {dentists.map((d) => {
-                const statusStyle = STATUS_COLORS[d.status] ?? STATUS_COLORS.ativo;
+                const statusStyle = STATUS_COLORS[d.status] ?? STATUS_COLORS.Ativo;
                 return (
                   <tr key={d.id}>
                     <td>

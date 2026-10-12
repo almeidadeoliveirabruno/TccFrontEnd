@@ -38,7 +38,8 @@ function truncate(name) {
     : name;
 }
 
-function YAxisTick({ x, y, payload }) {
+function YAxisTick({ x, y, payload }: any) {
+  if (!payload) return null;
   return (
     <text x={x} y={y} dy={4} textAnchor="end" fontSize={12} fill="#374151">
       <title>{payload.value}</title>
@@ -47,8 +48,8 @@ function YAxisTick({ x, y, payload }) {
   );
 }
 
-function CustomTooltip({ active, payload, format }) {
-  if (!active || !payload?.length) return null;
+function CustomTooltip({ active, payload, format }: { active?: boolean; payload?: any[]; format?: (v: any) => string }) {
+  if (!active || !payload?.length || !format) return null;
   const row = payload[0].payload;
   return (
     <div className="chart-tooltip">

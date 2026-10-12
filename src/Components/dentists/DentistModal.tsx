@@ -23,9 +23,9 @@ export default function DentistModal({
   onClose,
   onSaved,
   token,
-}) {
+}: any) {
   const [form, setForm] = useState(EMPTY_FORM);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
@@ -89,7 +89,7 @@ export default function DentistModal({
   }, [open, editDentist, token]);
 
   function validate() {
-    const e = {};
+    const e: Record<string, string> = {};
     const cleanPhone = cleanDigits(form.phone);
     const cleanCpf = cleanDigits(form.cpf);
 
@@ -137,7 +137,7 @@ export default function DentistModal({
     const cleanCpf = cleanDigits(form.cpf);
     const cleanCep = cleanDigits(form.cep);
 
-    const body = {
+    const body: Record<string, any> = {
       name: form.name.trim(),
       email: form.email.trim(),
       phone: cleanPhone,
@@ -362,7 +362,7 @@ export default function DentistModal({
 
   // Agrupa o rascunho de horários por dia da semana, igual ao que
   // DentistSchedules faz com os horários já salvos no backend.
-  function groupSchedules(list) {
+  function groupSchedules(list: any[]) {
     const grouped = [...list]
       .map((item, index) => ({ ...item, _draftIndex: index }))
       .sort(
@@ -370,16 +370,16 @@ export default function DentistModal({
           a.day_of_week - b.day_of_week ||
           a.time_begin.localeCompare(b.time_begin),
       )
-      .reduce((acc, item) => {
+      .reduce((acc: Record<string, any[]>, item) => {
         const key = item.day_of_week;
         if (!acc[key]) acc[key] = [];
         acc[key].push(item);
         return acc;
-      }, {});
+      }, {} as Record<string, any[]>);
 
     return Object.entries(grouped)
       .sort(([a], [b]) => Number(a) - Number(b))
-      .map(([day, items]) => ({ day: Number(day), items }));
+      .map(([day, items]: [string, any]) => ({ day: Number(day), items: items as any[] }));
   }
 
   return (

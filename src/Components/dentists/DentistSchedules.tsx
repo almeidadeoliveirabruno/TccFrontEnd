@@ -81,16 +81,16 @@ export default function DentistSchedules({
         a.day_of_week - b.day_of_week ||
         a.time_begin.localeCompare(b.time_begin),
     )
-    .reduce((acc, schedule) => {
+    .reduce((acc: Record<string, any[]>, schedule: any) => {
       const key = schedule.day_of_week;
       if (!acc[key]) acc[key] = [];
       acc[key].push(schedule);
       return acc;
-    }, {});
+    }, {} as Record<string, any[]>);
 
   const groupedEntries = Object.entries(groupedSchedules)
     .sort(([a], [b]) => Number(a) - Number(b))
-    .map(([day, items]) => ({ day: Number(day), items }));
+    .map(([day, items]: [string, any]) => ({ day: Number(day), items: items as any[] }));
 
   return (
     <div className="schedule-manager">

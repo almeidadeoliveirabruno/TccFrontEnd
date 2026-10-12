@@ -45,8 +45,8 @@ const items = [
 ];
 
 export default function Sidebar() {
-  const { setAuth, logout, token } = useAuth();
-  const payload = token ? jwtDecode(token) : null;
+  const { logout, token } = useAuth();
+  const payload = token ? jwtDecode<{ nome?: string }>(token) : null;
   const location = useLocation();
   const pathname = location.pathname;
 

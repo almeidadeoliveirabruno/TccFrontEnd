@@ -25,7 +25,7 @@ export default function AppointmentModal({
   editAppointmentId,
   preset,
 }) {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<any>({
     dentist_id: "",
     patient_id: "",
     appointment_date: toISODate(selectedDate),
@@ -34,7 +34,7 @@ export default function AppointmentModal({
     procedures: [{ ...EMPTY_PROCEDURE }],
     generate_receivable: true,
   });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
@@ -83,7 +83,7 @@ export default function AppointmentModal({
       const params = new URLSearchParams({
         page: "1",
         page_size: "30",
-        ...(patientSearch && { search: patientSearch }),
+        ...(patientSearch ? { search: patientSearch } : {}),
       });
       const r = await fetch(`${API_URL}/patients?${params}`, {
         headers: authHeaders(token),
@@ -123,7 +123,7 @@ export default function AppointmentModal({
         dentist_id: String(form.dentist_id),
         appointment_date: form.appointment_date,
         duration_minutes: String(effectiveDuration),
-        ...(editAppointmentId && { exclude_appointment_id: String(editAppointmentId) }),
+        ...(editAppointmentId ? { exclude_appointment_id: String(editAppointmentId) } : {}),
       });
       const r = await fetch(`${API_URL}/appointments/available-times?${params}`, {
         headers: authHeaders(token),
@@ -247,7 +247,7 @@ export default function AppointmentModal({
   }
 
   function validate() {
-    const e = {};
+    const e: Record<string, string> = {};
     if (!form.dentist_id) e.dentist_id = "Selecione o dentista";
     if (!form.patient_id) e.patient_id = "Selecione o paciente";
     if (!form.appointment_date) e.appointment_date = "Informe a data";

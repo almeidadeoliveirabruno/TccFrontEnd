@@ -34,7 +34,7 @@ function WhatsAppIcon({ size = 18, color = "currentColor" }) {
   );
 }
 
-function ConfirmationBadge({ appointment, compact }) {
+function ConfirmationBadge({ appointment, compact }: { appointment: any; compact?: boolean }) {
   const ui = getConfirmationUi(appointment);
   const sent = Boolean(appointment?.confirmation_message_sent);
   const Icon =
@@ -99,7 +99,7 @@ function AppointmentBlock({
         backgroundColor: statusStyle.cardBg || "rgba(255, 255, 255, 0.96)",
         borderColor: statusStyle.cardBorder || "rgba(148, 163, 184, 0.25)",
         borderLeftColor: statusStyle.accent,
-      }}
+      } as React.CSSProperties}
       onClick={(e) => {
         e.stopPropagation();
         onSelect(appointment);

@@ -3,15 +3,23 @@ import "./ProcedureModal.css";
 import { CATEGORIES, EMPTY_FORM } from "../../Pages/Procedimentos/constants";
 import { API_URL, authHeaders } from "../../Services/api";
 
+interface ProcedureFormData {
+  name: string;
+  description: string;
+  category: string;
+  price: string;
+  duration: string;
+}
+
 export default function ProcedureModal({
   open,
   editProc,
   onClose,
   onSaved,
   token,
-}) {
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [errors, setErrors] = useState({});
+}: any) {
+  const [form, setForm] = useState<ProcedureFormData>(EMPTY_FORM);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -32,16 +40,19 @@ export default function ProcedureModal({
   }, [open, editProc]);
 
   function validate() {
-    const e = {};
+    const e: Record<string, string> = {};
     if (!form.name.trim()) e.name = "Campo obrigatório";
     if (!form.category) e.category = "Selecione uma categoria";
-    if (form.price === "" || isNaN(Number(form.price)))
+    if (form.price === "" || isNaN(Number(form.price))) {
       e.price = "Campo obrigatório";
-    if (form.price <= 0) e.price = "Preço não pode ser negativo";
-    if (form.duration === "" || isNaN(Number(form.duration)))
+    } else if (Number(form.price) <= 0) {
+      e.price = "Preço não pode ser negativo";
+    }
+    if (form.duration === "" || isNaN(Number(form.duration))) {
       e.duration = "Campo obrigatório";
-    if (form.duration <= 0)
-      e.duration = "O tempo de duração não pode negativa ou zero"
+    } else if (Number(form.duration) <= 0) {
+      e.duration = "O tempo de duração não pode negativa ou zero";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   }

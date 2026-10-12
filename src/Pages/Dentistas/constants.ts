@@ -65,7 +65,7 @@ export const EMPTY_FORM = {
   cpf: "",
   cro: "",
   specialties: [],
-  status: "ativo",
+  status: "Ativo",
   street: "",
   number: "",
   complement: "",

@@ -92,12 +92,12 @@ export default function Financeiro() {
     setDespesasLoading(true);
     try {
       const params = new URLSearchParams({
-        page: despesasPage,
-        page_size: TABLE_PAGE_SIZE,
-        ...(despesaStatus && { status: despesaStatus }),
-        ...(despesaCategory && { category: despesaCategory }),
-        ...(dateFrom && { due_date_from: dateFrom }),
-        ...(dateTo && { due_date_to: dateTo }),
+        page: String(despesasPage),
+        page_size: String(TABLE_PAGE_SIZE),
+        ...(despesaStatus ? { status: despesaStatus } : {}),
+        ...(despesaCategory ? { category: despesaCategory } : {}),
+        ...(dateFrom ? { due_date_from: dateFrom } : {}),
+        ...(dateTo ? { due_date_to: dateTo } : {}),
       });
       const r = await fetch(`${API_URL}/expenses?${params}`, {
         headers: authHeaders(token),
@@ -128,13 +128,13 @@ export default function Financeiro() {
     setReceitasLoading(true);
     try {
       const params = new URLSearchParams({
-        page: receitasPage,
-        page_size: TABLE_PAGE_SIZE,
+        page: String(receitasPage),
+        page_size: String(TABLE_PAGE_SIZE),
         status: "pago",
-        ...(debouncedPatient && { patient_name: debouncedPatient }),
-        ...(debouncedDentist && { dentist_name: debouncedDentist }),
-        ...(dateFrom && { date_from: dateFrom }),
-        ...(dateTo && { date_to: dateTo }),
+        ...(debouncedPatient ? { patient_name: debouncedPatient } : {}),
+        ...(debouncedDentist ? { dentist_name: debouncedDentist } : {}),
+        ...(dateFrom ? { date_from: dateFrom } : {}),
+        ...(dateTo ? { date_to: dateTo } : {}),
       });
       const r = await fetch(`${API_URL}/receivables?${params}`, {
         headers: authHeaders(token),
