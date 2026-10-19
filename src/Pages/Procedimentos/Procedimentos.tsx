@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import "./Procedimentos.css";
 import { CATEGORIES, CAT_COLORS } from "./constants";
-import { API_URL, authHeaders } from "../../Services/api";
+import { getProcedures } from "../../Services/procedureService";
 import { useAuth } from "../../hooks/useAuth";
 import Toast from "../../Components/common/Toast/Toast";
 import ProcedureModal from "../../Components/procedures/ProcedureModal";
@@ -36,14 +36,11 @@ export default function Procedimentos() {
   const loadProcedures = useCallback(async () => {
   setLoading(true);
   try {
-      const params = new URLSearchParams({
-        page: String(page),
-        page_size: String(pageSize),
-        ...(search ? { search } : {}),
-        ...(catFilter ? { category: catFilter } : {}),
-      });
-      const r = await fetch(`${API_URL}/procedures?${params}`, {
-        headers: authHeaders(token),
+      const r = await getProcedures(token, {
+        page,
+        pageSize,
+        search,
+        category: catFilter,
       });
       if (!r.ok) throw new Error();
       const data = await r.json();

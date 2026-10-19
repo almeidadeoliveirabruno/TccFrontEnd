@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import "./Home.css";
 import { useAuth } from "../../hooks/useAuth";
-import { API_URL, authHeaders } from "../../Services/api";
+import {
+  getHomePatientsCount,
+  getHomeAppointmentsToday,
+  getHomeDentistCount,
+  getHomeExpensesNotPaid,
+} from "../../Services/dashboardService";
 import UpcomingAppointments from "../../Components/home/UpcomingAppointments";
 import RevenueExpenseChart from "../../Components/dashboard/RevenueExpenseChart";
 import ProceduresDistribution from "../../Components/home/ProceduresDistribution";
@@ -45,10 +50,10 @@ export default function Home() {
     setLoadingStats(true);
     try {
       const [pRes, aRes, dRes, eRes] = await Promise.all([
-        fetch(`${API_URL}/home/patients-count`, { headers: authHeaders(token) }),
-        fetch(`${API_URL}/home/appointments-today`, { headers: authHeaders(token) }),
-        fetch(`${API_URL}/home/dentist-count`, { headers: authHeaders(token) }),
-        fetch(`${API_URL}/home/expenses-not-paid`, { headers: authHeaders(token) }),
+        getHomePatientsCount(token),
+        getHomeAppointmentsToday(token),
+        getHomeDentistCount(token),
+        getHomeExpensesNotPaid(token),
       ]);
       if (!pRes.ok || !aRes.ok || !dRes.ok || !eRes.ok) throw new Error();
       const [p, a, d, e] = await Promise.all([

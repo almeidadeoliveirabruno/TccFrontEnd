@@ -7,7 +7,8 @@ import {
   STATUS_COLORS,
   APPOINTMENT_STATUS,
 } from "./constants";
-import { API_URL, authHeaders } from "../../Services/api";
+import { getAppointmentsTable } from "../../Services/appointmentService";
+import { getReceivableByAppointment } from "../../Services/receivableService";
 import { useAuth } from "../../hooks/useAuth";
 import Toast from "../../Components/common/Toast/Toast";
 import AppointmentDetailModal from "../../Components/atendimentos/AppointmentDetailModal";
@@ -71,9 +72,7 @@ export default function Atendimentos() {
   const loadReceivableStatus = useCallback(
     async (appointmentId) => {
       try {
-        const r = await fetch(`${API_URL}/receivables/by-appointment/${appointmentId}`, {
-          headers: authHeaders(token),
-        });
+        const r = await getReceivableByAppointment(token, appointmentId);
         if (!r.ok) return;
         const data = await r.json();
         setReceivableStatus((prev) => ({ ...prev, [appointmentId]: data.status }));
@@ -87,17 +86,14 @@ export default function Atendimentos() {
   const loadAppointments = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: String(page),
-        page_size: String(pageSize),
-        ...(patientSearch ? { patient: patientSearch } : {}),
-        ...(dentistSearch ? { dentist: dentistSearch } : {}),
-        ...(statusFilter ? { status: statusFilter } : {}),
-        ...(startDate ? { start_date: startDate } : {}),
-        ...(endDate ? { end_date: endDate } : {}),
-      });
-      const r = await fetch(`${API_URL}/appointments/table?${params}`, {
-        headers: authHeaders(token),
+      const r = await getAppointmentsTable(token, {
+        page,
+        pageSize,
+        patient: patientSearch,
+        dentist: dentistSearch,
+        status: statusFilter,
+        startDate,
+        endDate,
       });
       if (!r.ok) throw new Error();
       const data = await r.json();
@@ -310,8 +306,8 @@ export default function Atendimentos() {
                   moneyColor = "#16a34a";
                   moneyTitle = a.status === "cancelado" ? "Pago (Consulta cancelada)" : "Pago";
                 } else if (isCancelado) {
-                  moneyColor = "#dc2626";
-                  moneyTitle = "Cobrança cancelada";
+                  moneyColor = a.status === "cancelado" ? "#dc2626" : "#64748b";
+                  moneyTitle = a.status === "cancelado" ? "Consulta cancelada" : "Cobrança cancelada / Isenta";
                 } else if (recStatus === "parcial") {
                   moneyColor = "#f59e0b";
                   moneyTitle = "Pagamento parcial";

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { API_URL, authHeaders } from "../../Services/api";
+import { getHomeLastPatients } from "../../Services/dashboardService";
 import { formatPhone } from "../../utils/masks";
 
 const AVATAR_PALETTE = ["#0CB0C7", "#818CF8", "#34D399", "#FB923C", "#F472B6", "#60A5FA"];
@@ -26,7 +26,7 @@ export default function NewPatients({ token }) {
 
   useEffect(() => {
     let active = true;
-    fetch(`${API_URL}/home/last-patients`, { headers: authHeaders(token) })
+    getHomeLastPatients(token)
       .then((r) => r.json())
       .then((data) => {
         if (active) setPatients(Array.isArray(data) ? data : []);

@@ -2,7 +2,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Plus, Trash2, Search, X } from "lucide-react";
 import "./AppointmentModal.css";
-import { API_URL, authHeaders } from "../../Services/api";
+import { getPatients, getPatientById } from "../../Services/patientService";
+import { getProcedures } from "../../Services/procedureService";
+import {
+  getAvailableTimes,
+  getAppointmentById,
+  createAppointment,
+  updateAppointment,
+} from "../../Services/appointmentService";
 import { toISODate } from "../../Pages/Agenda/utils";
 import { formatPhone } from "../../utils/masks";
 import OdontogramModal from "../patients/OdontogramModal";
@@ -80,13 +87,10 @@ export default function AppointmentModal({
   const loadPatients = useCallback(async () => {
     setPatientsLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: "1",
-        page_size: "30",
-        ...(patientSearch ? { search: patientSearch } : {}),
-      });
-      const r = await fetch(`${API_URL}/patients?${params}`, {
-        headers: authHeaders(token),
+      const r = await getPatients(token, {
+        page: 1,
+        pageSize: 30,
+        search: patientSearch,
       });
       if (!r.ok) throw new Error();
       const data = await r.json();
@@ -100,10 +104,7 @@ export default function AppointmentModal({
 
   const loadProcedures = useCallback(async () => {
     try {
-      const params = new URLSearchParams({ page: "1", page_size: "20" });
-      const r = await fetch(`${API_URL}/procedures?${params}`, {
-        headers: authHeaders(token),
-      });
+      const r = await getProcedures(token, { page: 1, pageSize: 20 });
       if (!r.ok) throw new Error();
       const data = await r.json();
       setProcedureOptions(data.items ?? []);
@@ -119,14 +120,11 @@ export default function AppointmentModal({
     }
     setTimesLoading(true);
     try {
-      const params = new URLSearchParams({
-        dentist_id: String(form.dentist_id),
-        appointment_date: form.appointment_date,
-        duration_minutes: String(effectiveDuration),
-        ...(editAppointmentId ? { exclude_appointment_id: String(editAppointmentId) } : {}),
-      });
-      const r = await fetch(`${API_URL}/appointments/available-times?${params}`, {
-        headers: authHeaders(token),
+      const r = await getAvailableTimes(token, {
+        dentistId: form.dentist_id,
+        appointmentDate: form.appointment_date,
+        durationMinutes: effectiveDuration,
+        excludeAppointmentId: editAppointmentId || undefined,
       });
       if (!r.ok) throw new Error();
       const data = await r.json();
@@ -163,9 +161,7 @@ export default function AppointmentModal({
 
     if (editAppointmentId) {
       setLoadingDetail(true);
-      fetch(`${API_URL}/appointments/${editAppointmentId}`, {
-        headers: authHeaders(token),
-      })
+      getAppointmentById(token, editAppointmentId)
         .then((r) => {
           if (!r.ok) throw new Error();
           return r.json();
@@ -186,9 +182,7 @@ export default function AppointmentModal({
           });
 
           if (data.patient_id) {
-            fetch(`${API_URL}/patients/${data.patient_id}`, {
-              headers: authHeaders(token),
-            })
+            getPatientById(token, data.patient_id)
               .then((pr) => (pr.ok ? pr.json() : null))
               .then((patientData) => {
                 if (patientData) setSelectedPatient(patientData);
@@ -296,16 +290,9 @@ export default function AppointmentModal({
         generate_receivable: form.generate_receivable,
       };
 
-      const url = isEdit
-        ? `${API_URL}/appointments/${editAppointmentId}`
-        : `${API_URL}/appointments`;
-      const method = isEdit ? "PUT" : "POST";
-
-      const r = await fetch(url, {
-        method,
-        headers: authHeaders(token),
-        body: JSON.stringify(payload),
-      });
+      const r = isEdit
+        ? await updateAppointment(token, editAppointmentId, payload)
+        : await createAppointment(token, payload);
 
       if (!r.ok) {
         const err = await r.json().catch(() => ({}));

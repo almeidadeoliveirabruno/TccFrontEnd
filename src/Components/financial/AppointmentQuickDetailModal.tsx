@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "./AppointmentQuickDetailModal.css";
-import { API_URL, authHeaders } from "../../Services/api";
+import { getAppointmentTableById } from "../../Services/appointmentService";
 
 function splitTimeDay(timeDay) {
   if (!timeDay) return { day: "-", hour: "" };
@@ -24,9 +24,7 @@ export default function AppointmentQuickDetailModal({
     setLoading(true);
     setError("");
     setDetail(null);
-    fetch(`${API_URL}/appointments/table/${appointmentId}`, {
-      headers: authHeaders(token),
-    })
+    getAppointmentTableById(token, appointmentId)
       .then((r) => {
         if (!r.ok) throw new Error();
         return r.json();

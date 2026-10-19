@@ -8,7 +8,7 @@ import {
   statusLabel,
   AVATAR_PALETTE
 } from "./constants";
-import { API_URL, authHeaders } from "../../Services/api";
+import { getDentists } from "../../Services/dentistService";
 import { useAuth } from "../../hooks/useAuth";
 import Toast from "../../Components/common/Toast/Toast";
 import DentistModal from "../../Components/dentists/DentistModal";
@@ -16,10 +16,12 @@ import DentistDetailsModal from "../../Components/dentists/DentistDetailsModal";
 import { formatPhone } from "../../utils/masks";
 
 
-function avatarColor(name) {
-  let hash = 0;
-  for (const char of name) hash = char.charCodeAt(0) + ((hash << 5) - hash);
-  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+function avatarColor(name: string) {
+  let sum = 0;
+  for (const char of name) {
+    sum += char.charCodeAt(0);
+  }
+  return AVATAR_PALETTE[sum % AVATAR_PALETTE.length];
 }
 
 function initials(name) {
@@ -65,15 +67,12 @@ export default function Dentistas() {
   const loadDentists = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: String(page),
-        page_size: String(pageSize),
-        ...(search ? { search } : {}),
-        ...(specFilter ? { specialty: specFilter } : {}),
-        ...(statusFilter ? { status: statusFilter } : {}),
-      });
-      const r = await fetch(`${API_URL}/dentists?${params}`, {
-        headers: authHeaders(token),
+      const r = await getDentists(token, {
+        page,
+        pageSize,
+        search,
+        specialty: specFilter,
+        status: statusFilter,
       });
       if (!r.ok) throw new Error();
       const data = await r.json();

@@ -6,7 +6,14 @@ import {
   MessageCircle,
   Users,
 } from "lucide-react";
-import { API_URL, authHeaders } from "../../Services/api";
+import { getDentists, getDentistSchedules } from "../../Services/dentistService";
+import { getPatients, getPatientById } from "../../Services/patientService";
+import {
+  getAppointments,
+  getAppointmentById,
+  updateAppointmentStatus,
+  updateConfirmationMessage,
+} from "../../Services/appointmentService";
 import { useAuth } from "../../hooks/useAuth";
 import Toast from "../../Components/common/Toast/Toast";
 import ConfirmModal from "../../Components/common/ConfirmModal/ConfirmModal";
@@ -71,13 +78,10 @@ export default function Agenda() {
   }
 
   const loadDentists = useCallback(async () => {
-    const params = new URLSearchParams({
-      page: "1",
-      page_size: "100",
+    const r = await getDentists(token, {
+      page: 1,
+      pageSize: 100,
       status: "Ativo",
-    });
-    const r = await fetch(`${API_URL}/dentists?${params}`, {
-      headers: authHeaders(token),
     });
     if (!r.ok) throw new Error();
     const data = await r.json();
@@ -89,10 +93,7 @@ export default function Agenda() {
       setPatientMap({});
       return;
     }
-    const params = new URLSearchParams({ page: "1", page_size: "100" });
-    const r = await fetch(`${API_URL}/patients?${params}`, {
-      headers: authHeaders(token),
-    });
+    const r = await getPatients(token, { page: 1, pageSize: 100 });
     if (!r.ok) return;
     const data = await r.json();
     const map = {};
@@ -108,9 +109,7 @@ export default function Agenda() {
       return;
     }
     try {
-      const r = await fetch(`${API_URL}/dentists/${dentistId}/schedules`, {
-        headers: authHeaders(token),
-      });
+      const r = await getDentistSchedules(token, dentistId);
       if (!r.ok) {
         const body = await r.text().catch(() => "");
         throw new Error(`HTTP ${r.status} ${body}`);
@@ -127,10 +126,7 @@ export default function Agenda() {
   const loadAppointments = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ appointment_date: isoDate });
-      const r = await fetch(`${API_URL}/appointments?${params}`, {
-        headers: authHeaders(token),
-      });
+      const r = await getAppointments(token, { appointmentDate: isoDate });
 
       const data = await r.json();
 
@@ -213,17 +209,13 @@ export default function Agenda() {
   async function loadDetail(id) {
     setDetailLoading(true);
     try {
-      const r = await fetch(`${API_URL}/appointments/${id}`, {
-        headers: authHeaders(token),
-      });
+      const r = await getAppointmentById(token, id);
       if (!r.ok) throw new Error();
       const data = await r.json();
       setDetail(data);
 
       if (!patientMap[data.patient_id]) {
-        const pr = await fetch(`${API_URL}/patients/${data.patient_id}`, {
-          headers: authHeaders(token),
-        });
+        const pr = await getPatientById(token, data.patient_id);
         if (pr.ok) {
           const patient = await pr.json();
           setPatientMap((m) => ({ ...m, [patient.id]: patient }));
@@ -255,11 +247,7 @@ export default function Agenda() {
   }
 
   async function updateAppointmentStatusRequest(id, newStatus) {
-    const r = await fetch(`${API_URL}/appointments/${id}/status`, {
-      method: "PATCH",
-      headers: authHeaders(token),
-      body: JSON.stringify({ status: newStatus }),
-    });
+    const r = await updateAppointmentStatus(token, id, newStatus);
     if (!r.ok) throw new Error();
   }
 
@@ -267,11 +255,7 @@ export default function Agenda() {
     if (!detail) return;
     setStatusUpdateLoading(true);
     try {
-      const r = await fetch(`${API_URL}/appointments/${detail.id}/status`, {
-        method: "PATCH",
-        headers: authHeaders(token),
-        body: JSON.stringify({ status: newStatus }),
-      });
+      const r = await updateAppointmentStatus(token, detail.id, newStatus);
       if (!r.ok) throw new Error();
       const updated = await r.json();
       setDetail((prev) => (prev ? { ...prev, ...updated, status: newStatus } : updated));
@@ -306,10 +290,7 @@ export default function Agenda() {
     if (!detail) return;
     setConfirmMsgLoading(true);
     try {
-      const r = await fetch(
-        `${API_URL}/appointments/${detail.id}/confirmation-message?sent=${sentState}`,
-        { method: "PATCH", headers: authHeaders(token) },
-      );
+      const r = await updateConfirmationMessage(token, detail.id, sentState);
       if (!r.ok) throw new Error();
       const updated = await r.json();
       setDetail((prev) => (prev ? { ...prev, ...updated, confirmation_message_sent: sentState } : updated));

@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import "./ReceivableModal.css";
-import { API_URL, authHeaders } from "../../Services/api";
+import {
+  getReceivableByAppointment,
+  payReceivable,
+  unpayReceivable,
+  updateReceivable,
+  cancelReceivable,
+  reactivateReceivable,
+} from "../../Services/receivableService";
 
 const PAYMENT_METHODS = [
   { value: "dinheiro", label: "Dinheiro" },
@@ -49,13 +56,16 @@ export default function ReceivableModal({
   const isCancelado = receivable?.status === "cancelado" || isConsultaCancelada;
 
   useEffect(() => {
-    if (!open || !appointmentId) return;
+    if (!open || !appointmentId) {
+      setReceivable(null);
+      setNotFound(false);
+      setError("");
+      return;
+    }
     setLoading(true);
     setError("");
     setNotFound(false);
-    fetch(`${API_URL}/receivables/by-appointment/${appointmentId}`, {
-      headers: authHeaders(token),
-    })
+    getReceivableByAppointment(token, appointmentId)
       .then((r) => {
         if (r.status === 404) {
           setNotFound(true);
@@ -94,10 +104,7 @@ export default function ReceivableModal({
       // Caso 1: Usuário selecionou status "pendente"
       if (statusSelection === "pendente") {
         if (receivable.status === "pago") {
-          const r = await fetch(`${API_URL}/receivables/${receivable.id}/unpay`, {
-            method: "POST",
-            headers: authHeaders(token),
-          });
+          const r = await unpayReceivable(token, receivable.id);
           if (!r.ok) {
             const body = await r.json().catch(() => null);
             throw new Error(body?.detail || "Erro ao reverter pagamento para pendente.");
@@ -130,22 +137,14 @@ export default function ReceivableModal({
 
       let r;
       if (receivable.status !== "pago") {
-        const params = new URLSearchParams({
-          payment_method: paymentMethod,
-          paid_at: paidAt,
-        });
-        r = await fetch(`${API_URL}/receivables/${receivable.id}/pay?${params}`, {
-          method: "POST",
-          headers: authHeaders(token),
+        r = await payReceivable(token, receivable.id, {
+          paymentMethod,
+          paidAt,
         });
       } else {
-        r = await fetch(`${API_URL}/receivables/${receivable.id}`, {
-          method: "PUT",
-          headers: authHeaders(token),
-          body: JSON.stringify({
-            payment_method: paymentMethod,
-            paid_at: paidAt,
-          }),
+        r = await updateReceivable(token, receivable.id, {
+          payment_method: paymentMethod,
+          paid_at: paidAt,
         });
       }
 
@@ -156,6 +155,51 @@ export default function ReceivableModal({
       onSaved("Pagamento registrado com sucesso!");
     } catch (e) {
       setError(e.message || "Erro ao salvar pagamento.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleCancelReceivable() {
+    if (!receivable) return;
+    if (receivable.status === "pago") {
+      setError("Reverta o pagamento para Pendente antes de cancelar a cobrança.");
+      return;
+    }
+    const confirmed = window.confirm(
+      "Deseja realmente cancelar a cobrança desta consulta?\n\n• A consulta CONTINUARÁ AGENDADA normalmente.\n• Apenas a cobrança financeira será cancelada (isenta de pagamento)."
+    );
+    if (!confirmed) return;
+
+    setSaving(true);
+    setError("");
+    try {
+      const r = await cancelReceivable(token, receivable.id);
+      if (!r.ok) {
+        const body = await r.json().catch(() => null);
+        throw new Error(body?.detail || "Erro ao cancelar cobrança.");
+      }
+      onSaved("Cobrança cancelada com sucesso! A consulta permanece agendada normalmente.");
+    } catch (e) {
+      setError(e.message || "Erro ao cancelar cobrança.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleReactivateReceivable() {
+    if (!receivable) return;
+    setSaving(true);
+    setError("");
+    try {
+      const r = await reactivateReceivable(token, receivable.id);
+      if (!r.ok) {
+        const body = await r.json().catch(() => null);
+        throw new Error(body?.detail || "Erro ao reativar cobrança.");
+      }
+      onSaved("Cobrança reativada como Pendente!");
+    } catch (e) {
+      setError(e.message || "Erro ao reativar cobrança.");
     } finally {
       setSaving(false);
     }
@@ -173,13 +217,13 @@ export default function ReceivableModal({
           </button>
         </div>
 
-        {loading ? (
+        {loading || (!receivable && !notFound) ? (
           <div className="table-loading">Carregando...</div>
         ) : notFound ? (
           <div className="table-loading">
             Nenhuma cobrança encontrada para essa consulta.
           </div>
-        ) : (
+        ) : !receivable ? null : (
           <>
             <div className="form-row">
               <div className="form-group">
@@ -211,7 +255,7 @@ export default function ReceivableModal({
               </div>
             </div>
 
-            {isCancelado ? (
+            {isConsultaCancelada ? (
               <div
                 style={{
                   background: "#FEF2F2",
@@ -227,11 +271,52 @@ export default function ReceivableModal({
                 }}
               >
                 <span>⚠️</span>
-                <span>
-                  {isConsultaCancelada
-                    ? "Esta consulta está cancelada. Lançamento financeiro bloqueado."
-                    : "Esta cobrança está cancelada e bloqueada para alterações."}
-                </span>
+                <span>Esta consulta está cancelada. Lançamento financeiro bloqueado.</span>
+              </div>
+            ) : receivable?.status === "cancelado" ? (
+              <div
+                style={{
+                  background: "#F8FAFC",
+                  border: "1px solid #CBD5E1",
+                  color: "#334155",
+                  padding: "12px 14px",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  margin: "8px 0",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: "16px" }}>ℹ️</span>
+                  <div>
+                    <strong>Cobrança Cancelada / Isenta</strong>
+                    <div style={{ fontSize: "12px", color: "#64748B", marginTop: 2 }}>
+                      A consulta permanece agendada, mas não há cobrança financeira gerada (retorno/cortesia).
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleReactivateReceivable}
+                  disabled={saving}
+                  style={{
+                    background: "#FFFFFF",
+                    border: "1px solid #94A3B8",
+                    borderRadius: 6,
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "#0F172A",
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                  title="Reativar esta cobrança como Pendente"
+                >
+                  Reativar cobrança
+                </button>
               </div>
             ) : (
               <>
@@ -328,6 +413,42 @@ export default function ReceivableModal({
                     A consulta ficará registrada como <strong>Pendente</strong> de pagamento.
                   </div>
                 )}
+
+                {receivable?.status !== "pago" && (
+                  <div
+                    style={{
+                      marginTop: "16px",
+                      paddingTop: "12px",
+                      borderTop: "1px dashed #E2E8F0",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span style={{ fontSize: "12px", color: "#64748B" }}>
+                      Não deve cobrar esta consulta? (Retorno/Cortesia)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCancelReceivable}
+                      disabled={saving || loading}
+                      style={{
+                        background: "#FFF1F2",
+                        border: "1px solid #FECDD3",
+                        color: "#E11D48",
+                        borderRadius: "6px",
+                        padding: "6px 12px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                      }}
+                      title="Cancela apenas a cobrança financeira, mantendo a consulta normalmente agendada."
+                    >
+                      🚫 Cancelar cobrança
+                    </button>
+                  </div>
+                )}
               </>
             )}
 
@@ -344,7 +465,7 @@ export default function ReceivableModal({
             {isCancelado ? "Fechar" : "Cancelar"}
           </button>
 
-          {!notFound && !isCancelado && (
+          {!notFound && !isCancelado && receivable && (
             <button
               className="btn-primary"
               onClick={handleSave}

@@ -51,6 +51,7 @@ export default function PatientDetailsPanel({
   loadingHistory,
   onLoadHistory,
   onUpdateProcedureTooth,
+  onUpdateAppointmentNotes,
   onEdit,
   onDelete,
 }) {
@@ -58,8 +59,33 @@ export default function PatientDetailsPanel({
   const [menuOpen, setMenuOpen] = useState(false);
   // { key, value, saving, error } do procedimento sendo editado no histórico
   const [editingProc, setEditingProc] = useState(null);
+  // { appointmentId, value, saving } da observação de consulta sendo editada no histórico
+  const [editingNotes, setEditingNotes] = useState(null);
   // controla abertura do odontograma
   const [odontogramOpen, setOdontogramOpen] = useState(false);
+
+  function handleStartEditNotes(item) {
+    setEditingNotes({
+      appointmentId: item.appointment_id,
+      value: item.notes ?? "",
+      saving: false,
+    });
+  }
+
+  function handleCancelEditNotes() {
+    setEditingNotes(null);
+  }
+
+  async function handleSaveNotes(appointmentId) {
+    if (!editingNotes || !onUpdateAppointmentNotes) return;
+    setEditingNotes((prev) => (prev ? { ...prev, saving: true } : prev));
+    const ok = await onUpdateAppointmentNotes(appointmentId, editingNotes.value);
+    if (ok) {
+      setEditingNotes(null);
+    } else {
+      setEditingNotes((prev) => (prev ? { ...prev, saving: false } : prev));
+    }
+  }
 
   async function handleSaveTooth(procedureId, key) {
     const value = editingProc?.value ?? "";
@@ -257,87 +283,157 @@ export default function PatientDetailsPanel({
             <p className="patient-mock-note">Nenhum histórico encontrado.</p>
           ) : (
             <ul className="patient-history-list">
-              {history.map((item) => (
-                <li key={item.appointment_id} className="patient-history-item">
-                  <span className="patient-history-dot" />
-                  <div>
-                    <div className="patient-history-date">
-                      {formatConsultDate(item.date)} · {item.time_begin}
-                    </div>
-                    <div className="patient-history-dentist">{item.dentist}</div>
-                    {item.procedures?.length > 0 && (
-                      <ul className="patient-history-procedures">
-                        {item.procedures.map((proc) => {
-                          const key = `${item.appointment_id}-${proc.id}`;
-                          const isEditing = editingProc?.key === key;
+              {history.map((item) => {
+                const isEditingNotes = editingNotes?.appointmentId === item.appointment_id;
 
-                          return (
-                            <li key={proc.id} className="patient-procedure-item">
-                              {isEditing ? (
-                                <span className="patient-procedure-edit">
-                                  <span>{proc.name}</span>
-                                  {/* Botão para abrir o odontograma */}
-                                  <button
-                                    type="button"
-                                    className="patient-procedure-tooth-picker"
-                                    title="Selecionar dente no odontograma"
-                                    disabled={editingProc.saving}
-                                    onClick={() => setOdontogramOpen(true)}
-                                  >
-                                    🦷 {editingProc.value ? `Dente ${editingProc.value}` : "Selecionar dente"}
-                                    <i className="ti ti-chevron-down" aria-hidden="true" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn-icon-sm"
-                                    title="Salvar"
-                                    disabled={editingProc.saving}
-                                    onClick={() => handleSaveTooth(proc.id, key)}
-                                  >
-                                    <i className="ti ti-check" aria-hidden="true" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn-icon-sm"
-                                    title="Cancelar"
-                                    disabled={editingProc.saving}
-                                    onClick={() => setEditingProc(null)}
-                                  >
-                                    <i className="ti ti-x" aria-hidden="true" />
-                                  </button>
-                                  {editingProc.error && (
-                                    <span className="patient-procedure-error">{editingProc.error}</span>
-                                  )}
-                                </span>
-                              ) : (
-                                <span className="patient-procedure-display">
-                                  <span>{proc.display}</span>
-                                  <button
-                                    type="button"
-                                    className="btn-icon-sm patient-procedure-edit-btn"
-                                    title="Selecionar dente no odontograma"
-                                    onClick={() => {
-                                      setEditingProc({
-                                        key,
-                                        value: proc.tooth ?? "",
-                                        saving: false,
-                                        error: null,
-                                      });
-                                      setOdontogramOpen(true);
-                                    }}
-                                  >
-                                    <ToothIconSvg size={15} />
-                                  </button>
-                                </span>
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </div>
-                </li>
-              ))}
+                return (
+                  <li key={item.appointment_id} className="patient-history-item">
+                    <span className="patient-history-dot" />
+                    <div className="patient-history-content">
+                      <div className="patient-history-date">
+                        {formatConsultDate(item.date)} · {item.time_begin}
+                      </div>
+                      <div className="patient-history-dentist">{item.dentist}</div>
+                      {item.procedures?.length > 0 && (
+                        <ul className="patient-history-procedures">
+                          {item.procedures.map((proc) => {
+                            const key = `${item.appointment_id}-${proc.id}`;
+                            const isEditing = editingProc?.key === key;
+
+                            return (
+                              <li key={proc.id} className="patient-procedure-item">
+                                {isEditing ? (
+                                  <span className="patient-procedure-edit">
+                                    <span>{proc.name}</span>
+                                    {/* Botão para abrir o odontograma */}
+                                    <button
+                                      type="button"
+                                      className="patient-procedure-tooth-picker"
+                                      title="Selecionar dente no odontograma"
+                                      disabled={editingProc.saving}
+                                      onClick={() => setOdontogramOpen(true)}
+                                    >
+                                      🦷 {editingProc.value ? `Dente ${editingProc.value}` : "Selecionar dente"}
+                                      <i className="ti ti-chevron-down" aria-hidden="true" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn-icon-sm"
+                                      title="Salvar"
+                                      disabled={editingProc.saving}
+                                      onClick={() => handleSaveTooth(proc.id, key)}
+                                    >
+                                      <i className="ti ti-check" aria-hidden="true" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn-icon-sm"
+                                      title="Cancelar"
+                                      disabled={editingProc.saving}
+                                      onClick={() => setEditingProc(null)}
+                                    >
+                                      <i className="ti ti-x" aria-hidden="true" />
+                                    </button>
+                                    {editingProc.error && (
+                                      <span className="patient-procedure-error">{editingProc.error}</span>
+                                    )}
+                                  </span>
+                                ) : (
+                                  <span className="patient-procedure-display">
+                                    <span>{proc.display}</span>
+                                    <button
+                                      type="button"
+                                      className="btn-icon-sm patient-procedure-edit-btn"
+                                      title="Selecionar dente no odontograma"
+                                      onClick={() => {
+                                        setEditingProc({
+                                          key,
+                                          value: proc.tooth ?? "",
+                                          saving: false,
+                                          error: null,
+                                        });
+                                        setOdontogramOpen(true);
+                                      }}
+                                    >
+                                      <ToothIconSvg size={15} />
+                                    </button>
+                                  </span>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+
+                      {/* Observações da consulta (apresentação discreta) */}
+                      {isEditingNotes ? (
+                        <div className="patient-history-notes-editor">
+                          <textarea
+                            className="patient-history-notes-textarea"
+                            placeholder="Observação da consulta..."
+                            value={editingNotes.value}
+                            onChange={(e) =>
+                              setEditingNotes((prev) =>
+                                prev ? { ...prev, value: e.target.value } : prev,
+                              )
+                            }
+                            disabled={editingNotes.saving}
+                            rows={2}
+                            autoFocus
+                          />
+                          <div className="patient-history-notes-editor-actions">
+                            <button
+                              type="button"
+                              className="patient-history-notes-btn-cancel"
+                              onClick={handleCancelEditNotes}
+                              disabled={editingNotes.saving}
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              type="button"
+                              className="patient-history-notes-btn-save"
+                              onClick={() => handleSaveNotes(item.appointment_id)}
+                              disabled={editingNotes.saving}
+                            >
+                              {editingNotes.saving ? "Salvando..." : "Salvar"}
+                            </button>
+                          </div>
+                        </div>
+                      ) : item.notes && item.notes.trim() ? (
+                        <div className="patient-history-notes-box">
+                          <div className="patient-history-notes-header">
+                            <span className="patient-history-notes-label">
+                              <i className="ti ti-notes" aria-hidden="true" />
+                              Observação:
+                            </span>
+                            {onUpdateAppointmentNotes && (
+                              <button
+                                type="button"
+                                className="patient-history-notes-edit-btn"
+                                title="Editar observação"
+                                onClick={() => handleStartEditNotes(item)}
+                              >
+                                <i className="ti ti-pencil" aria-hidden="true" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="patient-history-notes-text">{item.notes}</div>
+                        </div>
+                      ) : onUpdateAppointmentNotes ? (
+                        <button
+                          type="button"
+                          className="patient-history-add-notes-btn"
+                          onClick={() => handleStartEditNotes(item)}
+                        >
+                          <i className="ti ti-notes" aria-hidden="true" />
+                          <span>Adicionar observação</span>
+                        </button>
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

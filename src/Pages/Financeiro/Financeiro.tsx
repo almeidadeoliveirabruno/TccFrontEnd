@@ -2,7 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import "../Atendimentos/Atendimentos.css";
 import "./Financeiro.css";
-import { API_URL, authHeaders } from "../../Services/api";
+import {
+  getExpenseCategories,
+  getExpenses,
+  payExpense,
+  unpayExpense,
+  deleteExpense,
+} from "../../Services/expenseService";
+import { getReceivables } from "../../Services/receivableService";
 import { useAuth } from "../../hooks/useAuth";
 import { formatCurrency } from "../../utils/masks";
 import {
@@ -82,7 +89,7 @@ export default function Financeiro() {
   }
 
   useEffect(() => {
-    fetch(`${API_URL}/expenses/categories`, { headers: authHeaders(token) })
+    getExpenseCategories(token)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => setCategories(data ?? []))
       .catch(() => setCategories([]));
@@ -91,16 +98,13 @@ export default function Financeiro() {
   const loadDespesas = useCallback(async () => {
     setDespesasLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: String(despesasPage),
-        page_size: String(TABLE_PAGE_SIZE),
-        ...(despesaStatus ? { status: despesaStatus } : {}),
-        ...(despesaCategory ? { category: despesaCategory } : {}),
-        ...(dateFrom ? { due_date_from: dateFrom } : {}),
-        ...(dateTo ? { due_date_to: dateTo } : {}),
-      });
-      const r = await fetch(`${API_URL}/expenses?${params}`, {
-        headers: authHeaders(token),
+      const r = await getExpenses(token, {
+        page: despesasPage,
+        pageSize: TABLE_PAGE_SIZE,
+        status: despesaStatus,
+        category: despesaCategory,
+        dueDateFrom: dateFrom,
+        dueDateTo: dateTo,
       });
       if (!r.ok) throw new Error();
       const data = await r.json();
@@ -127,17 +131,14 @@ export default function Financeiro() {
   const loadReceitas = useCallback(async () => {
     setReceitasLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: String(receitasPage),
-        page_size: String(TABLE_PAGE_SIZE),
+      const r = await getReceivables(token, {
+        page: receitasPage,
+        pageSize: TABLE_PAGE_SIZE,
         status: "pago",
-        ...(debouncedPatient ? { patient_name: debouncedPatient } : {}),
-        ...(debouncedDentist ? { dentist_name: debouncedDentist } : {}),
-        ...(dateFrom ? { date_from: dateFrom } : {}),
-        ...(dateTo ? { date_to: dateTo } : {}),
-      });
-      const r = await fetch(`${API_URL}/receivables?${params}`, {
-        headers: authHeaders(token),
+        patientName: debouncedPatient,
+        dentistName: debouncedDentist,
+        dateFrom,
+        dateTo,
       });
       if (!r.ok) throw new Error();
       const data = await r.json();
@@ -196,10 +197,7 @@ export default function Financeiro() {
     if (!payTarget) return;
     setPayLoading(true);
     try {
-      const r = await fetch(`${API_URL}/expenses/${payTarget}/pay`, {
-        method: "POST",
-        headers: authHeaders(token),
-      });
+      const r = await payExpense(token, payTarget);
       if (!r.ok) {
         const errorBody = await r.json().catch(() => null);
         throw new Error(
@@ -220,10 +218,7 @@ export default function Financeiro() {
     if (!unpayTarget) return;
     setUnpayLoading(true);
     try {
-      const r = await fetch(`${API_URL}/expenses/${unpayTarget}/unpay`, {
-        method: "POST",
-        headers: authHeaders(token),
-      });
+      const r = await unpayExpense(token, unpayTarget);
       if (!r.ok) {
         const errorBody = await r.json().catch(() => null);
         throw new Error(
@@ -244,10 +239,7 @@ export default function Financeiro() {
     if (!deleteTarget) return;
     setDeleteLoading(true);
     try {
-      const r = await fetch(`${API_URL}/expenses/${deleteTarget}`, {
-        method: "DELETE",
-        headers: authHeaders(token),
-      });
+      const r = await deleteExpense(token, deleteTarget);
       if (!r.ok) {
         const errorBody = await r.json().catch(() => null);
         throw new Error(

@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import "./RevenueExpenseChart.css";
-import { API_URL, authHeaders } from "../../Services/api";
+import { getRevenueSummary, getExpenseSummary } from "../../Services/dashboardService";
 import { useAuth } from "../../hooks/useAuth";
 import {
   formatCurrency,
@@ -92,12 +92,8 @@ export default function RevenueExpenseChart({
     try {
       const qs = buildQueryParams(startDate, endDate, granularity);
       const [revRes, expRes] = await Promise.all([
-        fetch(`${API_URL}/dashboard/revenue-summary${qs}`, {
-          headers: authHeaders(token),
-        }),
-        fetch(`${API_URL}/dashboard/expense-summary${qs}`, {
-          headers: authHeaders(token),
-        }),
+        getRevenueSummary(token, qs),
+        getExpenseSummary(token, qs),
       ]);
       if (!revRes.ok || !expRes.ok) throw new Error();
       const revenue = await revRes.json();

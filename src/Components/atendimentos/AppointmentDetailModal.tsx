@@ -2,7 +2,12 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import "./AppointmentDetailModal.css";
 import { STATUS_OPTIONS, STATUS_VALUE } from "../../Pages/Atendimentos/constants";
-import { API_URL, authHeaders } from "../../Services/api";
+import {
+  getAppointmentTableById,
+  updateAppointmentStatus,
+  updateProcedureTooth,
+  updateAppointmentNotes,
+} from "../../Services/appointmentService";
 import OdontogramModal from "../patients/OdontogramModal";
 
 // Abre uma consulta JÁ EXISTENTE. Diferente do AtendimentoModal (que serve
@@ -31,9 +36,7 @@ export default function AppointmentDetailModal({
 
     setLoading(true);
     // rota certa: devolve nomes (pacient_name/dentist_name), não IDs
-    fetch(`${API_URL}/appointments/table/${appointmentId}`, {
-      headers: authHeaders(token),
-    })
+    getAppointmentTableById(token, appointmentId)
       .then((r) => {
         if (!r.ok) throw new Error();
         return r.json();
@@ -66,11 +69,7 @@ export default function AppointmentDetailModal({
     try {
       // 1. status (só chama se mudou)
       if (status !== detail.status) {
-        const r = await fetch(`${API_URL}/appointments/${appointmentId}/status`, {
-          method: "PATCH",
-          headers: authHeaders(token),
-          body: JSON.stringify({ status }),
-        });
+        const r = await updateAppointmentStatus(token, appointmentId, status);
         if (!r.ok) {
           const errData = await r.json().catch(() => ({}));
           throw new Error(errData.detail || "Erro ao atualizar status");
@@ -83,14 +82,7 @@ export default function AppointmentDetailModal({
       );
       for (const p of procedures) {
         if (p.tooth !== (originalTeeth.get(p.id) ?? "")) {
-          const r = await fetch(
-            `${API_URL}/appointments/procedures/${p.id}/tooth`,
-            {
-              method: "PATCH",
-              headers: authHeaders(token),
-              body: JSON.stringify({ tooth: p.tooth || null }),
-            },
-          );
+          const r = await updateProcedureTooth(token, p.id, p.tooth || null);
           if (!r.ok) {
             const errData = await r.json().catch(() => ({}));
             throw new Error(errData.detail || "Erro ao atualizar dente do procedimento");
@@ -101,14 +93,7 @@ export default function AppointmentDetailModal({
       // 3. observações (só se mudou) -- rota exclusiva, não reaproveita
       // o PUT de edição completa (esse é fluxo de Agenda)
       if (notes !== (detail.notes ?? "")) {
-        const r = await fetch(
-          `${API_URL}/appointments/${appointmentId}/notes`,
-          {
-            method: "PATCH",
-            headers: authHeaders(token),
-            body: JSON.stringify({ notes: notes.trim() || null }),
-          },
-        );
+        const r = await updateAppointmentNotes(token, appointmentId, notes.trim() || null);
         if (!r.ok) {
           const errData = await r.json().catch(() => ({}));
           throw new Error(errData.detail || "Erro ao atualizar observações");

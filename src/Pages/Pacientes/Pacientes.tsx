@@ -1,7 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
 import "./Pacientes.css";
 import { avatarColor, initials } from "./constants";
-import { API_URL, authHeaders } from "../../Services/api";
+import {
+  getPatients,
+  getPatientById,
+  getPatientSummary,
+  getPatientHistory,
+  deletePatient,
+} from "../../Services/patientService";
+import {
+  updateProcedureTooth as updateToothReq,
+  updateAppointmentNotes as updateNotesReq,
+} from "../../Services/appointmentService";
 import { useAuth } from "../../hooks/useAuth";
 import Toast from "../../Components/common/Toast/Toast";
 import ConfirmModal from "../../Components/common/ConfirmModal/ConfirmModal";
@@ -66,13 +76,10 @@ export default function Pacientes() {
     async (targetPage, append) => {
       setLoadingList(true);
       try  {
-        const params = new URLSearchParams({
-          page: String(targetPage),
-          page_size: String(PAGE_SIZE),
-          ...(debouncedSearch ? { search: debouncedSearch } : {}),
-        });
-        const r = await fetch(`${API_URL}/patients?${params}`, {
-          headers: authHeaders(token),
+        const r = await getPatients(token, {
+          page: targetPage,
+          pageSize: PAGE_SIZE,
+          search: debouncedSearch,
         });
         if (!r.ok) throw new Error();
         const data = await r.json();
@@ -122,9 +129,7 @@ export default function Pacientes() {
       }
       setLoadingDetail(true);
       try {
-        const r = await fetch(`${API_URL}/patients/${id}`, {
-          headers: authHeaders(token),
-        });
+        const r = await getPatientById(token, id);
         if (!r.ok) throw new Error();
         const data = await r.json();
         setSelectedPatient(data);
@@ -145,9 +150,7 @@ export default function Pacientes() {
         return;
       }
       try {
-        const r = await fetch(`${API_URL}/patients/${id}/summary`, {
-          headers: authHeaders(token),
-        });
+        const r = await getPatientSummary(token, id);
         if (!r.ok) throw new Error();
         const data = await r.json();
         setPatientSummary(data);
@@ -167,9 +170,7 @@ export default function Pacientes() {
       }
       setLoadingHistory(true);
       try {
-        const r = await fetch(`${API_URL}/patients/${id}/history`, {
-          headers: authHeaders(token),
-        });
+        const r = await getPatientHistory(token, id);
         if (!r.ok) throw new Error();
         const data = await r.json();
         setPatientHistory(data);
@@ -195,14 +196,7 @@ export default function Pacientes() {
   const updateProcedureTooth = useCallback(
     async (procedureItemId, tooth) => {
       try {
-        const r = await fetch(`${API_URL}/appointments/procedures/${procedureItemId}/tooth`, {
-          method: "PATCH",
-          headers: {
-            ...authHeaders(token),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ tooth }),
-        });
+        const r = await updateToothReq(token, procedureItemId, tooth);
         if (!r.ok) throw new Error();
         const updated = await r.json();
 
@@ -221,6 +215,32 @@ export default function Pacientes() {
         return true;
       } catch {
         showToast("Erro ao atualizar o dente do procedimento.", "error");
+        return false;
+      }
+    },
+    [token],
+  );
+
+  const updateAppointmentNotes = useCallback(
+    async (appointmentId, notes) => {
+      try {
+        const r = await updateNotesReq(token, appointmentId, notes?.trim() || null);
+        if (!r.ok) throw new Error();
+        const updated = await r.json();
+
+        setPatientHistory((prev) =>
+          prev
+            ? prev.map((appt) =>
+                appt.appointment_id === appointmentId
+                  ? { ...appt, notes: updated.notes }
+                  : appt,
+              )
+            : prev,
+        );
+        showToast("Observação da consulta atualizada com sucesso!");
+        return true;
+      } catch {
+        showToast("Erro ao atualizar a observação da consulta.", "error");
         return false;
       }
     },
@@ -252,10 +272,7 @@ export default function Pacientes() {
   async function handleDelete() {
     setDeleteLoading(true);
     try {
-      const r = await fetch(`${API_URL}/patients/${deleteId}`, {
-        method: "DELETE",
-        headers: authHeaders(token),
-      });
+      const r = await deletePatient(token, deleteId);
       if (!r.ok) throw new Error();
       showToast("Paciente excluído.");
       setDeleteOpen(false);
@@ -436,6 +453,7 @@ export default function Pacientes() {
           loadingHistory={loadingHistory}
           onLoadHistory={handleLoadHistory}
           onUpdateProcedureTooth={updateProcedureTooth}
+          onUpdateAppointmentNotes={updateAppointmentNotes}
           onEdit={openEdit}
           onDelete={openDelete}
         />

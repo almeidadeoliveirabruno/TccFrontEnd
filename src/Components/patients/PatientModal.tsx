@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./PatientModal.css";
 import { GENDER_OPTIONS, EMPTY_PATIENT_FORM } from "../../Pages/Pacientes/constants";
-import { API_URL, authHeaders } from "../../Services/api";
+import { getPatientById, createPatient, updatePatient } from "../../Services/patientService";
 import { validarCPF, validarTelefone } from "../../utils/validators";
 import {
   cleanDigits,
@@ -24,9 +24,7 @@ export default function PatientModal({ open, editPatient, onClose, onSaved, toke
 
     if (editPatient) {
       setLoadingDetail(true);
-      fetch(`${API_URL}/patients/${editPatient.id}`, {
-        headers: authHeaders(token),
-      })
+      getPatientById(token, editPatient.id)
         .then((r) => {
           if (!r.ok) throw new Error();
           return r.json();
@@ -125,19 +123,9 @@ export default function PatientModal({ open, editPatient, onClose, onSaved, toke
     };
 
     try {
-      const url = editPatient
-        ? `${API_URL}/patients/${editPatient.id}`
-        : `${API_URL}/patients`;
-      const method = editPatient ? "PUT" : "POST";
-
-      const r = await fetch(url, {
-        method,
-        headers: {
-          ...authHeaders(token),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      });
+      const r = editPatient
+        ? await updatePatient(token, editPatient.id, body)
+        : await createPatient(token, body);
 
       if (r.ok) {
         onSaved(editPatient ? "Paciente atualizado!" : "Paciente criado!");

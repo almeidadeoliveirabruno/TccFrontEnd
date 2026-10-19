@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "./DentistDetailsModal.css";
-import { API_URL, authHeaders } from "../../Services/api";
+import { getDentistById } from "../../Services/dentistService";
 import { SPECIALTY_COLORS, STATUS_COLORS, statusLabel } from "../../Pages/Dentistas/constants";
 import DentistSchedules from "./DentistSchedules";
 import { formatPhone, formatCpf } from "../../utils/masks";
@@ -35,7 +35,7 @@ export default function DentistDetailsModal({ open, dentist, onClose, token }) {
       return;
     }
     setLoading(true);
-    fetch(`${API_URL}/dentists/${dentist.id}`, { headers: authHeaders(token) })
+    getDentistById(token, dentist.id)
       .then((r) => {
         if (!r.ok) throw new Error();
         return r.json();

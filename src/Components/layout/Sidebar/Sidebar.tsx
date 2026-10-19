@@ -1,8 +1,11 @@
+import { useState, useEffect } from "react";
 import "./Sidebar.css";
 import { useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import logo from "../../../assets/Logo_Alternativa.png";
 import { useAuth } from "../../../hooks/useAuth";
+import ProfileModal from "./ProfileModal";
+import Toast from "../../common/Toast/Toast";
 import {
   House,
   UserRound,
@@ -45,10 +48,44 @@ const items = [
 ];
 
 export default function Sidebar() {
-  const { logout, token } = useAuth();
+  const { logout, token, saveToken } = useAuth();
   const payload = token ? jwtDecode<{ nome?: string }>(token) : null;
+  const [displayName, setDisplayName] = useState<string>(payload?.nome ?? "Usuário");
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [toast, setToast] = useState({
+    visible: false,
+    message: "",
+    type: "success",
+  });
+
   const location = useLocation();
   const pathname = location.pathname;
+
+  useEffect(() => {
+    if (payload?.nome) {
+      setDisplayName(payload.nome);
+    }
+  }, [payload?.nome]);
+
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => {
+      setToast((prev) => ({ ...prev, visible: false }));
+    }, 3500);
+  };
+
+  const handleProfileSaved = (
+    userData: { id: number; email: string; nome: string; clinic: { id: string; nome: string; cnpj: string } },
+    newToken: string
+  ) => {
+    if (newToken) {
+      saveToken(newToken);
+    }
+    if (userData?.nome) {
+      setDisplayName(userData.nome);
+    }
+    showToast("Dados atualizados com sucesso!", "success");
+  };
 
   return (
     <aside className="sidebar">
@@ -73,14 +110,42 @@ export default function Sidebar() {
       </nav>
 
       <div className="profile">
-        <div className="profile-info">
-          <h4>{payload?.nome ?? "Usuário"}</h4>
+        <div
+          className="profile-info"
+          onClick={() => setIsProfileOpen(true)}
+          role="button"
+          tabIndex={0}
+          title="Clique para editar informações"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setIsProfileOpen(true);
+            }
+          }}
+        >
+          <h4>{displayName}</h4>
         </div>
-        <button className="logout-btn">
+
+
+        <button className="logout-btn" onClick={logout} title="Encerrar sessão">
           <LogOut size={20} />
-          <span onClick={logout}>Sair</span>
+          <span>Sair</span>
         </button>
       </div>
+
+      <ProfileModal
+        open={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        onSaved={handleProfileSaved}
+        token={token}
+      />
+
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        visible={toast.visible}
+      />
     </aside>
   );
 }
+

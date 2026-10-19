@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./ProcedureModal.css";
 import { CATEGORIES, EMPTY_FORM } from "../../Pages/Procedimentos/constants";
-import { API_URL, authHeaders } from "../../Services/api";
+import { createProcedure, updateProcedure } from "../../Services/procedureService";
 
 interface ProcedureFormData {
   name: string;
@@ -68,15 +68,9 @@ export default function ProcedureModal({
     duration: parseInt(form.duration),
   };
   try {
-    const url = editProc
-      ? `${API_URL}/procedures/${editProc.id}`
-      : `${API_URL}/procedures/`;
-    const method = editProc ? "PUT" : "POST";
-    const r = await fetch(url, {
-      method,
-      headers: authHeaders(token),
-      body: JSON.stringify(body),
-    });
+    const r = editProc
+      ? await updateProcedure(token, editProc.id, body)
+      : await createProcedure(token, body);
 
     if (!r.ok) {
       const data = await r.json().catch(() => null);

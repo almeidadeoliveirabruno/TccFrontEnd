@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import "./DentistSchedules.css";
 import { DAYS_OF_WEEK, EMPTY_SCHEDULE } from "../../Pages/Dentistas/constants";
-import { API_URL, authHeaders } from "../../Services/api";
+import {
+  getDentistSchedules,
+  createDentistSchedule,
+  deleteDentistSchedule,
+} from "../../Services/dentistService";
 
 export default function DentistSchedules({
   dentistId,
@@ -17,9 +21,7 @@ export default function DentistSchedules({
   async function load() {
     setLoading(true);
     try {
-      const r = await fetch(`${API_URL}/dentists/${dentistId}/schedules`, {
-        headers: authHeaders(token),
-      });
+      const r = await getDentistSchedules(token, dentistId);
       if (!r.ok) throw new Error();
       setSchedules(await r.json());
     } catch {
@@ -38,11 +40,7 @@ export default function DentistSchedules({
     setError("");
     setAdding(true);
     try {
-      const r = await fetch(`${API_URL}/dentists/${dentistId}/schedules`, {
-        method: "POST",
-        headers: authHeaders(token),
-        body: JSON.stringify({ availability: [newItem] }),
-      });
+      const r = await createDentistSchedule(token, dentistId, { availability: [newItem] });
       if (!r.ok) {
         const data = await r.json().catch(() => null);
         throw new Error(data?.detail || "Erro ao adicionar horário.");
@@ -58,13 +56,7 @@ export default function DentistSchedules({
   async function handleDelete(scheduleId) {
     setError("");
     try {
-      const r = await fetch(
-        `${API_URL}/dentists/${dentistId}/schedules/${scheduleId}`,
-        {
-          method: "DELETE",
-          headers: authHeaders(token),
-        },
-      );
+      const r = await deleteDentistSchedule(token, dentistId, scheduleId);
       if (!r.ok) throw new Error();
       await load();
     } catch {

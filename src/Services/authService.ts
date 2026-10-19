@@ -35,3 +35,27 @@ export async function signup(
         body: JSON.stringify(payload)
     });
 }
+
+export async function getProfile(token: string) {
+    return fetch(`${API_URL}/auth/me`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        }
+    });
+}
+
+export async function updateProfile(
+    token: string,
+    data: { nome: string; nome_clinica: string; cnpj: string }
+) {
+    return fetch(`${API_URL}/auth/me`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+    });
+}

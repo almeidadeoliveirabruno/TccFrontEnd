@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "./ExpenseModal.css";
-import { API_URL, authHeaders } from "../../Services/api";
+import { createExpense, updateExpense } from "../../Services/expenseService";
 import { EXPENSE_CATEGORY_LABELS } from "../../Pages/Financeiro/constants";
 
 const EMPTY_FORM = {
@@ -103,16 +103,9 @@ export default function ExpenseModal({
     };
 
     try {
-      const url = editExpense
-        ? `${API_URL}/expenses/${editExpense.id}`
-        : `${API_URL}/expenses`;
-      const method = editExpense ? "PUT" : "POST";
-
-      const r = await fetch(url, {
-        method,
-        headers: authHeaders(token),
-        body: JSON.stringify(body),
-      });
+      const r = editExpense
+        ? await updateExpense(token, editExpense.id, body)
+        : await createExpense(token, body);
 
       if (r.ok) {
         setForm(EMPTY_FORM);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { formatDate } from "../../utils/masks";
-import { API_URL, authHeaders } from "../../Services/api";
+import { getDentistsBasic } from "../../Services/dentistService";
+import { getHomeNextAppointmentByDentist } from "../../Services/dashboardService";
 
 const STATUS_LABEL = {
   AGENDADO: "Agendado",
@@ -32,13 +33,10 @@ export default function UpcomingAppointments({ token }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
-  // Busca os dentistas para preencher o seletor
   useEffect(() => {
     let active = true;
 
-    fetch(`${API_URL}/dentists/basic`, {
-      headers: authHeaders(token),
-    })
+    getDentistsBasic(token)
       .then((r) => {
         if (!r.ok) throw new Error();
         return r.json();
@@ -77,12 +75,7 @@ export default function UpcomingAppointments({ token }) {
     setLoading(true);
     setError(false);
 
-    fetch(
-      `${API_URL}/home/next-appointment-by-dentist?dentist_id=${dentistId}`,
-      {
-        headers: authHeaders(token),
-      }
-    )
+    getHomeNextAppointmentByDentist(token, dentistId)
       .then((r) => {
         if (!r.ok) throw new Error();
         return r.json();

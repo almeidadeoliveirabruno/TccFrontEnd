@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
-import { API_URL, authHeaders } from "../../Services/api";
+import { getHomeProcedureDistribution } from "../../Services/dashboardService";
 
 const COLORS = ["#0CB0C7", "#818CF8", "#34D399", "#FB923C", "#F472B6", "#9CA3AF"];
 
@@ -10,7 +10,7 @@ export default function ProceduresDistribution({ token }) {
 
   useEffect(() => {
     let active = true;
-    fetch(`${API_URL}/home/procedure-distribution`, { headers: authHeaders(token) })
+    getHomeProcedureDistribution(token)
       .then((r) => r.json())
       .then((json) => {
         if (active) setData(Array.isArray(json) ? json : []);
