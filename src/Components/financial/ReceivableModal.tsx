@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "./ReceivableModal.css";
+import ConfirmModal from "../common/ConfirmModal/ConfirmModal";
 import {
   getReceivableByAppointment,
   payReceivable,
@@ -51,20 +52,24 @@ export default function ReceivableModal({
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paidAt, setPaidAt] = useState("");
   const [error, setError] = useState("");
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
   const isConsultaCancelada = appointmentStatus === "cancelado";
-  const isCancelado = receivable?.status === "cancelado" || isConsultaCancelada;
+  const isReceivableCancelado = receivable?.status === "cancelado";
+  const isCancelado = isReceivableCancelado || (isConsultaCancelada && receivable?.status !== "pago");
 
   useEffect(() => {
     if (!open || !appointmentId) {
       setReceivable(null);
       setNotFound(false);
       setError("");
+      setCancelConfirmOpen(false);
       return;
     }
     setLoading(true);
     setError("");
     setNotFound(false);
+    setCancelConfirmOpen(false);
     getReceivableByAppointment(token, appointmentId)
       .then((r) => {
         if (r.status === 404) {
@@ -160,17 +165,14 @@ export default function ReceivableModal({
     }
   }
 
-  async function handleCancelReceivable() {
+  function handleCancelReceivable() {
     if (!receivable) return;
-    if (receivable.status === "pago") {
-      setError("Reverta o pagamento para Pendente antes de cancelar a cobrança.");
-      return;
-    }
-    const confirmed = window.confirm(
-      "Deseja realmente cancelar a cobrança desta consulta?\n\n• A consulta CONTINUARÁ AGENDADA normalmente.\n• Apenas a cobrança financeira será cancelada (isenta de pagamento)."
-    );
-    if (!confirmed) return;
+    setError("");
+    setCancelConfirmOpen(true);
+  }
 
+  async function handleConfirmCancel() {
+    if (!receivable) return;
     setSaving(true);
     setError("");
     try {
@@ -179,9 +181,17 @@ export default function ReceivableModal({
         const body = await r.json().catch(() => null);
         throw new Error(body?.detail || "Erro ao cancelar cobrança.");
       }
-      onSaved("Cobrança cancelada com sucesso! A consulta permanece agendada normalmente.");
+      setCancelConfirmOpen(false);
+      onSaved(
+        receivable.status === "pago"
+          ? "Cobrança cancelada e pagamento estornado com sucesso!"
+          : isConsultaCancelada
+          ? "Cobrança cancelada com sucesso!"
+          : "Cobrança cancelada com sucesso! A consulta permanece agendada normalmente."
+      );
     } catch (e) {
       setError(e.message || "Erro ao cancelar cobrança.");
+      setCancelConfirmOpen(false);
     } finally {
       setSaving(false);
     }
@@ -208,7 +218,8 @@ export default function ReceivableModal({
   const isPagoOriginally = receivable?.status === "pago";
 
   return (
-    <div className={`modal-overlay ${open ? "open" : ""}`}>
+    <>
+      <div className={`modal-overlay ${open ? "open" : ""}`}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-title">Pagamento da consulta</div>
@@ -256,23 +267,84 @@ export default function ReceivableModal({
             </div>
 
             {isConsultaCancelada ? (
-              <div
-                style={{
-                  background: "#FEF2F2",
-                  border: "1px solid #FCA5A5",
-                  color: "#991B1B",
-                  padding: "10px 14px",
-                  borderRadius: 8,
-                  fontSize: 13,
-                  margin: "8px 0",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                <span>⚠️</span>
-                <span>Esta consulta está cancelada. Lançamento financeiro bloqueado.</span>
-              </div>
+              receivable?.status === "pago" ? (
+                <div
+                  style={{
+                    background: "#FFFBEB",
+                    border: "1px solid #FDE68A",
+                    color: "#92400E",
+                    padding: "14px 16px",
+                    borderRadius: "12px",
+                    fontSize: "13px",
+                    margin: "12px 0",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "12px" }}>
+                    <span style={{ fontSize: "18px" }}>⚠️</span>
+                    <div>
+                      <strong style={{ fontSize: "14px", color: "#78350F" }}>
+                        Consulta Cancelada com Pagamento Registrado
+                      </strong>
+                      <p style={{ margin: "4px 0 0", color: "#92400E", lineHeight: "1.45" }}>
+                        Esta consulta foi cancelada na agenda, porém ainda consta como <strong>paga</strong> (R$ {Number(totalPrice || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}{receivable.payment_method ? ` via ${receivable.payment_method.toUpperCase()}` : ""}).
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      borderTop: "1px dashed #FCD34D",
+                      paddingTop: "12px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "12px",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <span style={{ fontSize: "12px", color: "#A16207" }}>
+                      Houve estorno ou o valor será cobrado na próxima consulta?
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCancelReceivable}
+                      disabled={saving || loading}
+                      style={{
+                        background: "#FFF1F2",
+                        border: "1px solid #FECDD3",
+                        color: "#E11D48",
+                        borderRadius: "8px",
+                        padding: "7px 14px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                      }}
+                      title="Cancela a cobrança e anula o pagamento registrado no financeiro"
+                    >
+                      🚫 Cancelar cobrança (Estornar)
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    background: "#FEF2F2",
+                    border: "1px solid #FCA5A5",
+                    color: "#991B1B",
+                    padding: "12px 14px",
+                    borderRadius: "10px",
+                    fontSize: "13px",
+                    margin: "8px 0",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <span>⚠️</span>
+                  <span>Esta consulta está cancelada e a cobrança financeira está cancelada.</span>
+                </div>
+              )
             ) : receivable?.status === "cancelado" ? (
               <div
                 style={{
@@ -462,10 +534,10 @@ export default function ReceivableModal({
 
         <div className="modal-footer">
           <button className="btn-cancel" onClick={onClose} disabled={saving}>
-            {isCancelado ? "Fechar" : "Cancelar"}
+            {isConsultaCancelada || isReceivableCancelado ? "Fechar" : "Cancelar"}
           </button>
 
-          {!notFound && !isCancelado && receivable && (
+          {!notFound && !isConsultaCancelada && !isReceivableCancelado && receivable && (
             <button
               className="btn-primary"
               onClick={handleSave}
@@ -483,5 +555,83 @@ export default function ReceivableModal({
         </div>
       </div>
     </div>
+
+      <ConfirmModal
+        open={cancelConfirmOpen}
+        title={
+          receivable?.status === "pago"
+            ? isConsultaCancelada
+              ? "Cancelar cobrança e estornar pagamento"
+              : "Cancelar cobrança e anular pagamento"
+            : "Cancelar cobrança"
+        }
+        icon="🚫"
+        danger={true}
+        confirmLabel={receivable?.status === "pago" ? "Sim, cancelar e estornar" : "Sim, cancelar cobrança"}
+        loadingLabel="Cancelando..."
+        loading={saving}
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setCancelConfirmOpen(false)}
+        message={
+          receivable?.status === "pago" ? (
+            <div>
+              <p style={{ margin: "0 0 12px", color: "#334155" }}>
+                {isConsultaCancelada
+                  ? "Esta consulta foi cancelada, mas consta com pagamento registrado. Deseja cancelar a cobrança e anular este pagamento?"
+                  : "Esta cobrança consta como paga. Deseja cancelar a cobrança e anular o pagamento?"}
+              </p>
+              <div
+                style={{
+                  background: "#FFF1F2",
+                  border: "1px solid #FECDD3",
+                  borderRadius: "12px",
+                  padding: "12px 14px",
+                  fontSize: "13px",
+                  color: "#9F1239",
+                  lineHeight: "1.5",
+                }}
+              >
+                <div style={{ marginBottom: "6px", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                  <span>💳</span>
+                  <span>
+                    O pagamento de <strong>R$ {Number(totalPrice || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong> será anulado.
+                  </span>
+                </div>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                  <span>📉</span>
+                  <span>O valor deixará de contar como receita recebida no faturamento da clínica.</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p style={{ margin: "0 0 12px", color: "#334155" }}>
+                Deseja realmente cancelar a cobrança desta consulta?
+              </p>
+              <div
+                style={{
+                  background: "#F8FAFC",
+                  border: "1px solid #E2E8F0",
+                  borderRadius: "12px",
+                  padding: "12px 14px",
+                  fontSize: "13px",
+                  color: "#475569",
+                  lineHeight: "1.5",
+                }}
+              >
+                <div style={{ marginBottom: "6px", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                  <span>📅</span>
+                  <span>A consulta <strong>permanecerá agendada</strong> normalmente.</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                  <span>💳</span>
+                  <span>Apenas a cobrança financeira será cancelada (isenta de pagamento).</span>
+                </div>
+              </div>
+            </div>
+          )
+        }
+      />
+    </>
   );
 }
