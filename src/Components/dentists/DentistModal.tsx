@@ -38,6 +38,7 @@ export default function DentistModal({
   const [cepLookupError, setCepLookupError] = useState("");
   const [scheduleDraft, setScheduleDraft] = useState([]); // só usado na criação
   const [newScheduleItem, setNewScheduleItem] = useState(EMPTY_SCHEDULE);
+  const [scheduleError, setScheduleError] = useState("");
   const [usedSpecialties, setUsedSpecialties] = useState([]);
   const [newSpecialtyInput, setNewSpecialtyInput] = useState("");
 
@@ -89,6 +90,7 @@ export default function DentistModal({
       setForm(EMPTY_FORM);
       setScheduleDraft([]);
       setNewScheduleItem(EMPTY_SCHEDULE);
+      setScheduleError("");
     }
   }, [open, editDentist, token]);
 
@@ -193,25 +195,26 @@ export default function DentistModal({
         } else {
           newErrors = { cro: detail };
         }
-      } else if (r.status === 400) {
-        // CPF ou telefone inválidos (validação de negócio no backend)
+      } else if (r.status === 400 || r.status === 422) {
+        // CPF, telefone ou horários sobrepostos
         if (lowerDetail.includes("cpf")) {
           newErrors = { cpf: detail };
         } else if (lowerDetail.includes("telefone")) {
           newErrors = { phone: detail };
-        } else {
-          onSaved(null);
+        } else if (
+          lowerDetail.includes("horário") ||
+          lowerDetail.includes("horario") ||
+          lowerDetail.includes("sobrep") ||
+          lowerDetail.includes("schedule")
+        ) {
+          setScheduleError(detail);
         }
-      } else if (r.status === 404) {
-        onSaved(null);
-      } else {
-        onSaved(null);
       }
 
       if (newErrors) {
         setErrors(newErrors);
-        onSaved(null);
       }
+      onSaved(null, detail);
     } catch {
       onSaved(null);
     } finally {
@@ -334,17 +337,46 @@ export default function DentistModal({
     }
   }
 
+  const dayLabel = (v) => DAYS_OF_WEEK.find((d) => d.value === v)?.label ?? v;
+  const fmt = (t) => (t ? t.slice(0, 5) : t);
+
   function addScheduleDraft() {
+    setScheduleError("");
+    const { day_of_week, time_begin, time_end } = newScheduleItem;
+
+    if (!time_begin || !time_end) {
+      setScheduleError("Informe os horários de início e término.");
+      return;
+    }
+
+    if (time_begin >= time_end) {
+      setScheduleError("O horário de início deve ser menor que o horário de término.");
+      return;
+    }
+
+    // Verifica sobreposição no mesmo dia da semana
+    const conflict = scheduleDraft.find(
+      (item: any) =>
+        item.day_of_week === day_of_week &&
+        time_begin < item.time_end &&
+        item.time_begin < time_end,
+    );
+
+    if (conflict) {
+      setScheduleError(
+        `Esse horário sobrepõe outro já adicionado para ${dayLabel(day_of_week)} (${fmt(conflict.time_begin)} às ${fmt(conflict.time_end)}).`,
+      );
+      return;
+    }
+
     setScheduleDraft((list) => [...list, newScheduleItem]);
     setNewScheduleItem(EMPTY_SCHEDULE);
   }
 
   function removeScheduleDraft(index) {
+    setScheduleError("");
     setScheduleDraft((list) => list.filter((_, i) => i !== index));
   }
-
-  const dayLabel = (v) => DAYS_OF_WEEK.find((d) => d.value === v)?.label ?? v;
-  const fmt = (t) => (t ? t.slice(0, 5) : t);
 
   // Agrupa o rascunho de horários por dia da semana, igual ao que
   // DentistSchedules faz com os horários já salvos no backend.
@@ -407,7 +439,7 @@ export default function DentistModal({
                   className={`form-input ${errors.cro ? "input-error" : ""}`}
                   value={form.cro}
                   onChange={set("cro")}
-                  placeholder="123456-SP"
+                  placeholder="SP-123456"
                 />
                 {errors.cro && <span className="form-error">{errors.cro}</span>}
               </div>
@@ -736,6 +768,11 @@ export default function DentistModal({
                       + Adicionar
                     </button>
                   </div>
+                  {scheduleError && (
+                    <span className="form-error" style={{ display: "block", marginTop: 8 }}>
+                      {scheduleError}
+                    </span>
+                  )}
                 </div>
               )}
             </div>

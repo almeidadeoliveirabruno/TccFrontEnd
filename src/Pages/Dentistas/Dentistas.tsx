@@ -115,9 +115,9 @@ export default function Dentistas() {
     setDetailsOpen(true);
   }
 
-  async function handleSaved(message) {
+  async function handleSaved(message, errorMessage) {
     if (!message) {
-      showToast("Erro ao salvar dentista.", "error");
+      showToast(errorMessage || "Erro ao salvar dentista.", "error");
       return;
     }
     showToast(message);
